@@ -7684,7 +7684,8 @@ async function saveSharedMasterRecord(type,existing,updated){
   if(!result.error&&type==='vendor'){
     const mirrored=await managementDb.rpc('sync_vendor_business_master',{
       p_shared_master_id:result.data||existing?._cloudId||null,
-      p_name:data.name||'',p_email:data.email||null,p_phone:data.tel||data.phone||null,p_active:true
+      p_name:data.name||'',p_invoice_reg_no:data.invoiceNo||null,
+      p_email:data.email||null,p_phone:data.tel||data.phone||null,p_active:true
     });
     if(mirrored.error&&!purchaseOrderCloudUnavailable(mirrored.error)){
       console.warn('発注用業者マスタへの反映を保留しました',mirrored.error);
@@ -7809,7 +7810,7 @@ function renderVendorMaster(){
 
 function openVendorModal(idx){
   const isNew = idx<0;
-  const v = isNew ? {name:'',category:'',zip:'',addr:'',tel:'',fax:'',contact:'',note:''} : vendorDetails[idx];
+  const v = isNew ? {name:'',category:'',invoiceNo:'',email:'',zip:'',addr:'',tel:'',fax:'',contact:'',note:''} : vendorDetails[idx];
   const categories=['内装','畳','塗装','清掃','建具','外注','大工','設備','他'];
   const categorySelect=`<div><label style="${fl_style}">カテゴリ</label><select id="vm-cat" style="${fi_style}">
     ${categories.map(c=>`<option value="${c}"${c===(v.category||'他')?' selected':''}>${c}</option>`).join('')}
@@ -7820,6 +7821,9 @@ function openVendorModal(idx){
     mrow('1fr','1fr') +
     mf('郵便番号','vm-zip','000-0000',undefined,v.zip) +
     mf('電話','vm-tel','03-xxxx-xxxx',undefined,v.tel) + '</div>' +
+    mrow('1fr','1fr') +
+    mf('適格請求書発行事業者番号','vm-invoice','T＋13桁',undefined,v.invoiceNo||v.invoice_reg_no) +
+    mf('通知先メール','vm-email','vendor@example.jp',undefined,v.email) + '</div>' +
     mf('住所','vm-addr','東京都…',undefined,v.addr) +
     mrow('1fr','1fr') +
     mf('FAX','vm-fax','',undefined,v.fax) +
@@ -7831,11 +7835,14 @@ function openVendorModal(idx){
       const existing=isNew?null:vendorDetails[idx];
       const updated = {
         name:mfi('vm-name'), category:mfi('vm-cat'),
+        invoiceNo:mfi('vm-invoice').toUpperCase(), email:mfi('vm-email'),
         zip:mfi('vm-zip'), addr:mfi('vm-addr'),
         tel:mfi('vm-tel'), fax:mfi('vm-fax'),
         contact:mfi('vm-contact'), note:mfi('vm-note')
       };
       if(!updated.name){alert('業者名は必須です');return;}
+      if(updated.invoiceNo&&!/^T[0-9]{13}$/.test(updated.invoiceNo)){alert('登録番号はT＋数字13桁で入力してください');return;}
+      if(updated.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updated.email)){alert('通知先メールの形式を確認してください');return;}
       const saved=await saveSharedMasterRecord('vendor',existing,updated);
       if(saved.error){alert('業者を保存できません：'+saved.error.message);return;}
       if(!isNew&&existing.name!==updated.name){

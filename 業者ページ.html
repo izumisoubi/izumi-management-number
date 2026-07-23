@@ -25,7 +25,7 @@
     <div id="actions">
       <div class="agreement"><input id="agreeCheck" type="checkbox"><label for="agreeCheck">上記の工事内容・金額・支払期日を確認しました。</label></div>
       <div class="action-grid"><button id="agreeButton" class="btn primary" onclick="agree()" disabled>内容を確認しました</button><button id="disputeButton" class="btn danger" onclick="showDispute()">相違内容を連絡</button></div>
-      <div id="disputeBox" class="hidden" style="margin-top:12px"><label for="disputeReason"><b>相違内容</b></label><textarea id="disputeReason" placeholder="管理番号、工事内容、金額など、相違している点を具体的に入力してください。"></textarea><div class="toolbar"><button class="btn danger" onclick="sendDispute()">相違内容を送信</button><button class="btn secondary" onclick="hideDispute()">戻る</button></div></div>
+      <div id="disputeBox" class="hidden" style="margin-top:12px"><label for="disputeAmount"><b>正しいと考える税込支払額</b></label><input id="disputeAmount" inputmode="numeric" placeholder="例：110000"><label for="disputeReason"><b>相違内容</b></label><textarea id="disputeReason" placeholder="管理番号、工事内容、金額など、相違している点を具体的に入力してください。"></textarea><div class="toolbar"><button class="btn danger" onclick="sendDispute()">相違内容を送信</button><button class="btn secondary" onclick="hideDispute()">戻る</button></div></div>
       <div id="actionStatus" class="status" aria-live="polite"></div>
     </div>
     <div id="completed" class="success-box hidden"></div>
@@ -39,8 +39,8 @@ function readToken(){const hash=new URLSearchParams(location.hash.replace(/^#/,'
 function fail(message){$('loading').classList.add('hidden');$('noticeCard').classList.add('hidden');$('errorCard').classList.remove('hidden');$('errorText').textContent=message}
 async function loadNotice(){
   token=readToken();if(!token)return fail('確認用トークンがありません。');
-  const result=await db.rpc('get_payment_notice_by_token',{p_token:token});if(result.error)return fail(result.error.message||'確認URLが無効です。');
-  payload=result.data;const notice=payload.notice||{},lines=payload.lines||[];
+  const result=await db.functions.invoke('notice-action',{body:{action:'view',token}});if(result.error||result.data?.error)return fail(result.data?.error||result.error?.message||'確認URLが無効です。');
+  payload=result.data?.data;const notice=payload.notice||{},lines=payload.lines||[];
   $('noticeNo').textContent=`通知番号 ${payload.notice_no||''}　版 ${notice.version||''}`;$('vendorName').textContent=(notice.vendor_name_snapshot||'')+' 御中';
   $('vendorRegistration').textContent=`登録番号 ${notice.vendor_invoice_reg_no_snapshot||'未登録'}　作成者 ${notice.issuer_name_snapshot||'株式会社イズミ装美'}`;
   $('issueInfo').textContent=`発行日 ${notice.issue_date||'-'}　支払期日 ${notice.payment_due_date||'-'}`;
@@ -52,9 +52,9 @@ async function loadNotice(){
   $('loading').classList.add('hidden');$('noticeCard').classList.remove('hidden');
 }
 $('agreeCheck').addEventListener('change',()=>{$('agreeButton').disabled=!$('agreeCheck').checked||submitting});
-async function agree(){if(!$('agreeCheck').checked||submitting)return;submitting=true;$('agreeButton').disabled=true;$('actionStatus').textContent='確認内容を記録中…';const result=await db.rpc('agree_payment_notice_with_token',{p_token:token,p_evidence:{source:'vendor_page',notice_no:payload.notice_no}});if(result.error){submitting=false;$('agreeButton').disabled=false;$('actionStatus').textContent=result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='ご確認ありがとうございました。確認日時を記録しました。'}
+async function agree(){if(!$('agreeCheck').checked||submitting)return;submitting=true;$('agreeButton').disabled=true;$('actionStatus').textContent='確認内容を記録中…';const result=await db.functions.invoke('notice-action',{body:{action:'agree',token}});if(result.error||result.data?.error){submitting=false;$('agreeButton').disabled=false;$('actionStatus').textContent=result.data?.error||result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='ご確認ありがとうございました。確認日時を記録しました。'}
 function showDispute(){$('disputeBox').classList.remove('hidden');$('disputeReason').focus()}function hideDispute(){$('disputeBox').classList.add('hidden')}
-async function sendDispute(){const reason=$('disputeReason').value.trim();if(!reason)return $('actionStatus').textContent='相違内容を入力してください。';if(submitting)return;submitting=true;$('actionStatus').textContent='相違内容を記録中…';const result=await db.rpc('dispute_payment_notice_with_token',{p_token:token,p_reason:reason,p_evidence:{source:'vendor_page',notice_no:payload.notice_no}});if(result.error){submitting=false;$('actionStatus').textContent=result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='相違内容を受け付けました。イズミ装美の担当者からご連絡します。'}
+async function sendDispute(){const reason=$('disputeReason').value.trim(),amountText=String($('disputeAmount').value).replace(/[,，¥￥\s]/g,''),amount=Number(amountText);if(!reason||amountText===''||!Number.isFinite(amount))return $('actionStatus').textContent='正しいと考える税込支払額と相違内容を入力してください。';if(submitting)return;submitting=true;$('actionStatus').textContent='相違内容を記録中…';const result=await db.functions.invoke('notice-action',{body:{action:'dispute',token,reason,amount}});if(result.error||result.data?.error){submitting=false;$('actionStatus').textContent=result.data?.error||result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='相違内容を受け付けました。イズミ装美の担当者からご連絡します。'}
 loadNotice();
 </script>
 </body>

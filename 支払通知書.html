@@ -26,13 +26,13 @@
     <div class="layout">
       <div>
         <section class="card"><h2>作成対象</h2><div class="toolbar"><div><label>業者</label><select id="vendorSelect"></select></div><button onclick="loadVendorOrders()">発注実績を更新</button></div><div id="orderLines" class="table-wrap" style="margin-top:12px"></div><div class="button-row"><button id="createButton" class="primary" onclick="createDraft()">選択明細で下書きを作成</button></div></section>
-        <section class="card"><h2>保存済み通知書</h2><div id="noticeList" class="notice-list"></div></section>
+        <section class="card"><h2>保存済み通知書</h2><div id="noticeList" class="notice-list"></div><div id="noticePager" class="toolbar"></div></section>
       </div>
       <section class="card"><h2>通知書編集</h2><div id="editorEmpty" class="empty">左側で明細を選び、下書きを作成してください。</div><div id="editor" class="hidden">
         <div class="grid"><div><label>通知番号</label><input id="noticeNo" readonly></div><div><label>状態</label><input id="noticeStatus" readonly></div><div><label>発行日</label><input id="issueDate" type="date"></div><div><label>支払期日</label><input id="paymentDueDate" type="date"></div><div><label>確認期間（日）</label><input id="approvalDays" type="number" min="1" max="60"></div><div><label>業者</label><input id="vendorName" readonly></div></div>
         <div id="draftLines" class="table-wrap" style="margin-top:13px"></div>
         <div class="totals"><div><span>税抜</span><strong id="subtotal">¥0</strong></div><div><span>消費税</span><strong id="tax">¥0</strong></div><div><span>税込支払額</span><strong id="total">¥0</strong></div></div>
-        <div class="button-row"><button onclick="saveDraft(false)">今すぐ保存</button><button onclick="window.print()">印刷プレビュー</button><button id="voidButton" class="danger" onclick="voidDraft()">下書きを取消</button><button id="sendButton" class="primary" onclick="sendNotice()">PDF固定・業者へ送信</button></div><div id="editorStatus" class="status"></div>
+        <div class="button-row"><button onclick="saveDraft(false)">今すぐ保存</button><button onclick="window.print()">印刷プレビュー</button><button id="correctionButton" class="primary hidden" onclick="createCorrection()">承認済COで訂正版v2を作成</button><button id="voidButton" class="danger" onclick="voidDraft()">下書きを取消</button><button id="sendButton" class="primary" onclick="sendNotice()">PDF固定・業者へ送信</button></div><div id="editorStatus" class="status"></div>
       </div></section>
     </div>
   </div>
@@ -42,7 +42,8 @@
 const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
-let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false;
+let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false,usedPoLineIds=new Set(),usedChangeOrderIds=new Set(),noticePage=0;
+const NOTICE_PAGE_SIZE=100;
 const schemaMissing=error=>/payment_notice|purchase_orders|vendors|schema cache|does not exist|could not find/i.test(error?.message||'');
 function setStatus(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'')}
 async function sessionReady(session){
@@ -59,7 +60,7 @@ async function loadBase(){
   setStatus('globalStatus','業者・通知書を読み込み中…');
   const [vendorResult,noticeResult]=await Promise.all([
     db.from('vendors').select('id,name').eq('active',true).is('deleted_at',null).order('name'),
-    db.from('payment_notices').select('id,group_id,version,status,vendor_id,vendor_name_snapshot,vendor_address_snapshot,vendor_invoice_reg_no_snapshot,issuer_name_snapshot,issuer_address_snapshot,issuer_invoice_reg_no_snapshot,issue_date,payment_due_date,approval_days,subtotal_snapshot,tax_snapshot,total_snapshot,revision,updated_at,payment_notice_groups(notice_no)').is('deleted_at',null).order('created_at',{ascending:false}).limit(500)
+    loadNoticeSummaries()
   ]);
   if(vendorResult.error||noticeResult.error){
     const error=vendorResult.error||noticeResult.error;
@@ -70,17 +71,34 @@ async function loadBase(){
   $('vendorSelect').innerHTML='<option value="">業者を選択</option>'+vendors.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('');
   renderNoticeList();setStatus('globalStatus',`業者 ${vendors.length}社・通知書 ${notices.length}件を読み込みました。`); 
 }
+async function loadNoticeSummaries(){
+  const rows=[];for(let offset=0;offset<100000;offset+=1000){
+    const result=await db.from('payment_notices').select('id,group_id,version,status,vendor_id,vendor_name_snapshot,vendor_address_snapshot,vendor_invoice_reg_no_snapshot,issuer_name_snapshot,issuer_address_snapshot,issuer_invoice_reg_no_snapshot,issue_date,payment_due_date,approval_days,subtotal_snapshot,tax_snapshot,total_snapshot,dispute_amount,revision,updated_at,payment_notice_groups(notice_no)').is('deleted_at',null).order('created_at',{ascending:false}).range(offset,offset+999);
+    if(result.error)return result;rows.push(...(result.data||[]));if((result.data||[]).length<1000)break;
+  }return{data:rows,error:null};
+}
+async function loadUsedNoticeSources(vendorId){
+  const rows=[];for(let offset=0;offset<100000;offset+=1000){
+    const result=await db.from('payment_notice_lines').select('source_po_line_id,source_change_order_id,payment_notices!inner(vendor_id,status,deleted_at)').eq('payment_notices.vendor_id',vendorId).in('payment_notices.status',['draft','sent','agreed','disputed','confirmed']).is('payment_notices.deleted_at',null).is('deleted_at',null).range(offset,offset+999);
+    if(result.error)return result;rows.push(...(result.data||[]));if((result.data||[]).length<1000)break;
+  }return{data:rows,error:null};
+}
 async function loadVendorOrders(){
   const vendorId=$('vendorSelect').value;if(!vendorId){$('orderLines').innerHTML='<div class="empty">業者を選択してください。</div>';return}
   setStatus('globalStatus','発注実績を読み込み中…');
-  const result=await db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate),change_orders(id,co_no,reason,detail,amount,tax_rate,status,approved_at)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false});
-  if(result.error){setStatus('globalStatus','発注実績を読み込めません：'+result.error.message,true);return}
+  const [result,usedResult]=await Promise.all([
+    db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate),change_orders(id,co_no,reason,detail,amount,tax_rate,status,approved_at)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false}),
+    loadUsedNoticeSources(vendorId)
+  ]);
+  if(result.error||usedResult.error){setStatus('globalStatus','発注実績を読み込めません：'+(result.error||usedResult.error).message,true);return}
+  usedPoLineIds=new Set((usedResult.data||[]).map(row=>row.source_po_line_id).filter(Boolean));
+  usedChangeOrderIds=new Set((usedResult.data||[]).map(row=>row.source_change_order_id).filter(Boolean));
   orders=result.data||[];renderOrderLines();setStatus('globalStatus',`${orders.length}件の発注書を確認しました。`);
 }
 function selectableLines(){
   return orders.flatMap(order=>[
-    ...(order.purchase_order_lines||[]).map(line=>({order,line,kind:'po',sourceKey:line.id})),
-    ...(order.change_orders||[]).filter(change=>change.status==='approved').map(change=>({
+    ...(order.purchase_order_lines||[]).filter(line=>!usedPoLineIds.has(line.id)).map(line=>({order,line,kind:'po',sourceKey:line.id})),
+    ...(order.change_orders||[]).filter(change=>change.status==='approved'&&!usedChangeOrderIds.has(change.id)).map(change=>({
       order,kind:'co',sourceKey:`co-${change.id}`,change,
       line:{id:`co-${change.id}`,description:`【変更注文 ${change.co_no}】${change.detail||change.reason}`,
         quantity:1,unit:'式',unit_price:change.amount,amount:change.amount,tax_rate:change.tax_rate}
@@ -98,7 +116,8 @@ function selectedSourceLines(){
     po_no_snapshot:order.po_no,co_no_snapshot:kind==='co'?change.co_no:null,work_date_snapshot:order.completed_at?.slice(0,10)||null,
     client_name_snapshot:null,property_name_snapshot:[order.property_name_snapshot,order.room_no_snapshot].filter(Boolean).join(' '),
     description_snapshot:line.description,quantity_snapshot:line.quantity,unit_snapshot:line.unit,
-    unit_price_snapshot:line.unit_price,amount_snapshot:line.amount,tax_rate_snapshot:line.tax_rate
+    unit_price_snapshot:line.unit_price,amount_snapshot:line.amount,tax_rate_snapshot:line.tax_rate,
+    source_po_line_id:kind==='po'?line.id:null,source_change_order_id:kind==='co'?change.id:null
   }));
 }
 function headerPayload(){return{issue_date:$('issueDate').value||new Date().toISOString().slice(0,10),payment_due_date:$('paymentDueDate').value||null,approval_days:Number($('approvalDays').value)||7,issuer_name_snapshot:'株式会社イズミ装美',issuer_address_snapshot:'東京都中央区日本橋浜町2-16-5 東味ビルディング5F',issuer_invoice_reg_no_snapshot:'T7011601015057'}}
@@ -111,8 +130,12 @@ async function createDraft(){
   await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(n=>n.id===created?.id);if(index>=0)await openNotice(index);
 }
 function renderNoticeList(){
-  $('noticeList').innerHTML=notices.length?notices.map((notice,index)=>`<button class="notice-item ${activeNotice?.id===notice.id?'active':''}" onclick="openNotice(${index})"><b>${esc(notice.payment_notice_groups?.notice_no||'通知番号未取得')} v${notice.version}</b> <span class="state ${notice.status}">${esc(notice.status)}</span><small>${esc(notice.vendor_name_snapshot)}　${esc(notice.issue_date)}　${yen(notice.total_snapshot)}</small></button>`).join(''):'<div class="empty">支払通知書はまだありません。</div>';
+  const pageCount=Math.max(1,Math.ceil(notices.length/NOTICE_PAGE_SIZE));noticePage=Math.min(noticePage,pageCount-1);
+  const start=noticePage*NOTICE_PAGE_SIZE,pageRows=notices.slice(start,start+NOTICE_PAGE_SIZE);
+  $('noticeList').innerHTML=pageRows.length?pageRows.map((notice,index)=>`<button class="notice-item ${activeNotice?.id===notice.id?'active':''}" onclick="openNotice(${start+index})"><b>${esc(notice.payment_notice_groups?.notice_no||'通知番号未取得')} v${notice.version}</b> <span class="state ${notice.status}">${esc(notice.status)}</span><small>${esc(notice.vendor_name_snapshot)}　${esc(notice.issue_date)}　${yen(notice.total_snapshot)}</small></button>`).join(''):'<div class="empty">支払通知書はまだありません。</div>';
+  $('noticePager').innerHTML=notices.length>NOTICE_PAGE_SIZE?`<button ${noticePage===0?'disabled':''} onclick="changeNoticePage(-1)">前へ</button><span>${noticePage+1} / ${pageCount}ページ（全${notices.length}件）</span><button ${noticePage>=pageCount-1?'disabled':''} onclick="changeNoticePage(1)">次へ</button>`:'';
 }
+function changeNoticePage(delta){noticePage=Math.max(0,noticePage+delta);renderNoticeList();$('noticeList').scrollIntoView({behavior:'smooth',block:'start'})}
 async function openNotice(index){
   const summary=notices[index];if(!summary)return;setStatus('editorStatus','明細を読み込み中…');
   const result=await db.from('payment_notice_lines').select('*').eq('notice_id',summary.id).is('deleted_at',null).order('line_no');
@@ -120,7 +143,8 @@ async function openNotice(index){
   activeNotice={...summary};activeLines=result.data||[];$('editorEmpty').classList.add('hidden');$('editor').classList.remove('hidden');
   $('noticeNo').value=summary.payment_notice_groups?.notice_no||'';$('noticeStatus').value=summary.status;$('issueDate').value=summary.issue_date||'';$('paymentDueDate').value=summary.payment_due_date||'';$('approvalDays').value=summary.approval_days||7;$('vendorName').value=summary.vendor_name_snapshot||'';
   const editable=summary.status==='draft'&&isAdmin;['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).disabled=!editable);$('voidButton').disabled=!editable;$('sendButton').disabled=!editable;
-  renderDraftLines();renderTotals();renderNoticeList();setStatus('editorStatus',editable?'入力を変更すると約1.2秒後に自動保存します。':'送信後の内容は固定されています。');
+  $('correctionButton').classList.toggle('hidden',!(summary.status==='disputed'&&isAdmin));
+  renderDraftLines();renderTotals();renderNoticeList();setStatus('editorStatus',editable?'入力を変更すると約1.2秒後に自動保存します。':summary.status==='disputed'?`業者申出額 ${yen(summary.dispute_amount)}。承認済COを確認し、旧版を変更せず訂正版を作成してください。`:'送信後の内容は固定されています。');
 }
 function renderDraftLines(){
   $('draftLines').innerHTML=`<table class="line-select"><thead><tr><th>管理番号</th><th>発注番号</th><th>工事内容</th><th>数量</th><th>単位</th><th>単価</th><th>金額</th></tr></thead><tbody>${activeLines.map(line=>`<tr><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.po_no_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.unit_price_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('')}</tbody></table>`;
@@ -142,6 +166,31 @@ async function saveDraft(automatic){
   return true;
 }
 async function voidDraft(){if(!activeNotice||activeNotice.status!=='draft')return;const reason=prompt('取消理由を入力してください。');if(!reason?.trim())return;const result=await db.rpc('transition_payment_notice',{p_notice_id:activeNotice.id,p_expected_revision:activeNotice.revision,p_new_status:'void',p_reason:reason.trim(),p_document_storage_path:null,p_document_sha256:null});if(result.error)return setStatus('editorStatus',result.error.message,true);activeNotice=null;activeLines=[];$('editor').classList.add('hidden');$('editorEmpty').classList.remove('hidden');await loadBase()}
+async function createCorrection(){
+  if(!activeNotice||activeNotice.status!=='disputed'||!isAdmin)return;
+  setStatus('editorStatus','承認済み変更注文を確認中…');
+  const [orderResult,usedResult]=await Promise.all([
+    db.from('purchase_orders').select('id,project_id,po_no,management_number,property_name_snapshot,room_no_snapshot,completed_at,change_orders(id,co_no,reason,detail,amount,tax_rate,status)').eq('vendor_id',activeNotice.vendor_id).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null),
+    loadUsedNoticeSources(activeNotice.vendor_id)
+  ]);
+  if(orderResult.error||usedResult.error)return setStatus('editorStatus',(orderResult.error||usedResult.error).message,true);
+  const usedByOther=new Set((usedResult.data||[]).map(row=>row.source_change_order_id).filter(Boolean));
+  const existing=new Set(activeLines.map(line=>line.source_change_order_id).filter(Boolean));
+  const additions=(orderResult.data||[]).flatMap(order=>(order.change_orders||[]).filter(change=>change.status==='approved'&&!existing.has(change.id)&&!usedByOther.has(change.id)).map(change=>({
+    project_id:order.project_id,management_number_snapshot:order.management_number,po_no_snapshot:order.po_no,
+    co_no_snapshot:change.co_no,work_date_snapshot:order.completed_at?.slice(0,10)||null,client_name_snapshot:null,
+    property_name_snapshot:[order.property_name_snapshot,order.room_no_snapshot].filter(Boolean).join(' '),
+    description_snapshot:`【変更注文 ${change.co_no}】${change.detail||change.reason}`,quantity_snapshot:1,unit_snapshot:'式',
+    unit_price_snapshot:change.amount,amount_snapshot:change.amount,tax_rate_snapshot:change.tax_rate,
+    source_po_line_id:null,source_change_order_id:change.id
+  })));
+  if(!additions.length)return setStatus('editorStatus','訂正へ追加できる承認済COがありません。先に変更注文を承認してください。',true);
+  const lines=[...activeLines.map(line=>({...line})),...additions].map((line,index)=>({...line,line_no:index+1}));
+  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:activeNotice.vendor_id,p_header:{...headerPayload(),issue_date:new Date().toISOString().slice(0,10)},p_lines:lines,p_supersedes_notice_id:activeNotice.id});
+  if(result.error)return setStatus('editorStatus',result.error.message,true);
+  await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(notice=>notice.id===created?.id);if(index>=0)await openNotice(index);
+  setStatus('editorStatus','旧版を保持し、承認済COを加えた訂正版を作成しました。');
+}
 async function sendNotice(){
   if(!activeNotice||activeNotice.status!=='draft'||!isAdmin)return;
   if(!activeNotice.vendor_invoice_reg_no_snapshot)return setStatus('editorStatus','業者マスタのT番号を設定してください。',true);
