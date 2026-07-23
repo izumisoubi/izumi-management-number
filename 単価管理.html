@@ -1,26 +1,39 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>業者・単価管理</title><link rel="stylesheet" href="業務基盤.css"></head><body>
-<header><div class="head"><div><h1>業者・単価管理</h1><div>全員共通の標準単価＋業者ごとの個別設定</div></div><a href="業務フロー.html">業務フロー</a></div></header><main>
+<header><div class="head"><div><h1>業者・単価管理</h1><div>共通の標準単価＋業者ごとの個別設定</div></div><a href="業務フロー.html">業務フロー</a></div></header><main>
 <section class="panel"><div class="toolbar"><div style="min-width:260px"><label for="vendor"><b>対象業者</b></label><select id="vendor"></select></div><button class="btn secondary" id="newVendor">業者を追加</button><span class="status" id="vendorStatus"></span></div>
-<hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><div class="toolbar"><button class="btn primary" id="add">工事項目を追加</button><label class="btn secondary">CSV/JSONを取り込む<input class="hidden" id="file" type="file" accept=".csv,.json"></label><button class="btn secondary" id="template">入力テンプレートを保存</button><span class="status" id="status">入力内容は対象業者ごとに保持</span></div><p class="notice">共通単価が全員へ適用されます。選択した業者の個別単価を入力した場合だけ個別値を優先し、個別値を消すと最新の共通単価が自動復活します。</p>
-<table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（自動）</th><th>業者別単価（手入力）</th><th>適用単価</th><th></th></tr></thead><tbody id="rows"></tbody></table><div class="mobile-cards" id="cards"></div></section></main>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><div class="toolbar"><button class="btn primary" id="add">工事項目を追加</button><label class="btn secondary">CSV/JSONを取り込む<input class="hidden" id="file" type="file" accept=".csv,.json"></label><button class="btn secondary" id="template">入力テンプレートを保存</button><span class="status" id="status">現在はこの端末へ仮保存（共有DB適用前）</span></div><p class="notice">共通単価は全業者へ適用されます。選択した業者の個別単価を入力した場合だけ個別値を優先し、個別値を消すと最新の共通単価が自動復活します。</p>
+<table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（全業者）</th><th>業者別単価（手入力）</th><th>適用単価</th><th></th></tr></thead><tbody id="rows"></tbody></table><div class="mobile-cards" id="cards"></div></section></main>
 <script src="業務基盤.js"></script><script>
-const LS_VENDOR='izumi_vendors_v3',LS_PRICES='izumi_vendor_price_drafts_v1';
+const LS_VENDOR='izumi_vendors_v3',LS_LEGACY='izumi_vendor_price_drafts_v1',LS_COMMON='izumi_common_prices_v1',LS_OVERRIDES='izumi_vendor_price_overrides_v2';
 let fallbackVendors=[
   {name:'株式会社美装'}, {name:'染谷住宅サービス'}, {name:'有限会社林硝子工業所'},
   {name:'RE・BOX株式会社'}, {name:'ネックス株式会社'}, {name:'稲垣機材株式会社'}
-],currentVendor='',priceDrafts={};
+],currentVendor='',commonItems=[],vendorOverrides={};
 try{const loaded=JSON.parse(localStorage.getItem(LS_VENDOR)||'null');if(Array.isArray(loaded)&&loaded.length)fallbackVendors=loaded}catch{}
-try{priceDrafts=JSON.parse(localStorage.getItem(LS_PRICES)||'{}')||{}}catch{}
-let items=[];
-function baseItems(){return[{name:'クロス貼替',unit:'㎡',common:1200,override:null},{name:'ハウスクリーニング',unit:'式',common:25000,override:null}]}
+function baseItems(){return[{id:'wallpaper',name:'クロス貼替',unit:'㎡',common:1200},{id:'cleaning',name:'ハウスクリーニング',unit:'式',common:25000}]}
+try{commonItems=JSON.parse(localStorage.getItem(LS_COMMON)||'null')||[]}catch{}
+try{vendorOverrides=JSON.parse(localStorage.getItem(LS_OVERRIDES)||'{}')||{}}catch{}
+if(!commonItems.length){
+  let legacy={};try{legacy=JSON.parse(localStorage.getItem(LS_LEGACY)||'{}')||{}}catch{}
+  const firstRows=Object.values(legacy).find(Array.isArray);
+  commonItems=(firstRows?.length?firstRows.map((x,i)=>({id:`legacy-${i}`,name:x.name||'',unit:x.unit||'式',common:Number(x.common)||0})):baseItems());
+  Object.entries(legacy).forEach(([vendorName,rows])=>{
+    if(!Array.isArray(rows))return;
+    vendorOverrides[vendorName]={};
+    rows.forEach((row,i)=>{if(row.override!==null&&row.override!==''&&commonItems[i])vendorOverrides[vendorName][commonItems[i].id]=Number(row.override)});
+  });
+  localStorage.setItem(LS_COMMON,JSON.stringify(commonItems));localStorage.setItem(LS_OVERRIDES,JSON.stringify(vendorOverrides));
+}
 function vendorName(v){return typeof v==='string'?v:v?.name||''}
-function savePrices(){if(!currentVendor)return;priceDrafts[currentVendor]=items;localStorage.setItem(LS_PRICES,JSON.stringify(priceDrafts));vendorStatus.textContent=`${currentVendor} の個別設定`}
-function loadVendor(name){currentVendor=name;items=JSON.parse(JSON.stringify(priceDrafts[name]||baseItems()));render();vendorStatus.textContent=`${name} の個別設定`}
+function saveCommon(){localStorage.setItem(LS_COMMON,JSON.stringify(commonItems))}
+function saveOverrides(){localStorage.setItem(LS_OVERRIDES,JSON.stringify(vendorOverrides))}
+function overrideFor(item){const value=vendorOverrides[currentVendor]?.[item.id];return value===undefined?null:value}
+function loadVendor(name){currentVendor=name;render();vendorStatus.textContent=`${name} の個別設定`}
 vendor.innerHTML=fallbackVendors.map(v=>`<option>${escapeHtml(vendorName(v))}</option>`).join('');loadVendor(vendor.value);
 vendor.onchange=()=>loadVendor(vendor.value);
-newVendor.onclick=()=>{const name=prompt('追加する業者名を入力してください');if(!name?.trim())return;const clean=name.trim();const option=document.createElement('option');option.textContent=clean;vendor.append(option);vendor.value=clean;loadVendor(clean)};
-function render(){rows.innerHTML=items.map((x,i)=>`<tr><td><input value="${escapeHtml(x.name)}" data-i="${i}" data-k="name"></td><td><input value="${escapeHtml(x.unit)}" data-i="${i}" data-k="unit"></td><td class="price-auto">¥${x.common.toLocaleString()}</td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${x.override??''}" data-i="${i}" data-k="override"></td><td class="${x.override==null?'price-auto':'price-manual'}">¥${effectiveValue(x.common,x.override).toLocaleString()}</td><td><button class="btn danger" data-delete="${i}">削除</button></td></tr>`).join('');cards.innerHTML=items.map((x,i)=>`<div class="mobile-card"><b>${escapeHtml(x.name)}</b><p>${escapeHtml(x.unit)} ／ 適用 ¥${effectiveValue(x.common,x.override).toLocaleString()}</p><span class="badge">${x.override==null?'共通単価':'業者別単価'}</span></div>`).join('')}
-document.addEventListener('input',e=>{const i=e.target.dataset.i;if(i===undefined)return;const k=e.target.dataset.k;items[i][k]=k==='override'?(normalizeNumber(e.target.value)===''?null:Number(normalizeNumber(e.target.value))):e.target.value;savePrices();render()});
-document.addEventListener('click',e=>{if(e.target.dataset.delete!==undefined){items.splice(Number(e.target.dataset.delete),1);savePrices();render()}});
-add.onclick=()=>{items.push({name:'新しい工事項目',unit:'式',common:0,override:null});savePrices();render()};template.onclick=()=>downloadJson('単価入力テンプレート.json',{vendor_name:currentVendor,items:[{name:'',unit:'',common_price:0,vendor_override:null}]});file.onchange=()=>status.textContent='取込内容は自動確定せず、差分確認画面へ送ります';render();
+newVendor.onclick=()=>{const name=prompt('追加する業者名を入力してください');if(!name?.trim())return;const clean=name.trim();if(!fallbackVendors.some(v=>vendorName(v)===clean)){fallbackVendors.push({name:clean});localStorage.setItem(LS_VENDOR,JSON.stringify(fallbackVendors))}const option=document.createElement('option');option.textContent=clean;vendor.append(option);vendor.value=clean;loadVendor(clean)};
+function render(){rows.innerHTML=commonItems.map((x,i)=>{const override=overrideFor(x);return `<tr><td><input value="${escapeHtml(x.name)}" data-i="${i}" data-k="name"></td><td><input value="${escapeHtml(x.unit)}" data-i="${i}" data-k="unit"></td><td><input inputmode="numeric" value="${x.common}" data-i="${i}" data-k="common" aria-label="共通単価"></td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-i="${i}" data-k="override"></td><td class="${override==null?'price-auto':'price-manual'}">¥${effectiveValue(x.common,override).toLocaleString()}</td><td><button class="btn danger" data-delete="${i}">削除</button></td></tr>`}).join('');cards.innerHTML=commonItems.map(x=>{const override=overrideFor(x);return `<div class="mobile-card"><b>${escapeHtml(x.name)}</b><p>${escapeHtml(x.unit)} ／ 適用 ¥${effectiveValue(x.common,override).toLocaleString()}</p><span class="badge">${override==null?'共通単価':'業者別単価'}</span></div>`}).join('')}
+document.addEventListener('input',e=>{const i=e.target.dataset.i;if(i===undefined)return;const item=commonItems[Number(i)],k=e.target.dataset.k;if(!item)return;if(k==='override'){vendorOverrides[currentVendor]??={};const normalized=normalizeNumber(e.target.value);if(normalized==='')delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=Number(normalized);saveOverrides()}else if(k==='common'){item.common=Number(normalizeNumber(e.target.value))||0;saveCommon()}else{item[k]=e.target.value;saveCommon()}render()});
+document.addEventListener('click',e=>{if(e.target.dataset.delete!==undefined){const i=Number(e.target.dataset.delete),id=commonItems[i]?.id;commonItems.splice(i,1);Object.values(vendorOverrides).forEach(map=>{if(map&&id)delete map[id]});saveCommon();saveOverrides();render()}});
+add.onclick=()=>{commonItems.push({id:crypto.randomUUID(),name:'新しい工事項目',unit:'式',common:0});saveCommon();render()};template.onclick=()=>downloadJson('単価入力テンプレート.json',{vendor_name:currentVendor,items:[{name:'',unit:'',common_price:0,vendor_override:null}]});file.onchange=()=>status.textContent='取込内容は自動確定せず、差分確認画面へ送ります';render();
 </script></body></html>
