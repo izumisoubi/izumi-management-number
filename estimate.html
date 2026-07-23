@@ -460,6 +460,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <button class="ubtn" onclick="duplicateProject()" title="内容を複製し、管理番号・請求日・完工日・部屋番号をクリア">⧉ 複製</button>
     <button class="ubtn" onclick="saveAll()" title="入力内容は自動保存されます。このボタンは直ちに保存したい場合に使用します（⌘/Ctrl＋S）">💾 今すぐ保存</button>
     <span id="onlineSaveStatus" title="管理番号がある案件は、入力が止まると自動でクラウド保存されます" style="font-size:10px;color:var(--tm);white-space:nowrap">自動保存：待機</span>
+    <button class="ubtn" id="conflictDraftButton" onclick="restoreConflictDraft()" style="display:none;color:#b45309;border-color:#b45309" title="同時編集の競合時に退避した入力を確認します">⚠ 競合退避を確認</button>
     <button class="ubtn" onclick="openProjectOnline()" title="クラウドに保存済みの案件一覧から選んで開きます">📂 保存済み案件を開く</button>
     <button class="ubtn" onclick="saveBackupToPc()" title="障害・復旧に備え、現在の案件をJSONファイルとしてこのPCへ保存します">📦 PCへバックアップ</button>
     <button class="ubtn" onclick="openFileWithPicker()" title="以前このPCへ保存したJSONバックアップを読み込みます">🗂 PCバックアップを読込</button>
@@ -1926,6 +1927,7 @@ function syncEst(){
   if(dU) dU.textContent=fmtD(vv('b-uketsuke'));
   var dK=document.getElementById('ct-kanko-disp');
   if(dK) dK.textContent=fmtD(vv('b-kanko-date'));
+  if(typeof updateConflictDraftButton==='function')updateConflictDraftButton();
 }
 function getClientBillingInfo(){
   const clientName=vv('b-client');
@@ -5524,28 +5526,23 @@ async function saveProjectOnline(options={}){
       p_schedule_id:activeScheduleId||null,
       p_draft_id:onlineDraftId||null
     });
-  let expectedRevision=onlineProjectRevision??0;
+  const expectedRevision=onlineProjectRevision??0;
   let result=null,saveError=null;
-  for(let attempt=0;attempt<5;attempt++){
-    ({data:result,error:saveError}=await saveBundle(expectedRevision));
-    const revisionConflict=saveError&&/別の端末で更新|再読込してから保存/.test(saveError.message||'');
-    if(!revisionConflict)break;
-    setOnlineSaveStatus('最新の版へ追従中…','saving');
-    const {data:latest,error:latestError}=await managementDb.from('estimate_projects')
-      .select('revision,payload').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();
-    if(latestError){saveError=latestError;break;}
-    mergeLatestBlankBasicFields(latest?.payload,data);
-    expectedRevision=latest?.revision??0;
-    onlineProjectRevision=expectedRevision;
+  ({data:result,error:saveError}=await saveBundle(expectedRevision));
+  const revisionConflict=saveError&&/別の端末で更新|再読込してから保存/.test(saveError.message||'');
+  if(revisionConflict){
+    const conflictKey=`izumi_conflict_draft_${managementNumber}`;
+    try{localStorage.setItem(conflictKey,JSON.stringify({saved_at:new Date().toISOString(),management_number:managementNumber,expected_revision:expectedRevision,payload:data}))}catch(_error){}
+    setOnlineSaveStatus('他の端末と更新が競合・入力を退避','error');
+    updateConflictDraftButton();
+    showToastMsg('別の社員が先に更新しました。こちらの入力は端末内へ退避しました。案件を再読込して差分を確認してください。');
+    return false;
   }
+  // RPC未適用時に直接UPDATEへ逃がすと、版競合・監査・RLSを迂回するため保存しない。
   if(saveError&&(/save_project_bundle|schema cache|function/i.test(saveError.message||''))){
-    const record={management_number:managementNumber,project_id:project.id,payload:data,updated_by:session.user.id,updated_at:new Date().toISOString()};
-    const fallback=await managementDb.from('estimate_projects').upsert(record,{onConflict:'management_number'});
-    if(!fallback.error){
-      const synced=await managementDb.from('management_numbers').update({...onlineProjectPatch(data),project_data:data}).eq('id',project.id);
-      saveError=synced.error;
-      result={revision:null};
-    }
+    setOnlineSaveStatus('安全な保存機能の設定待ち','error');
+    showToastMsg('安全な自動保存機能を確認できないため、台帳を直接上書きしませんでした。PCバックアップを保存してください。');
+    return false;
   }
   if(saveError){showToastMsg('保存に失敗しました：'+saveError.message);return false;}
   onlineProjectRevision=result?.revision??onlineProjectRevision;
@@ -5559,6 +5556,22 @@ async function saveProjectOnline(options={}){
   try{localStorage.setItem('izumi-ledger-refresh',JSON.stringify({at:Date.now(),managementNumber}));}catch(error){}
   if(!automatic)showToastMsg('💾 保存完了：'+managementNumber);
   return true;
+}
+function conflictDraftKey(){
+  const managementNumber=vv('b-kanri').trim();
+  return managementNumber?`izumi_conflict_draft_${managementNumber}`:'';
+}
+function updateConflictDraftButton(){
+  const button=document.getElementById('conflictDraftButton');if(!button)return;
+  const key=conflictDraftKey();button.style.display=key&&localStorage.getItem(key)?'':'none';
+}
+function restoreConflictDraft(){
+  const key=conflictDraftKey();if(!key)return showToastMsg('管理番号を確認してください。');
+  let draft=null;try{draft=JSON.parse(localStorage.getItem(key)||'null')}catch(_error){}
+  if(!draft?.payload)return showToastMsg('競合退避データはありません。');
+  if(!confirm('退避した自分の入力を画面へ戻しますか？\\n先にクラウドの最新版を別タブで確認し、必要な差分だけ反映してください。'))return;
+  loadAllFromText(JSON.stringify(draft.payload));
+  setOnlineSaveStatus('競合退避を画面へ復元・未保存','error');
 }
 
 async function openProjectOnline(){
@@ -7935,8 +7948,8 @@ function openEmpModal(idx){
   const isNew=idx<0;
   const emp=isNew?{name:'',title:'',email:'',access:'従業員権限',isBoss:false}:employeeList[idx];
   const body=mf('社員名','em-name','氏名',undefined,emp.name)+mf('役職','em-title','例：営業',undefined,emp.title||'')+
-    mf('会社メール','em-email','name@izumisoubi.co.jp',undefined,emp.email||'')+
-    `<label style="${fl_style}">システム権限</label><select id="em-access" style="${fi_style}"><option${emp.access==='従業員権限'?' selected':''}>従業員権限</option><option${emp.access==='最高権限'?' selected':''}>最高権限</option></select>`+
+    `<label style="${fl_style}">会社メール</label><input id="em-email" value="${esc(emp.email||'')}" disabled style="${fi_style};opacity:.72">`+
+    `<label style="${fl_style}">システム権限</label><div style="${fi_style};opacity:.82">${esc(emp.access||'従業員権限')}<small style="display:block;color:var(--tm);margin-top:4px">変更は「システム管理」で行います</small></div>`+
     `<label style="${fl_style}">印鑑承認区分</label><select id="em-boss" style="${fi_style}">
       <option value="0"${emp.isBoss?'':' selected'}>一般社員</option>
       <option value="1"${emp.isBoss?' selected':''}>上司（承認印・1名のみ）</option>
@@ -7948,7 +7961,7 @@ function openEmpModal(idx){
       const selectedStaff=document.getElementById('b-staff')?.value||'';
       const isBoss=mfi('em-boss')==='1';
       if(isBoss) employeeList.forEach((other,i)=>{if(isNew||i!==idx)other.isBoss=false;});
-      const updated={...emp,name:mfi('em-name'),title:mfi('em-title'),email:mfi('em-email').trim().toLowerCase(),access:mfi('em-access'),isBoss:isBoss};
+      const updated={...emp,name:mfi('em-name'),title:mfi('em-title'),email:emp.email||'',access:emp.access||'従業員権限',isBoss:isBoss};
       if(isNew) employeeList.push(updated);
       else employeeList[idx]=updated;
       saveEmployees(); closeMasterModal(); renderEmployeeGrid();
