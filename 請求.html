@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#163b6d"><title>イズミ装美 請求管理</title>
+  <link rel="stylesheet" href="台帳共通.css?v=20260720-UX22"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header>
+    <div><h1>イズミ装美　請求管理</h1><div class="sub">客先請求・入金・外注費支払を案件単位で確認します</div></div>
+    <div id="userBox" class="user hidden"><nav class="nav"><a href="index.html">番号取得</a><a href="工事リスト.html">一覧メニュー</a><a href="estimate.html" target="_blank" rel="noopener">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト・原価.html">原価</a><a href="工事リスト・未発注.html">未発注</a></nav><span id="userEmail"></span><button class="logout" onclick="signOut()">ログアウト</button></div>
+  </header>
+  <section id="loginCard" class="login"><h2>社員ログイン</h2><div>全社員が閲覧・修正できます。</div><label>メールアドレス</label><input id="email" type="email"><label>パスワード</label><input id="password" type="password"><button class="primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
+  <main id="app" class="hidden">
+    <section class="controls"><div class="toolbar">
+      <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option><option value="22">2022年度</option><option value="23">2023年度</option><option value="24">2024年度</option><option value="25">2025年度</option><option value="26">2026年度</option><option value="27">2027年度</option><option value="28">2028年度</option><option value="29">2029年度</option><option value="30">2030年度</option></select></div>
+      <div class="field search"><label>検索</label><input id="search" placeholder="番号・物件・客先"></div>
+      <div class="field zoom"><label>縮尺</label><select id="zoom"><option value=".7">70%</option><option value=".8">80%</option><option value=".9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option></select></div>
+      <button class="secondary" onclick="clearSearch()">解除</button><button class="secondary" onclick="loadData()">更新</button><button class="primary" onclick="downloadCsv()">CSV</button>
+      <span class="excel-help">範囲選択・コピー＆貼り付け・⌘Dで下方向コピー・Enterで次の行</span>
+    </div><div id="summary" class="summary"></div><div id="ledgerStatus" class="status"></div></section>
+    <section class="sheet-area"><div class="table-wrap"><div class="sheet-scale"><table><thead id="ledgerHead"></thead><tbody id="ledgerBody"></tbody></table></div></div></section>
+  </main>
+  <script>
+    window.LEDGER_CONFIG={
+      viewKey:'billing',title:'請求管理',allowDelete:true,
+      fields:[
+        {key:'management_number',label:'管理番号',type:'text',width:'w-number',locked:true},
+        {key:'accounting_month',label:'計上月',type:'month',width:'w-month'},
+        {key:'property_room',label:'物件・部屋',type:'text',width:'w-property'},
+        {key:'client_name',label:'客先名',type:'text',width:'w-client'},
+        {key:'invoice_date',label:'請求書<br>提出日',type:'date',width:'w-date'},
+        {key:'customer_invoice_amount',label:'客先請求額<br>（税抜）',type:'money',width:'w-money'},
+        {key:'received_checked',label:'既入金',type:'checkbox',width:'w-check'},
+        {key:'received_amount',label:'入金額',type:'money',width:'w-money',manualRequired:true},
+        {key:'outstanding_amount',label:'未入金額',type:'money',width:'w-money',computed:true},
+        {key:'external_cost',label:'外注費<br>（税抜）',type:'money',width:'w-money'},
+        {key:'external_paid_checked',label:'外注費<br>支払済',type:'checkbox',width:'w-check'}
+      ],
+      summaries:[
+        {label:'表示件数',type:'count'},{label:'客先請求合計',key:'customer_invoice_amount'},
+        {label:'入金合計',key:'received_amount'},{label:'未入金合計',key:'outstanding_amount'},
+        {label:'外注費合計',key:'external_cost'}
+      ]
+    };
+  </script><script src="台帳共通.js?v=20260723-UX28"></script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

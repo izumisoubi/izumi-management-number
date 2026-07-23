@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>イズミ装美 社員ログイン</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="管理ポータル.css?v=20260720-UX22">
+</head>
+<body>
+<header><div class="header-inner"><div><h1>イズミ装美　社員ログイン</h1><div class="sub">見積・発注・原価・請求・台帳・予定カレンダー 共通アカウント</div></div><div class="header-actions"><a href="工事リスト.html">一覧メニュー</a></div></div></header>
+<main class="wrap narrow">
+  <section class="card">
+    <div class="tabs"><button id="loginTab" class="active" onclick="showMode('login')">ログイン</button><button id="signupTab" onclick="showMode('signup')">初回登録</button><button id="forgotTab" onclick="showMode('forgot')">パスワードを忘れた</button></div>
+    <div id="loginPanel">
+      <h2>ログイン</h2>
+      <p class="notice">社員アカウントは登録済みです。会社メールアドレスと設定済みパスワードでログインしてください。パスワードを忘れた場合は「パスワードを忘れた」を選択してください。</p>
+      <div class="grid" style="margin-top:14px"><div class="full"><label>メールアドレス</label><input id="loginEmail" type="email" autocomplete="email"></div><div class="full"><label>パスワード</label><input id="loginPassword" type="password" autocomplete="current-password"></div></div>
+      <button class="primary" style="width:100%;margin-top:14px" onclick="signIn()">ログイン</button>
+    </div>
+    <div id="signupPanel" class="hidden">
+      <h2>初回登録</h2>
+      <p class="notice">管理者から利用許可を受けた会社メールアドレスだけ登録できます。8文字以上のパスワードを設定し、確認メールが届いた場合はメール内のリンクを開いて登録を完了してください。</p>
+      <div class="grid" style="margin-top:14px"><div class="full"><label>招待されたメールアドレス</label><input id="signupEmail" type="email" autocomplete="email"></div><div class="full"><label>新しいパスワード</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password"></div><div class="full"><label>パスワード（確認）</label><input id="signupPassword2" type="password" minlength="8" autocomplete="new-password"></div></div>
+      <button class="primary" style="width:100%;margin-top:14px" onclick="signUp()">アカウントを登録</button>
+    </div>
+    <div id="forgotPanel" class="hidden">
+      <h2>パスワード再設定</h2>
+      <p class="notice">登録済みの会社メールアドレスへ、安全な再設定リンクを送ります。管理者が現在のパスワードを確認することはできません。</p>
+      <div style="margin-top:14px"><label>メールアドレス</label><input id="forgotEmail" type="email" autocomplete="email"></div>
+      <button class="primary" style="width:100%;margin-top:14px" onclick="sendReset()">再設定メールを送る</button>
+    </div>
+    <div id="recoveryPanel" class="hidden">
+      <h2>新しいパスワードを設定</h2>
+      <p class="notice">再設定メール内のリンクから開いた画面です。8文字以上の新しいパスワードを2回入力してください。</p>
+      <div class="grid" style="margin-top:14px"><div class="full"><label>新しいパスワード</label><input id="recoveryPassword" type="password" minlength="8" autocomplete="new-password"></div><div class="full"><label>パスワード（確認）</label><input id="recoveryPassword2" type="password" minlength="8" autocomplete="new-password"></div></div>
+      <button class="primary" style="width:100%;margin-top:14px" onclick="updatePassword()">パスワードを更新</button>
+    </div>
+    <div id="status" class="status"></div>
+  </section>
+  <section class="card"><h3>困ったとき</h3><div class="muted">このアカウントは見積・発注・原価・請求・各台帳・予定カレンダーで共通です。確認メールや再設定メールが届かない場合は、迷惑メールと会社メールの受信制限を確認してください。利用許可や利用停止に関するお問い合わせはシステム管理者へご連絡ください。管理者がパスワードの内容を見ることはできません。</div></section>
+</main>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const safeNext=()=>{const next=params.get('next')||'工事リスト.html';try{const target=new URL(next,location.href);return target.origin===location.origin?target.href:new URL('工事リスト.html',location.href).href}catch(_error){return new URL('工事リスト.html',location.href).href}};
+function setStatus(text,error=false){$('status').textContent=text;$('status').className='status '+(error?'error':'success')}
+function showMode(mode){
+  ['login','signup','forgot','recovery'].forEach(name=>$(name+'Panel').classList.toggle('hidden',name!==mode));
+  ['login','signup','forgot'].forEach(name=>$(name+'Tab').classList.toggle('active',name===mode));
+  if(mode==='recovery')document.querySelector('.tabs').classList.add('hidden');else document.querySelector('.tabs').classList.remove('hidden');
+  setStatus('');
+}
+async function signIn(){
+  setStatus('ログイン中…');
+  const {error}=await db.auth.signInWithPassword({email:$('loginEmail').value.trim().toLowerCase(),password:$('loginPassword').value});
+  if(error)return setStatus('ログインできません。メールアドレスまたはパスワードを確認してください。',true);
+  const {data:enabled,error:accessError}=await db.rpc('is_current_app_user_enabled');
+  if(accessError||enabled!==true){
+    await db.auth.signOut();
+    return setStatus(accessError?'利用者設定を確認できません。システム管理者へ連絡してください。':'このアカウントは利用停止中です。システム管理者へ連絡してください。',true);
+  }
+  location.href=safeNext();
+}
+async function signUp(){
+  const email=$('signupEmail').value.trim().toLowerCase(),password=$('signupPassword').value;
+  if(password.length<8)return setStatus('パスワードは8文字以上にしてください。',true);
+  if(password!==$('signupPassword2').value)return setStatus('確認用パスワードが一致しません。',true);
+  setStatus('利用許可を確認中…');
+  const {data:allowed,error:checkError}=await db.rpc('is_invited_email',{p_email:email});
+  if(checkError)return setStatus('利用者設定を確認できません。管理者へ連絡してください。',true);
+  if(!allowed)return setStatus('このメールアドレスはまだ利用許可されていません。管理者へ連絡してください。',true);
+  const redirectTo=new URL('auth.html?mode=confirmed',location.href).href;
+  const {data,error}=await db.auth.signUp({email,password,options:{emailRedirectTo:redirectTo}});
+  if(error)return setStatus(error.message,true);
+  if(data.session){
+    await db.rpc('register_current_user_profile');
+    const {data:enabled}=await db.rpc('is_current_app_user_enabled');
+    if(enabled===true)location.href=safeNext();
+    else setStatus('利用者設定を確認できません。システム管理者へ連絡してください。',true);
+  }else setStatus('確認メールを送りました。メール内のリンクを開くと登録が完了します。');
+}
+async function sendReset(){
+  const email=$('forgotEmail').value.trim().toLowerCase();
+  if(!email)return setStatus('メールアドレスを入力してください。',true);
+  const redirectTo=new URL('auth.html?mode=recovery',location.href).href;
+  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+  if(error)return setStatus(error.message,true);
+  setStatus('再設定メールを送信しました。届かない場合は迷惑メールも確認してください。');
+}
+async function updatePassword(){
+  const password=$('recoveryPassword').value;
+  if(password.length<8)return setStatus('パスワードは8文字以上にしてください。',true);
+  if(password!==$('recoveryPassword2').value)return setStatus('確認用パスワードが一致しません。',true);
+  const {error}=await db.auth.updateUser({password});
+  if(error)return setStatus(error.message,true);
+  setStatus('パスワードを更新しました。一覧メニューへ移動します。');
+  setTimeout(()=>location.href=safeNext(),900);
+}
+db.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){showMode('recovery');return}
+  if(event==='SIGNED_IN'&&params.get('mode')==='confirmed'&&session){
+    await db.rpc('register_current_user_profile');
+    const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
+    if(error||enabled!==true){
+      await db.auth.signOut();
+      setStatus(error?'利用者設定を確認できません。システム管理者へ連絡してください。':'このアカウントは利用停止中です。システム管理者へ連絡してください。',true);
+      return;
+    }
+    setStatus('メール確認が完了しました。一覧メニューへ移動します。');
+    setTimeout(()=>location.href=safeNext(),800);
+  }
+});
+const requestedMode=params.get('mode');
+if(requestedMode==='signup'){
+  showMode('signup');
+  const email=params.get('email');if(email)$('signupEmail').value=email;
+}else if(requestedMode==='forgot')showMode('forgot');
+else if(requestedMode==='recovery')showMode('recovery');
+else showMode('login');
+</script>
+</body>
+</html>

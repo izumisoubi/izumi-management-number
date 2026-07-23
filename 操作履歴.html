@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17345f">
+  <title>イズミ装美 操作履歴</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--navy:#17345f;--blue:#2563eb;--line:#d9e1ed;--text:#172033;--muted:#637188;--bg:#eef3f9;--danger:#c53030;--green:#177c55}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+    header{background:linear-gradient(115deg,#15345f,#1f4d84);color:#fff;box-shadow:0 4px 16px #17345f2a}
+    .header-inner{max-width:1600px;min-height:68px;margin:auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+    h1{font-size:20px;margin:0}.sub{font-size:10px;opacity:.78;margin-top:4px}
+    nav{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+    nav a,nav button{border:1px solid #ffffff55;border-radius:8px;background:#ffffff0d;color:#fff;padding:7px 10px;text-decoration:none;font:800 10px inherit;cursor:pointer}
+    main{max-width:1600px;margin:auto;padding:20px 22px 38px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 7px 22px #17345f0c}
+    .filters{padding:17px;display:grid;grid-template-columns:minmax(190px,1.4fr) minmax(130px,.8fr) minmax(180px,1fr) 145px 145px auto;gap:10px;align-items:end}
+    label{display:grid;gap:5px;color:var(--muted);font-size:10px;font-weight:800}
+    input,select{width:100%;height:36px;border:1px solid #cfd9e8;border-radius:8px;background:#fff;color:var(--text);padding:0 10px;font:600 12px inherit;outline:none}
+    input:focus,select:focus{border-color:#5b8ee4;box-shadow:0 0 0 3px #2563eb18}
+    .buttons{display:flex;gap:7px}.btn{height:36px;border:0;border-radius:8px;background:var(--blue);color:#fff;padding:0 14px;font:800 11px inherit;cursor:pointer}.btn.secondary{background:#e8eef7;color:#23416e}
+    .status{padding:10px 17px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+    .table-wrap{overflow:auto;max-height:calc(100vh - 235px);border-radius:14px}
+    table{width:100%;min-width:1180px;border-collapse:separate;border-spacing:0;font-size:11px}
+    th{position:sticky;top:0;z-index:2;background:#173f73;color:#fff;text-align:left;padding:10px 9px;border-right:1px solid #ffffff30;white-space:nowrap}
+    td{background:#fff;padding:9px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+    tbody tr:hover td{background:#f5f9ff}
+    .time{white-space:nowrap;color:#46566d}.email{font-weight:700;word-break:break-all}.number{color:#155ec1;font-weight:900;white-space:nowrap}
+    .action{display:inline-flex;border-radius:999px;padding:3px 8px;background:#e8f0ff;color:#174f9a;font-weight:900;white-space:nowrap}.action.delete{background:#fff0f0;color:var(--danger)}.action.issue{background:#e9f8f1;color:var(--green)}
+    details summary{color:#285da8;font-weight:800;cursor:pointer;line-height:1.5}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .json{max-height:200px;overflow:auto;margin:0;padding:8px;border-radius:7px;background:#f3f6fa;color:#344258;font:10px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+    .load-more{display:flex;justify-content:center;padding:15px}.hidden{display:none!important}
+    .login{max-width:460px;margin:70px auto;padding:24px}.login h2{margin:0 0 8px;font-size:18px}.login p{margin:0 0 17px;color:var(--muted);font-size:12px;line-height:1.7}.login .fields{display:grid;gap:12px}.login .message{min-height:18px;color:var(--danger);font-size:11px}
+    .empty{padding:55px;text-align:center;color:var(--muted)}
+    @media(max-width:1000px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.buttons{grid-column:1/-1}.table-wrap{max-height:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div><h1>イズミ装美　操作履歴</h1><div class="sub">採番・案件保存・台帳変更・削除を、実行者と変更内容まで記録します</div></div>
+      <nav>
+        <a href="工事リスト.html">一覧メニュー</a>
+        <a href="管理番号台帳.html">管理番号台帳</a>
+        <a href="estimate.html" target="_blank" rel="noopener">見積を開く</a>
+        <a href="ユーザー設定.html">ユーザー設定</a>
+        <button type="button" id="logoutButton">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="loginPanel" class="panel login hidden">
+      <h2>社員ログイン</h2>
+      <p>管理番号台帳と同じ社員アカウントでログインしてください。</p>
+      <div class="fields">
+        <label>メールアドレス<input id="loginEmail" type="email" autocomplete="username"></label>
+        <label>パスワード<input id="loginPassword" type="password" autocomplete="current-password"></label>
+        <div id="loginMessage" class="message"></div>
+        <button class="btn" type="button" id="loginButton">ログイン</button>
+      </div>
+    </section>
+
+    <section id="appPanel" class="hidden">
+      <div class="panel">
+        <div class="filters">
+          <label>管理番号<input id="numberFilter" placeholder="例：26-2974"></label>
+          <label>操作
+            <select id="actionFilter">
+              <option value="">すべて</option>
+              <option value="採番">採番</option>
+              <option value="案件一括保存">案件一括保存</option>
+              <option value="台帳更新">台帳更新</option>
+              <option value="ソフト削除">ソフト削除</option>
+              <option value="予定削除">予定削除</option>
+              <option value="マスタ削除">マスタ削除</option>
+            </select>
+          </label>
+          <label>実行者メール<input id="emailFilter" placeholder="メールアドレスで検索"></label>
+          <label>開始日<input id="fromFilter" type="date"></label>
+          <label>終了日<input id="toFilter" type="date"></label>
+          <div class="buttons"><button class="btn" id="searchButton" type="button">検索</button><button class="btn secondary" id="clearButton" type="button">解除</button></div>
+        </div>
+        <div id="status" class="status">履歴を読み込んでいます…</div>
+      </div>
+
+      <div class="panel" style="margin-top:13px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>日時</th><th>実行者</th><th>管理番号</th><th>操作</th><th>画面・保存元</th><th>変更内容</th></tr></thead>
+            <tbody id="logBody"></tbody>
+          </table>
+          <div id="emptyState" class="empty hidden">該当する操作履歴はありません。</div>
+        </div>
+        <div class="load-more"><button id="loadMoreButton" class="btn secondary hidden" type="button">さらに読み込む</button></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const PAGE_SIZE=200;
+    let offset=0;
+    let logs=[];
+    let rpcAvailable=true;
+
+    const $=id=>document.getElementById(id);
+    const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const sourceLabels={management:'管理番号台帳',cost:'工事リスト・原価',unassigned:'工事リスト・未発注',billing:'請求管理',meeting:'会議用案件',estimate:'見積システム','見積システム':'見積システム','管理番号取得':'管理番号取得','台帳':'台帳','予定カレンダー':'予定カレンダー','共通マスタ':'共通マスタ'};
+    const fieldLabels={
+      management_number:'管理番号',staff_name:'担当者',property_name:'物件名',room_number:'部屋番号',work_name:'作業件名',
+      billing_client_name:'請求先',estimate_amount_ex_tax:'見積金額',invoice_amount_ex_tax:'請求金額',completed_on:'完工日',
+      accounting_month:'計上月',payment_date:'支払日',deposit_date:'入金日',notes:'備考',status:'ステータス',
+      vendor_name:'業者名',supplier_paid:'業者支払済',customer_paid:'入金済',deleted_at:'削除日時',deleted_by_name:'削除者',deletion_reason:'削除理由',event_date:'予定日',property_name:'物件名',staff_name:'担当者',master_type:'マスタ種別',name:'名称',reason:'理由'
+    };
+
+    function formatDateTime(value){
+      if(!value)return '';
+      return new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(value));
+    }
+    function flatten(object,prefix='',result={}){
+      if(!object||typeof object!=='object'||Array.isArray(object)){if(prefix)result[prefix]=object;return result;}
+      Object.entries(object).forEach(([key,value])=>{
+        const path=prefix?`${prefix}.${key}`:key;
+        if(value&&typeof value==='object'&&!Array.isArray(value))flatten(value,path,result);
+        else result[path]=value;
+      });
+      return result;
+    }
+    function summarize(before,after){
+      const left=flatten(before),right=flatten(after);
+      const keys=[...new Set([...Object.keys(left),...Object.keys(right)])].filter(key=>JSON.stringify(left[key])!==JSON.stringify(right[key]));
+      if(!keys.length)return '記録データを表示';
+      return keys.slice(0,8).map(key=>{
+        const leaf=key.split('.').pop();
+        return fieldLabels[leaf]||leaf;
+      }).join('、')+(keys.length>8?` ほか${keys.length-8}項目`:'');
+    }
+    function actionClass(action){
+      if(String(action).includes('削除'))return 'delete';
+      if(String(action).includes('採番'))return 'issue';
+      return '';
+    }
+    function render(){
+      const body=$('logBody');
+      body.innerHTML=logs.map(log=>{
+        const before=log.before_data||null,after=log.after_data||null;
+        const summary=summarize(before,after);
+        const details=`<details><summary>${esc(summary)}</summary><div class="detail-grid"><div><b>変更前</b><pre class="json">${esc(JSON.stringify(before,null,2)||'なし')}</pre></div><div><b>変更後</b><pre class="json">${esc(JSON.stringify(after,null,2)||'なし')}</pre></div></div></details>`;
+        return `<tr><td class="time">${esc(formatDateTime(log.changed_at))}</td><td class="email">${esc(log.changed_by_email||log.changed_by||'不明')}</td><td class="number">${esc(log.management_number||'')}</td><td><span class="action ${actionClass(log.action)}">${esc(log.action||'')}</span></td><td>${esc(sourceLabels[log.source]||log.source||'')}</td><td>${details}</td></tr>`;
+      }).join('');
+      $('emptyState').classList.toggle('hidden',logs.length>0);
+      $('loadMoreButton').classList.toggle('hidden',logs.length===0||logs.length%PAGE_SIZE!==0);
+    }
+    function isoStart(value){return value?new Date(`${value}T00:00:00+09:00`).toISOString():null}
+    function isoEnd(value){return value?new Date(`${value}T23:59:59.999+09:00`).toISOString():null}
+    async function fetchWithRpc(){
+      return db.rpc('get_project_audit_log',{
+        p_limit:PAGE_SIZE,p_offset:offset,
+        p_management_number:$('numberFilter').value.trim()||null,
+        p_action:$('actionFilter').value||null,
+        p_email:$('emailFilter').value.trim()||null,
+        p_from:isoStart($('fromFilter').value),
+        p_to:isoEnd($('toFilter').value)
+      });
+    }
+    async function fetchDirect(){
+      let query=db.from('project_audit_log').select('*').order('changed_at',{ascending:false}).range(offset,offset+PAGE_SIZE-1);
+      const number=$('numberFilter').value.trim(),action=$('actionFilter').value;
+      if(number)query=query.ilike('management_number',`%${number}%`);
+      if(action)query=query.eq('action',action);
+      if($('fromFilter').value)query=query.gte('changed_at',isoStart($('fromFilter').value));
+      if($('toFilter').value)query=query.lte('changed_at',isoEnd($('toFilter').value));
+      return query;
+    }
+    async function load(reset=true){
+      if(reset){offset=0;logs=[];}
+      $('status').textContent='履歴を読み込んでいます…';
+      let response=rpcAvailable?await fetchWithRpc():await fetchDirect();
+      if(response.error&&rpcAvailable){
+        rpcAvailable=false;
+        response=await fetchDirect();
+      }
+      if(response.error){
+        $('status').textContent=`読み込みできません：${response.error.message}`;
+        return;
+      }
+      const page=response.data||[];
+      logs.push(...page);
+      offset+=page.length;
+      render();
+      $('status').textContent=`${logs.length}件を表示中${rpcAvailable?'':'（実行者メール表示には最新版SQLの実行が必要です）'}`;
+    }
+    async function signIn(){
+      $('loginMessage').textContent='ログイン中…';
+      const {error}=await db.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
+      if(error){$('loginMessage').textContent=error.message;return;}
+      $('loginMessage').textContent='';
+    }
+    async function showSession(session){
+      if(session){
+        const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
+        if(error||enabled!==true){
+          await db.auth.signOut();
+          $('loginMessage').textContent=error?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。';
+          session=null;
+        }
+      }
+      const signedIn=Boolean(session);
+      $('loginPanel').classList.toggle('hidden',signedIn);
+      $('appPanel').classList.toggle('hidden',!signedIn);
+      if(signedIn)load(true);
+    }
+    $('loginButton').addEventListener('click',signIn);
+    $('loginPassword').addEventListener('keydown',event=>{if(event.key==='Enter')signIn()});
+    $('logoutButton').addEventListener('click',()=>db.auth.signOut());
+    $('searchButton').addEventListener('click',()=>load(true));
+    $('clearButton').addEventListener('click',()=>{
+      ['numberFilter','emailFilter','fromFilter','toFilter'].forEach(id=>$(id).value='');
+      $('actionFilter').value='';
+      load(true);
+    });
+    $('loadMoreButton').addEventListener('click',()=>load(false));
+    const requestedAction=new URLSearchParams(location.search).get('action');
+    if(requestedAction&&[...$('actionFilter').options].some(option=>option.value===requestedAction))$('actionFilter').value=requestedAction;
+    db.auth.getSession().then(({data:{session}})=>showSession(session));
+    db.auth.onAuthStateChange((_event,session)=>showSession(session));
+  </script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#163b6d"><title>イズミ装美 工事リスト・未発注</title>
+  <link rel="stylesheet" href="台帳共通.css?v=20260720-UX22"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header>
+    <div><h1>イズミ装美　工事リスト・未発注</h1><div class="sub">発注書PDFを開いていない業者・カテゴリを自動抽出します</div></div>
+    <div id="userBox" class="user hidden"><nav class="nav"><a href="index.html">番号取得</a><a href="工事リスト.html">一覧メニュー</a><a href="estimate.html" target="_blank" rel="noopener">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト・原価.html">原価</a><a href="請求.html">請求</a></nav><span id="userEmail"></span><button class="logout" onclick="signOut()">ログアウト</button></div>
+  </header>
+  <section id="loginCard" class="login"><h2>社員ログイン</h2><div>全社員が閲覧・修正できます。</div><label>メールアドレス</label><input id="email" type="email"><label>パスワード</label><input id="password" type="password"><button class="primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
+  <main id="app" class="hidden">
+    <section class="controls"><div class="toolbar">
+      <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option><option value="22">2022年度</option><option value="23">2023年度</option><option value="24">2024年度</option><option value="25">2025年度</option><option value="26">2026年度</option><option value="27">2027年度</option><option value="28">2028年度</option><option value="29">2029年度</option><option value="30">2030年度</option></select></div>
+      <div class="field search"><label>検索</label><input id="search" placeholder="番号・担当・物件・業者"></div>
+      <div class="field zoom"><label>縮尺</label><select id="zoom"><option value=".7">70%</option><option value=".8">80%</option><option value=".9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option></select></div>
+      <button class="secondary" onclick="clearSearch()">解除</button><button class="secondary" onclick="loadData()">更新</button><button class="primary" onclick="downloadCsv()">CSV</button>
+      <span class="excel-help">範囲選択・コピー＆貼り付け・⌘Dで下方向コピー・Enterで次の行</span>
+    </div><div id="summary" class="summary"></div><div id="ledgerStatus" class="status"></div></section>
+    <section class="sheet-area"><div class="table-wrap"><div class="sheet-scale"><table><thead id="ledgerHead"></thead><tbody id="ledgerBody"></tbody></table></div></div></section>
+  </main>
+  <script>
+    window.LEDGER_CONFIG={
+      viewKey:'unordered',title:'工事リスト・未発注',allowDelete:true,
+      fields:[
+        {key:'management_number',label:'管理番号',type:'text',width:'w-number',locked:true},
+        {key:'input_date',label:'入力日',type:'date',width:'w-date'},
+        {key:'staff_name',label:'工事担当者',type:'staff',width:'w-staff'},
+        {key:'property_name',label:'物件名',type:'text',width:'w-property'},
+        {key:'work_name',label:'作業件名',type:'text',width:'w-work'},
+        {key:'category',label:'カテゴリ',type:'text',width:'w-category'},
+        {key:'vendor_name',label:'業者名',type:'text',width:'w-vendor'},
+        {key:'estimate_amount_ex_tax',label:'見積金額<br>（税抜）',type:'money',width:'w-money'},
+        {key:'invoice_amount_ex_tax',label:'請求金額<br>（税抜）',type:'money',width:'w-money'},
+        {key:'variance_ex_tax',label:'差異<br>（税抜）',type:'money',width:'w-money',computed:true},
+        {key:'scheduled_completion_date',label:'完工予定日',type:'date',width:'w-date'},
+        {key:'completed_on',label:'完工日',type:'date',width:'w-date'},
+        {key:'invoice_to_customer_date',label:'請求書<br>（to 得意先）',type:'date',width:'w-date'},
+        {key:'invoice_from_vendor_date',label:'請求書<br>（from 外注先）',type:'date',width:'w-date'},
+        {key:'payment_date',label:'支払日',type:'date',width:'w-date'},
+        {key:'payment_month',label:'支払月',type:'month',width:'w-month'},
+        {key:'notes',label:'備考',type:'text',width:'w-note'}
+      ],
+      summaries:[
+        {label:'未発注行数',type:'count'},{label:'見積合計（税抜）',key:'estimate_amount_ex_tax'},
+        {label:'外注請求合計（税抜）',key:'invoice_amount_ex_tax'},{label:'差異合計（税抜）',key:'variance_ex_tax'}
+      ]
+    };
+  </script><script src="台帳共通.js?v=20260723-UX28"></script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

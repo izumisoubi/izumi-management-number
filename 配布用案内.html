@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17345f">
+  <title>イズミ装美 システムご利用案内</title>
+  <style>
+    :root{--navy:#17345f;--blue:#2563eb;--bg:#f3f6fb;--line:#d8e1ed;--text:#172033;--muted:#5f6f86;--green:#147d59;--yellow:#fff7d6}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.75}
+    header{background:linear-gradient(115deg,#15345f,#1f4d83);color:#fff}.head{max-width:1100px;margin:auto;padding:24px 20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.head h1{margin:0;font-size:22px}.head p{margin:4px 0 0;font-size:11px;opacity:.8}.head a{padding:8px 12px;border:1px solid #ffffff66;border-radius:8px;color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+    main{max-width:1100px;margin:auto;padding:24px 18px 50px}.welcome{padding:20px;border:1px solid #bcd0ef;border-radius:14px;background:#fff;box-shadow:0 8px 26px #17345f0e}.welcome h2{margin:0 0 6px;color:var(--navy);font-size:20px}.welcome p{margin:4px 0;color:var(--muted);font-size:13px}.url{margin-top:13px;padding:10px 12px;border-radius:8px;background:#edf4ff;color:#174f9e;font-weight:800;overflow-wrap:anywhere}
+    h2.section{margin:28px 0 12px;color:var(--navy);font-size:18px}.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.step{display:flex;gap:12px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}.num{display:grid;place-items:center;flex:0 0 34px;height:34px;border-radius:50%;background:#eaf2ff;color:#245aa8;font-weight:900}.step h3{margin:0 0 4px;font-size:14px}.step p{margin:0;color:var(--muted);font-size:11px}.step a{color:var(--blue);font-weight:800;text-decoration:none}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}.card h3{margin:0 0 7px;color:var(--navy);font-size:14px}.card p,.card li{color:var(--muted);font-size:11px}.card p{margin:5px 0}.card ul{margin:7px 0 0;padding-left:20px}.important{border-color:#ead48a;background:var(--yellow)}.ok{border-color:#a8d9c7;background:#f1fbf7}.copy{padding:16px;border:1px dashed #8fa9ce;border-radius:12px;background:#fff;color:#33455f;font-size:12px;white-space:pre-wrap}.links{display:flex;flex-wrap:wrap;gap:8px}.links a{padding:9px 12px;border:1px solid #bfd0e6;border-radius:8px;background:#fff;color:#24558f;text-decoration:none;font-size:11px;font-weight:800}.foot{margin-top:28px;padding-top:15px;border-top:1px solid var(--line);color:#778399;font-size:10px;text-align:center}
+    @media(max-width:720px){.head{align-items:flex-start;flex-direction:column}.steps,.grid{grid-template-columns:1fr}main{padding:16px 10px 35px}}
+    @media print{body{background:#fff}.head a,.links{display:none}main{padding:10mm}.welcome,.step,.card{box-shadow:none;break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <header><div class="head"><div><h1>イズミ装美　業務管理システム</h1><p>配布用ご案内・簡単な使い方</p></div><a href="工事リスト.html">一覧メニューを開く</a></div></header>
+  <main>
+    <section class="welcome">
+      <h2>ご利用を開始する方へ</h2>
+      <p>予定、管理番号、見積、発注、原価、請求、台帳を同じ社員アカウントで利用できます。</p>
+      <p>社員アカウントは登録済みです。各自の会社メールアドレスと設定済みパスワードでログインしてください。</p>
+      <div class="url">利用URL： https://izumisoubi.github.io/izumi-management-number/</div>
+    </section>
+
+    <h2 class="section">基本の使い方</h2>
+    <div class="steps">
+      <section class="step"><div class="num">1</div><div><h3>予定を登録</h3><p><a href="calendar.html">予定カレンダー</a>で日付・担当者・時間・物件・作業内容を登録します。予定だけの共有メモも入力できます。</p></div></section>
+      <section class="step"><div class="num">2</div><div><h3>管理番号を取得</h3><p>案件化する予定は「管理番号を取得」を押します。予定内容が管理番号台帳へ連携されます。発行済み番号は再利用されません。</p></div></section>
+      <section class="step"><div class="num">3</div><div><h3>見積を作成・保存</h3><p><a href="estimate.html" target="_blank" rel="noopener">見積システム</a>で基本情報と明細を入力し、「保存」を押します。社員間で共有する正式データとしてクラウドへ保存されます。</p></div></section>
+      <section class="step"><div class="num">4</div><div><h3>発注・原価を登録</h3><p>同じ画面の「発注」「売上原価管理表」で業者、発注額、原価、支払情報を登録します。保存すると各台帳へ反映されます。</p></div></section>
+      <section class="step"><div class="num">5</div><div><h3>請求・完了報告</h3><p>請求書と完了報告書を作成します。印刷前画面はクリックして一時的な追記ができ、印刷後も元データは変わりません。</p></div></section>
+      <section class="step"><div class="num">6</div><div><h3>台帳で進捗確認</h3><p><a href="管理番号台帳.html">管理番号台帳</a>で案件を確認します。管理番号をクリックすると保存済み見積が開きます。</p></div></section>
+    </div>
+
+    <h2 class="section">間違えやすいポイント</h2>
+    <div class="grid">
+      <section class="card important"><h3>「保存」と「PCへバックアップ」</h3><p>通常は「保存」を使用します。社員間で共有する正式データとしてクラウドへ保存され、各台帳にも反映されます。「PCへバックアップ」は障害・復旧に備えるJSON保存で、毎回行う必要はありません。</p></section>
+      <section class="card"><h3>同時編集</h3><p>編集中の変更は他の人の画面へ即時反映されません。先に保存された更新がある場合、後の保存は停止され、再読込を案内します。</p></section>
+      <section class="card"><h3>印刷・PDF保存</h3><p>印刷ボタンを押すと独立した印刷画面が開きます。開かない場合はブラウザでポップアップを許可してください。縦見積は縦、横見積は横を選択します。</p></section>
+      <section class="card"><h3>マスター情報</h3><p>業者・取引先・物件は全社員共通です。追加は可能ですが、誤削除を避けるため削除は管理者へ依頼してください。</p></section>
+      <section class="card"><h3>削除と履歴</h3><p>案件削除は管理番号台帳で2回確認後に実行します。削除した番号は欠番として残り、操作履歴で担当者と日時を確認できます。</p></section>
+      <section class="card ok"><h3>困ったとき</h3><ul><li>表示がおかしい：ページを再読み込み</li><li>パスワード忘れ：ログイン画面から再設定</li><li>保存競合：「保存済み案件を開く」で再読込し、変更内容を確認して再入力</li><li>利用停止表示：管理者へ利用許可を依頼</li></ul></section>
+    </div>
+
+    <h2 class="section">配布時に送る文章</h2>
+    <div class="copy">イズミ装美の業務管理システムをご利用ください。
+
+URL： https://izumisoubi.github.io/izumi-management-number/
+
+社員アカウントは登録済みです。各自の会社メールアドレスと設定済みパスワードでログインしてください。
+基本操作は一覧メニューの「ご利用案内・簡単な使い方」で確認できます。
+見積を入力・変更した後は「保存」を押してください。社員間で共有する正式データとしてクラウドへ保存されます。</div>
+
+    <h2 class="section">主要画面</h2>
+    <nav class="links"><a href="工事リスト.html">一覧メニュー</a><a href="calendar.html">予定カレンダー</a><a href="index.html">管理番号取得</a><a href="estimate.html" target="_blank" rel="noopener">見積・発注・原価・請求</a><a href="管理番号台帳.html">管理番号台帳</a><a href="ユーザー設定.html">ユーザー設定</a></nav>
+    <div class="foot">株式会社イズミ装美　社内業務用</div>
+  </main>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

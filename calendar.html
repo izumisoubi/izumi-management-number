@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17345f">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>イズミ装美 行動予定</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
+    *{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+    button,input,select,textarea{font:inherit}button{border:0;border-radius:7px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{border:1px solid #c9d5e6;background:#fff;color:#27466f}.danger{background:#fff;color:var(--red);border:1px solid #edb5bc}.hidden{display:none!important}
+    header{background:linear-gradient(115deg,#15345f,#1f4d83);color:#fff;box-shadow:0 3px 14px #17345f2a}.header-inner{max-width:1600px;min-height:68px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px}h1{font-size:19px;margin:0}.sub{font-size:10px;opacity:.78;margin-top:4px}.user,.nav{display:flex;align-items:center;gap:7px;white-space:nowrap}.nav a{padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;font-size:11px;font-weight:800}.nav a:hover,.nav a.current{background:#ffffff20}.logout{padding:6px 9px;background:#ffffff12;border:1px solid #ffffff66;color:#fff}
+    .login{max-width:430px;margin:64px auto;background:#fff;border:1px solid var(--line2);border-radius:14px;padding:24px;box-shadow:0 14px 40px #1932581a}.login h2{margin:0 0 8px}.login label,.form label{display:block;margin:12px 0 5px;font-size:11px;font-weight:800;color:#425675}.login input{width:100%;padding:9px;border:1px solid var(--line2);border-radius:7px}
+    main{width:100%;max-width:none;margin:15px auto 35px;padding:0 12px}.panel{background:#fff;border:1px solid var(--line2);border-radius:13px;box-shadow:0 7px 22px #17345f0d}.toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:8px;padding:12px}.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:10px;font-weight:800;color:#536887}.field select{height:35px;min-width:130px;padding:0 9px;border:1px solid var(--line2);border-radius:7px;background:#fff}.month-title{min-width:145px;text-align:center;font-size:18px;font-weight:900;padding-bottom:5px}.spacer{flex:1}.stats{display:flex;gap:7px;padding:0 12px 12px;overflow:auto}.stat{min-width:116px;padding:7px 10px;border:1px solid #dce5f1;border-radius:8px;background:#f8fbff}.stat b{display:block;margin-top:2px;font-size:16px}.stat span{font-size:9px;color:var(--muted)}.status{font-size:10px;color:#526783;padding:0 12px 10px}.status.error{color:var(--red)}
+    .sheet-panel{margin-top:12px;overflow:hidden}.sheet-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line2);background:#fff}.sheet-toolbar strong{font-size:12px;color:var(--navy)}.sheet-toolbar span{font-size:10px;color:var(--muted)}.sheet-toolbar-main{display:flex;align-items:center;gap:8px}.scale-control{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:800;color:#536887}.scale-control select{height:35px;min-width:92px;padding:0 9px;border:1px solid var(--line2);border-radius:7px;background:#fff;color:#27466f}.sheet-wrap{max-height:calc(100vh - 235px);min-height:500px;overflow:auto;background:#fff;scrollbar-gutter:stable}
+    table{border-collapse:separate;border-spacing:0;min-width:max-content;width:max-content;font-size:11px;table-layout:fixed;transform-origin:top left}th,td{height:28px;padding:2px 4px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;vertical-align:middle}thead th{position:sticky;z-index:20;background:#1d477b;color:#fff;text-align:center;font-weight:850}thead tr:first-child th{top:0;height:31px}thead tr:nth-child(2) th{top:31px;height:26px;background:#2d5d94}.staff-group,.staff-start{border-left:3px solid #244d78!important}.day-start>td{border-top:3px solid #315b86!important}.date-col{position:sticky!important;left:0;z-index:24!important;width:86px;min-width:86px;max-width:86px;text-align:center}.day-col{position:sticky!important;left:86px;z-index:24!important;width:40px;min-width:40px;max-width:40px;text-align:center}.date-cell{position:sticky!important;font-weight:850;color:#203f68;background:#fff;vertical-align:top;padding:6px 3px 36px}.day-cell{font-weight:850;text-align:center;background:#fff;vertical-align:top;padding-top:8px}.sun{color:#b22d3d!important}.sat{color:#235ea8!important}.today-row .date-cell,.today-row .day-cell{box-shadow:inset 4px 0 #4f8ee8}.time-cell,.status-cell{width:72px;min-width:72px;max-width:72px;text-align:center}.content-cell{width:215px;min-width:215px;max-width:215px;padding:0}.empty-cell{background:#fff}.empty-cell:hover{background:#fff}.quick-entry,.quick-time,.event-direct{width:100%;height:26px;border:0;padding:3px 5px;background:#fff;color:#203b60;font-size:10px;font-weight:400;outline:0}.quick-entry{font-size:11.5px;padding-left:8px}.quick-time{padding:2px 3px;text-align:center}.quick-entry::placeholder,.quick-time::placeholder{color:#9aa7ba}.quick-entry:focus,.quick-time:focus,.event-direct:focus{background:#eaf3ff;box-shadow:inset 0 0 0 2px #4f8ee8}.quick-entry.saving,.quick-time.saving,.event-direct.saving{opacity:.55}.event-direct-content{border-left:4px solid var(--event-color,#2563eb);padding-left:8px;text-align:left;font-size:11.5px;font-weight:400}.add-date{margin-top:4px;padding:2px 6px;border:1px solid #c9d8ea;background:#fff;color:#315685;font-size:9px}.date-row-controls{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:78px;display:flex;align-items:center;justify-content:center;gap:3px;padding:2px 4px;border:1px solid #cbd8e9;border-radius:999px;background:#fff;box-shadow:0 4px 12px #17345f24}.date-row-controls button{min-width:21px;padding:1px 4px;border:1px solid #c9d5e6;border-radius:999px;background:#fff;color:#27466f;font-size:10px}.date-row-controls span{min-width:25px;color:#526783;font-size:9px}.event-tooltip{position:fixed;z-index:1600;max-width:280px;padding:8px 10px;border-radius:8px;background:#12233d;color:#fff;font-size:10px;line-height:1.5;box-shadow:0 10px 28px #08162c4d;pointer-events:none;transform:translate(12px,12px)}.event-tooltip:before{content:"";position:absolute;left:-6px;top:10px;border-width:6px 6px 6px 0;border-style:solid;border-color:transparent #12233d transparent transparent}.memo-detail-hidden{display:none!important}.color-row{display:flex;align-items:center;gap:8px}.color-row select{flex:1}.color-preview{width:30px;height:30px;border:1px solid #cbd7e8;border-radius:7px;background:#fff;box-shadow:inset 4px 0 var(--preview-color,#2563eb)}.flow-note.memo{background:#fff;border-color:#f2d67f;color:#765b08}
+    .modal-back{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:#0f1b2d7d}.modal{width:min(780px,100%);max-height:calc(100vh - 36px);overflow:auto;border-radius:15px;background:#fff;box-shadow:0 24px 70px #0004}.modal-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line2);background:#fff}.modal-head h2{margin:0;font-size:17px}.close{padding:3px 7px;background:transparent;color:#50627e;font-size:20px}.form{padding:4px 18px 18px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px}.form .wide{grid-column:1/-1}.form input,.form select,.form textarea{width:100%;border:1px solid var(--line2);border-radius:7px;padding:8px;background:#fff}.form select[multiple]{min-height:92px}.form textarea{min-height:74px;resize:vertical}.time-help{display:block;margin-top:4px;color:#728098;font-size:9px}.modal-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line2);background:#fbfcff}.link-note{margin-top:12px;padding:10px 12px;background:#f3f8ff;border:1px solid #d7e6fb;border-radius:8px;color:#315685;font-size:11px;line-height:1.55}
+    @media(max-width:900px){.header-inner{padding:10px 12px;align-items:flex-start;flex-direction:column}.user{width:100%;overflow:auto}.user>span{display:none}main{padding:0 8px;margin-top:8px}.month-title{order:-1;width:100%}.spacer{display:none}.sheet-wrap{min-height:520px;max-height:75vh}.form-grid{grid-template-columns:1fr}.form .wide{grid-column:auto}.modal-back{padding:5px}}
+    .staff-group{font-size:13px!important;font-weight:400!important}
+    thead th{font-size:13px!important;font-weight:400!important}
+    .saved-content,.empty-content{position:relative}.saved-content .event-direct-content{padding-right:45px}.empty-content .quick-entry{padding-right:25px}.row-edit,.row-delete{position:absolute;top:50%;z-index:2;width:19px;height:19px;padding:0;transform:translateY(-50%);border:0;border-radius:50%;background:transparent;color:#8292a8;font-size:13px;font-weight:400;line-height:19px;opacity:.62}.row-edit{right:23px}.empty-content .row-edit{right:3px}.row-delete{right:3px;font-size:14px;color:#9aa8ba}.row-edit:hover,.row-edit:focus{background:#eaf3ff;color:#245b9c;opacity:1}.row-delete:hover,.row-delete:focus{background:#fff0f1;color:#c43c4a;opacity:1}
+  </style>
+</head>
+<body>
+  <header><div class="header-inner"><div><h1>イズミ装美　行動予定</h1><div class="sub">元Excelと同じ「日付 × 社員横並び」で受付・立会・現調・工事を共有</div></div><div id="userBox" class="user hidden"><nav class="nav"><a href="index.html">番号取得</a><a class="current" href="calendar.html">カレンダー</a><a href="estimate.html" target="_blank" rel="noopener">見積を開く</a><a href="管理番号台帳.html">台帳</a><a href="工事リスト.html">一覧メニュー</a><a href="請求.html">請求</a><a href="ユーザー設定.html">ユーザー設定</a></nav><span id="userEmail"></span><button class="logout" id="logout">ログアウト</button></div></div></header>
+  <section id="loginCard" class="login"><h2>社員ログイン</h2><div style="font-size:12px;color:#64748b;line-height:1.7">イズミ装美の社内システム共通アカウントでログインします。登録済みの会社メールアドレスと設定済みパスワードを入力してください。</div><label>メールアドレス</label><input id="email" type="email" autocomplete="email"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary" style="width:100%;margin-top:13px">ログイン</button><div style="display:flex;justify-content:space-between;gap:12px;margin-top:13px;font-size:12px;font-weight:800"><a href="auth.html?mode=signup&amp;next=calendar.html">新しい社員の登録</a><a href="auth.html?mode=forgot&amp;next=calendar.html">パスワードを忘れた方</a></div><div id="loginStatus" class="status" style="padding:10px 0 0"></div></section>
+  <main id="app" class="hidden">
+    <section class="panel"><div class="toolbar"><button id="prevMonth" class="secondary">‹ 前月</button><div id="monthTitle" class="month-title"></div><button id="nextMonth" class="secondary">次月 ›</button><button id="today" class="secondary">今月</button><div class="field"><label>社員表示</label><select id="staffFilter"><option value="">全社員</option></select></div><div class="field"><label>予定種別</label><select id="typeFilter"><option value="">すべて</option><option>退去立会</option><option>現地調査</option><option>見積訪問</option><option>工事</option><option>完工確認</option><option>休み</option><option>その他</option></select></div><label class="scale-control">縮尺<select id="calendarScale"><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option><option value="100">100%</option><option value="110">110%</option><option value="120">120%</option></select></label><div class="spacer"></div><a class="secondary" style="padding:8px 11px;border-radius:7px;text-decoration:none;font-size:12px;font-weight:800" href="操作履歴.html?action=予定削除">削除履歴</a><button id="newEvent" class="primary">＋ 予定を登録</button></div><div class="stats" id="stats"></div><div id="calendarStatus" class="status"></div></section>
+    <section class="panel sheet-panel"><div class="sheet-toolbar"><div class="sheet-toolbar-main"><strong>行動予定表</strong></div><span>各日左下の − / ＋ で、その日だけ行数変更／空欄は時間・帰社・内容を直接入力</span></div><div class="sheet-wrap"><table id="scheduleTable" onclick="handleScheduleClick(event)" ondblclick="handleScheduleDoubleClick(event)"></table></div></section>
+  </main>
+  <div id="modalBack" class="modal-back hidden"><section class="modal"><div class="modal-head"><h2 id="modalTitle">予定を登録</h2><button class="close" id="closeModal">×</button></div><form id="eventForm" class="form"><input id="eventId" type="hidden"><input id="eventMode" type="hidden" value="linked"><div class="form-grid"><div><label>日付 *</label><input id="eventDate" type="date" required></div><div><label>予定種別 *</label><select id="eventType"><option>退去立会</option><option>現地調査</option><option>見積訪問</option><option>工事</option><option>完工確認</option><option>休み</option><option>その他</option></select></div><div><label>開始時間</label><input id="startTime" type="text" inputmode="numeric" autocomplete="off" placeholder="例：9:00、930"><small class="time-help">手入力してください</small></div><div><label>終了・帰社予定</label><input id="endTime" type="text" inputmode="numeric" autocomplete="off" placeholder="例：17:30、1730"><small class="time-help">不要な場合は空欄</small></div><div><label>主担当 *</label><select id="eventStaff" required></select></div><div><label>状況</label><select id="eventStatus"><option>予定</option><option>確認待ち</option><option>見積作成</option><option>工事中</option><option>完了</option><option>キャンセル</option><option>メモ</option></select></div><div><label>表示色</label><div class="color-row"><select id="eventColor"><option value="auto">自動（予定種別）</option><option value="blue">青</option><option value="purple">紫</option><option value="green">緑</option><option value="cyan">水色</option><option value="yellow">黄</option><option value="orange">オレンジ</option><option value="red">赤</option><option value="gray">グレー</option></select><span id="colorPreview" class="color-preview"></span></div></div><div></div><div class="wide"><label>同行・追加担当（複数選択可）</label><select id="additionalStaff" multiple></select></div><div><label>管理番号</label><input id="managementNumber" placeholder="案件化後に入力・自動連携"></div><div><label>客先・管理会社</label><input id="clientName" placeholder="会社名"></div><div><label>物件名 *</label><input id="propertyName" required placeholder="物件名"></div><div><label>部屋番号</label><input id="roomNumber" placeholder="部屋番号"></div><div class="wide"><label>作業件名</label><input id="eventWorkName" placeholder="作業件名"></div><div class="wide"><label>現場住所</label><input id="eventAddress" placeholder="現場住所"></div><div><label>先方担当者</label><input id="contactName"></div><div><label>電話番号</label><input id="phone"></div><div class="wide"><label>受付・現場メモ</label><textarea id="eventNotes" placeholder="メール・電話で受けた内容、鍵、立会条件など"></textarea></div></div><div id="eventFlowNote" class="link-note">管理番号がある予定だけ台帳へ自動連携します。管理番号がない予定はカレンダーに保存され、「管理番号を取得」後に台帳へ連携します。</div></form><div class="modal-actions"><button id="deleteEvent" class="danger hidden" type="button">削除</button><div style="flex:1"></div><button id="issueNumber" class="secondary" type="button">管理番号を取得</button><button id="openEstimate" class="secondary" type="button">見積を作成</button><button id="saveEvent" class="primary" type="button">予定を保存</button></div></section></div>
+  <div id="eventTooltip" class="event-tooltip hidden"></div>
+  <script>
+  function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
+  normalizeStablePageUrls();
+  const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
+  const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY),$=id=>document.getElementById(id);
+  const DEFAULT_STAFF=['大島','林','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
+  const COLOR_PALETTE={blue:{line:'#2563eb',bg:'#eef5ff'},purple:{line:'#7c3aed',bg:'#f5f0ff'},green:{line:'#15805d',bg:'#edf9f3'},cyan:{line:'#0891b2',bg:'#ebfbff'},yellow:{line:'#d59b12',bg:'#fff8d7'},orange:{line:'#e46c1a',bg:'#fff1e6'},red:{line:'#c94352',bg:'#fff0f2'},gray:{line:'#64748b',bg:'#f1f5f9'}};
+  const AUTO_COLORS={'現地調査':'purple','見積訪問':'purple','工事':'green','完工確認':'cyan','休み':'gray','その他':'yellow','退去立会':'blue'};
+  let currentUser=null,currentProfile=null,employees=[],events=[],editorDirectory={},dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0};
+  const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const isoDate=date=>{const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`};
+  const estimateDocumentUrl=()=>new URL('estimate.html',location.href);
+  const staffOptions=value=>employees.map(name=>`<option value="${esc(name)}"${name===value?' selected':''}>${esc(name)}</option>`).join('');
+  function normalizeManualTime(value){
+    const raw=String(value||'').trim().replace(/[：]/g,':');
+    if(!raw)return'';
+    let hours='',minutes='';
+    if(/^\d{1,2}$/.test(raw)){hours=raw;minutes='00'}
+    else if(/^\d{3,4}$/.test(raw)){hours=raw.slice(0,-2);minutes=raw.slice(-2)}
+    else{const match=raw.match(/^(\d{1,2}):(\d{1,2})$/);if(match){hours=match[1];minutes=match[2]}else return raw}
+    const hour=Number(hours),minute=Number(minutes);
+    return hour>=0&&hour<=23&&minute>=0&&minute<=59?`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`:raw;
+  }
+  function setTimeSelect(id,value=''){const input=$(id);if(input)input.value=String(value||'').replace(/:\d{2}(?:[+-].*)?$/,'')}
+  const selectedAdditional=()=>[...$('additionalStaff').selectedOptions].map(option=>option.value).filter(Boolean);
+  function currentEmployeeName(){
+    const display=String(currentProfile?.display_name||'').replace(/[\s　]/g,'');
+    if(!display)return'';
+    return employees.find(name=>String(name).replace(/[\s　]/g,'')===display)
+      ||employees.find(name=>display.startsWith(String(name).replace(/[\s　]/g,'')))||'';
+  }
+  function moveCurrentEmployeeFirst(list){const mine=currentEmployeeName();return mine?[mine,...list.filter(name=>name!==mine)]:list}
+  function japaneseHolidaySet(year){
+    const holidays=new Set(),add=(month,day)=>holidays.add(isoDate(new Date(year,month-1,day))),nthMonday=(month,n)=>{const first=new Date(year,month-1,1),day=1+(8-first.getDay())%7+(n-1)*7;add(month,day)};
+    add(1,1);nthMonday(1,2);add(2,11);add(2,23);
+    add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));
+    add(4,29);add(5,3);add(5,4);add(5,5);nthMonday(7,3);add(8,11);nthMonday(9,3);
+    add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));
+    nthMonday(10,2);add(11,3);add(11,23);
+    [...holidays].sort().forEach(key=>{const date=new Date(key+'T00:00:00');if(date.getDay()!==0)return;do date.setDate(date.getDate()+1);while(holidays.has(isoDate(date)));holidays.add(isoDate(date))});
+    for(let date=new Date(year,0,2);date.getFullYear()===year;date.setDate(date.getDate()+1)){const key=isoDate(date),before=new Date(date),after=new Date(date);before.setDate(before.getDate()-1);after.setDate(after.getDate()+1);if(!holidays.has(key)&&holidays.has(isoDate(before))&&holidays.has(isoDate(after)))holidays.add(key)}
+    return holidays;
+  }
+  function readDayRows(){try{return JSON.parse(localStorage.getItem('izumiCalendarDayRowsV2')||'{}')||{}}catch(_error){return{}}}
+  function rowsForDate(dateKey){return Math.max(1,Math.min(20,Number(dayRows[dateKey])||5))}
+  function status(text,error=false){$('calendarStatus').textContent=text;$('calendarStatus').className='status'+(error?' error':'')}
+  async function showApp(){
+    const {data:{user}}=await db.auth.getUser();
+    if(!user)return;
+    const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
+    if(error||enabled!==true){
+      await db.auth.signOut();
+      $('loginStatus').textContent=error?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。';
+      return;
+    }
+    currentUser=user;
+    const {data:profiles}=await db.rpc('get_my_app_profile');
+    currentProfile=profiles?.[0]||{display_name:user.user_metadata?.display_name||user.email?.split('@')[0]||'',email:user.email||''};
+    $('loginCard').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    $('userBox').classList.remove('hidden');
+    $('userEmail').textContent=user.email;
+    await loadEmployees();
+    await loadEvents();
+  }
+  async function loadEmployees(){employees=[...DEFAULT_STAFF];$('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');$('eventStaff').innerHTML=staffOptions('');$('additionalStaff').innerHTML=staffOptions('')}
+  function calendarScaleKey(){return `izumiCalendarScaleV2:${currentUser?.id||'local'}`}
+  function applyCalendarScale(value){
+    const scale=Math.max(70,Math.min(120,Number(value)||100));
+    $('calendarScale').value=String(scale);
+    $('scheduleTable').style.zoom=String(scale/100);
+    try{localStorage.setItem(calendarScaleKey(),String(scale))}catch(_error){}
+  }
+  function loadCalendarScale(){let scale=100;try{scale=Number(localStorage.getItem(calendarScaleKey()))||100}catch(_error){}applyCalendarScale(scale)}
+  function monthRange(){return {start:isoDate(new Date(displayMonth.getFullYear(),displayMonth.getMonth(),1)),end:isoDate(new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1))}}
+  async function loadEditorDirectory(){const ids=[...new Set(events.flatMap(event=>[event.updated_by,event.created_by]).filter(Boolean))];editorDirectory={};if(!ids.length)return;const {data,error}=await db.rpc('get_calendar_editor_directory',{p_user_ids:ids});if(!error)(data||[]).forEach(row=>editorDirectory[row.user_id]=row.display_name||row.email?.split('@')[0]||'利用者')}
+  async function loadEvents(){const {start,end}=monthRange();status('予定を読み込み中…');const {data,error}=await db.from('calendar_events').select('*').is('deleted_at',null).gte('event_date',start).lt('event_date',end).order('event_date').order('start_time');if(error){status('予定を読み込めません：'+error.message,true);return}events=data||[];await loadEditorDirectory();render();status(`${events.length.toLocaleString()}件の予定を表示しています`)}
+  function assignedTo(event,name){return event.staff_name===name||(event.additional_staff_names||[]).includes(name)}
+  function render(){
+    const year=displayMonth.getFullYear(),month=displayMonth.getMonth(),last=new Date(year,month+1,0),today=isoDate(new Date()),holidays=japaneseHolidaySet(year);
+    const type=$('typeFilter').value,staff=$('staffFilter').value,visible=events.filter(event=>!type||event.event_type===type),shownStaff=staff?[staff]:employees;
+    $('monthTitle').textContent=`${year}年${month+1}月`;
+    $('stats').innerHTML=`<div class="stat"><span>月間予定</span><b>${visible.length}件</b></div><div class="stat"><span>退去立会</span><b>${visible.filter(e=>e.event_type==='退去立会').length}件</b></div><div class="stat"><span>現調・見積</span><b>${visible.filter(e=>['現地調査','見積訪問'].includes(e.event_type)).length}件</b></div><div class="stat"><span>工事・完工</span><b>${visible.filter(e=>['工事','完工確認'].includes(e.event_type)).length}件</b></div>`;
+    let head=`<thead><tr><th class="date-col" rowspan="2">日付</th><th class="day-col" rowspan="2">曜</th>${shownStaff.map(name=>`<th class="staff-group" colspan="3">${esc(name)}</th>`).join('')}</tr><tr>${shownStaff.map(()=>'<th class="time-cell staff-start">予定</th><th class="status-cell">状況</th><th class="content-cell">予定内容</th>').join('')}</tr></thead>`,body='<tbody>';
+    for(let day=1;day<=last.getDate();day++){
+      const date=new Date(year,month,day),dateKey=isoDate(date),groups=Object.fromEntries(shownStaff.map(name=>[name,visible.filter(event=>event.event_date===dateKey&&assignedTo(event,name))])),slots=Math.max(rowsForDate(dateKey),...shownStaff.map(name=>groups[name].length));
+      for(let slot=0;slot<slots;slot++){
+        body+=`<tr class="${slot===0?'day-start ':''}${dateKey===today?'today-row':''}">`;
+        if(slot===0){const dayClass=holidays.has(dateKey)||date.getDay()===0?'sun':date.getDay()===6?'sat':'';body+=`<td class="date-col date-cell ${dayClass}" rowspan="${slots}">${month+1}/${day}<br><button class="add-date" onclick="newEvent('${dateKey}')">予定登録</button><div class="date-row-controls" title="この日だけ表示行数を変更"><button type="button" onclick="changeDateRows(event,'${dateKey}',-1)">−</button><span>${slots}行</span><button type="button" onclick="changeDateRows(event,'${dateKey}',1)">＋</button></div></td><td class="day-col day-cell ${dayClass}" rowspan="${slots}">${weekdays[date.getDay()]}</td>`}
+        shownStaff.forEach(name=>{
+          const event=groups[name][slot];
+          if(!event){
+            const quickKey=`${dateKey}|${name}|${slot}`;
+            body+=`<td class="time-cell empty-cell staff-start"><input class="quick-time" type="text" autocomplete="off" aria-label="${esc(name)} ${dateKey} の予定時間" data-quick-key="${esc(quickKey)}" data-role="start" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"></td><td class="status-cell empty-cell"><input class="quick-time" type="text" autocomplete="off" aria-label="${esc(name)} ${dateKey} の帰社時間" data-quick-key="${esc(quickKey)}" data-role="end" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"></td><td class="content-cell empty-cell empty-content"><input class="quick-entry" placeholder="直接入力" aria-label="${esc(name)} ${dateKey} の予定を直接入力" data-quick-key="${esc(quickKey)}" data-role="content" data-date="${dateKey}" data-staff="${esc(name)}" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"><button class="row-edit" type="button" aria-label="${esc(name)} ${dateKey} の詳細入力を開く" title="詳細を開く" onmousedown="event.preventDefault()" onclick="newMemoFromQuick(event,'${esc(quickKey)}')">✎</button></td>`;
+            return;
+          }
+          const memo=Boolean(event.memo_only||event.event_status==='メモ'),start=event.start_text??event.start_time?.slice(0,5)??'',end=event.end_time?.slice(0,5)||'',returnStatus=event.return_status_text??(end||(event.event_status&&event.event_status!=='メモ'?event.event_status:'')),title=[event.property_name,event.room_number].filter(Boolean).join(' '),color=calendarEventColor(event),style=`--event-color:${title?color.line:'transparent'}`;
+          body+=`<td class="time-cell staff-start"><input class="event-direct" type="text" autocomplete="off" value="${esc(start)}" data-event-id="${event.id}" data-field="start" data-original="${esc(start)}" aria-label="予定時間" onblur="updateEventDirect(this)"></td><td class="status-cell"><input class="event-direct" type="text" autocomplete="off" value="${esc(returnStatus)}" data-event-id="${event.id}" data-field="returnStatus" data-original="${esc(returnStatus)}" aria-label="帰社・状況" onblur="updateEventDirect(this)"></td><td class="content-cell saved-content"><input class="event-direct event-direct-content" style="${style}" type="text" autocomplete="off" value="${esc(title)}" data-event-id="${event.id}" data-field="content" data-original="${esc(title)}" aria-label="予定内容" onblur="updateEventDirect(this)" onmouseenter="showEventTooltip(event,'${event.id}')" onmousemove="moveEventTooltip(event)" onmouseleave="hideEventTooltip()"><button class="row-edit" type="button" aria-label="この予定の詳細を編集" title="詳細を開く" onmousedown="event.preventDefault()" onclick="openEventDetails(event,'${event.id}')">✎</button><button class="row-delete" type="button" aria-label="この予定を削除" title="この予定を削除" onmousedown="event.preventDefault()" onclick="deleteEventDirect(event,'${event.id}')">×</button></td>`;
+        });
+        body+='</tr>';
+      }
+    }
+    $('scheduleTable').innerHTML=head+body+'</tbody>';
+    loadCalendarScale();
+  }
+  function quickGroup(input){return [...document.querySelectorAll('[data-quick-key]')].filter(element=>element.dataset.quickKey===input.dataset.quickKey)}
+  function validNormalizedTime(value){return /^\d{2}:\d{2}$/.test(normalizeManualTime(value))}
+  function openEventDetails(pointer,id){pointer.preventDefault();pointer.stopPropagation();hideEventTooltip();editEvent(id)}
+  function handleScheduleClick(pointer){
+    if(pointer.target.closest?.('.row-edit,.row-delete'))return;
+    const input=pointer.target.closest?.('.event-direct[data-event-id],[data-quick-key]');
+    if(!input)return;
+    const key=input.dataset.eventId?`event:${input.dataset.eventId}:${input.dataset.field}`:`quick:${input.dataset.quickKey}:${input.dataset.role}`;
+    const now=Date.now(),isSecond=lastScheduleClick.key===key&&now-lastScheduleClick.at<800;
+    lastScheduleClick=isSecond?{key:'',at:0}:{key,at:now};
+    if(isSecond)handleScheduleDoubleClick(pointer);
+  }
+  async function handleScheduleDoubleClick(pointer){
+    if(!$('modalBack').classList.contains('hidden'))return;
+    lastScheduleClick={key:'',at:0};
+    const savedInput=pointer.target.closest?.('.event-direct[data-event-id]');
+    if(savedInput){$('modalBack').classList.remove('hidden');openEventDetails(pointer,savedInput.dataset.eventId);return}
+    const quickInput=pointer.target.closest?.('[data-quick-key]');
+    if(!quickInput)return;
+    const content=quickGroup(quickInput).find(element=>element.dataset.role==='content');
+    if(!content?.value.trim())return;
+    pointer.preventDefault();pointer.stopPropagation();
+    const savedId=await saveQuickEntry(content);
+    if(savedId)editEvent(savedId);
+  }
+  async function updateEventDirect(input){
+    const value=input.value.trim();
+    if(value===String(input.dataset.original||'')||input.dataset.saving==='1')return;
+    const event=events.find(row=>String(row.id)===String(input.dataset.eventId));
+    if(!event)return;
+    const patch={updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||'',updated_at:new Date().toISOString(),revision:(Number(event.revision)||0)+1};
+    if(input.dataset.field==='start'){
+      patch.start_text=value||null;
+      patch.start_time=value&&validNormalizedTime(value)?normalizeManualTime(value):null;
+    }else if(input.dataset.field==='returnStatus'){
+      patch.return_status_text=value||null;
+      patch.end_time=value&&validNormalizedTime(value)?normalizeManualTime(value):null;
+    }else if(input.dataset.field==='content'){
+      patch.property_name=value||null;
+      if(event.room_number&&value!==[event.property_name,event.room_number].filter(Boolean).join(' '))patch.room_number=null;
+    }
+    input.dataset.saving='1';input.classList.add('saving');
+    const {error}=await db.from('calendar_events').update(patch).eq('id',event.id);
+    if(error){input.dataset.saving='';input.classList.remove('saving');status('直接入力を保存できません：'+error.message,true);input.focus();return}
+    Object.assign(event,patch);input.dataset.original=value;input.classList.remove('saving');input.dataset.saving='';
+    status('直接入力を保存しました');render();
+  }
+  async function deleteEventDirect(pointer,id){
+    pointer.preventDefault();pointer.stopPropagation();hideEventTooltip();
+    if(!confirm('予定時間・帰社状況・予定内容をすべて削除してよろしいですか？'))return;
+    const {error}=await db.from('calendar_events').update({deleted_at:new Date().toISOString(),deleted_by:currentUser.id,deletion_reason:'予定表の×ボタンから削除',updated_by:currentUser.id,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){alert('削除できません：'+error.message);return}
+    events=events.filter(event=>String(event.id)!==String(id));
+    render();
+    status('予定時間・帰社状況・予定内容を削除しました');
+  }
+  async function saveQuickEntry(input){
+    const group=quickGroup(input),content=group.find(element=>element.dataset.role==='content'),start=group.find(element=>element.dataset.role==='start'),end=group.find(element=>element.dataset.role==='end'),value=content?.value.trim()||'';
+    if(!value||group.some(element=>element.dataset.saving==='1'))return;
+    const startValue=start?.value.trim()||'',endValue=end?.value.trim()||'';
+    group.forEach(element=>{element.dataset.saving='1';element.classList.add('saving')});
+    status('予定メモを保存中…');
+    const payload={
+      event_date:content.dataset.date,
+      start_text:startValue||null,
+      return_status_text:endValue||null,
+      start_time:startValue&&validNormalizedTime(startValue)?normalizeManualTime(startValue):null,
+      end_time:endValue&&validNormalizedTime(endValue)?normalizeManualTime(endValue):null,
+      event_type:'その他',
+      event_status:'メモ',
+      staff_name:content.dataset.staff,
+      additional_staff_names:[],
+      property_name:value,
+      notes:null,
+      created_by:currentUser?.id||null,
+      updated_by:currentUser?.id||null,
+      updated_at:new Date().toISOString(),
+      color_key:'auto',
+      memo_only:true,
+      created_by_name:currentProfile?.display_name||currentUser?.email||'',
+      updated_by_name:currentProfile?.display_name||currentUser?.email||''
+    };
+    const {data,error}=await persistCalendarEvent('',payload);
+    if(error){
+      group.forEach(element=>{element.dataset.saving='';element.classList.remove('saving')});
+      status('直接入力を保存できません：'+error.message,true);
+      content.focus();
+      return false;
+    }
+    await loadEvents();
+    return data?.id||false;
+  }
+  function quickEntryKey(event,input){
+    if(event.key==='Enter'){
+      event.preventDefault();
+      saveQuickEntry(input);
+    }else if(event.key==='Escape'){
+      input.value='';
+      input.blur();
+    }
+  }
+  function quickEntryBlur(input){
+    setTimeout(()=>{if(!quickGroup(input).includes(document.activeElement))saveQuickEntry(input)},120);
+  }
+  const CALENDAR_EXTENSION_FIELDS=['color_key','memo_only','created_by_name','updated_by_name','work_name','start_text','return_status_text'];
+  function legacyCalendarPayload(payload){const result={...payload};CALENDAR_EXTENSION_FIELDS.forEach(key=>delete result[key]);return result}
+  function calendarSchemaNeedsFallback(error){return Boolean(error&&CALENDAR_EXTENSION_FIELDS.some(key=>(error.message||'').includes(key)))}
+  async function persistCalendarEvent(id,payload){
+    const save=record=>id?db.from('calendar_events').update(record).eq('id',id).select('id').single():db.from('calendar_events').insert(record).select('id').single();
+    let result=await save(payload);
+    if(calendarSchemaNeedsFallback(result.error))result=await save(legacyCalendarPayload(payload));
+    return result;
+  }
+  function calendarProjectPatch(payload){
+    const pairs={reception_date:payload.event_date,staff_name:payload.staff_name,client_name:payload.client_name,property_name:payload.property_name,room_number:payload.room_number,work_name:payload.work_name||payload.event_type,notes:payload.notes};
+    return Object.fromEntries(Object.entries(pairs).filter(([,value])=>value!==null&&value!==undefined&&String(value).trim()!==''));
+  }
+  async function syncCalendarEventToLedger(eventId,payload){
+    if(!eventId||payload.memo_only||!payload.management_number)return null;
+    const rpcResult=await db.rpc('sync_calendar_event_to_project',{p_calendar_event_id:eventId});
+    if(!rpcResult.error)return null;
+    const {data:project,error:loadError}=await db.from('management_numbers').select('id,revision').eq('management_number',payload.management_number).is('deleted_at',null).maybeSingle();
+    if(loadError||!project)return loadError||rpcResult.error||new Error(`管理番号 ${payload.management_number} が台帳にありません。先に管理番号を取得してください。`);
+    const patch={...calendarProjectPatch(payload),updated_by:currentUser.id,revision:(Number(project.revision)||0)+1};
+    let updateResult=await db.from('management_numbers').update(patch).eq('id',project.id);
+    if(updateResult.error&&/updated_by|revision/i.test(updateResult.error.message||'')){
+      delete patch.updated_by;
+      delete patch.revision;
+      updateResult=await db.from('management_numbers').update(patch).eq('id',project.id);
+    }
+    return updateResult.error||null;
+  }
+  function calendarEventColor(event){const key=event.color_key&&event.color_key!=='auto'?event.color_key:(event.memo_only||event.event_status==='メモ'?'yellow':AUTO_COLORS[event.event_type]||'blue');return COLOR_PALETTE[key]||COLOR_PALETTE.blue}
+  function updateColorPreview(){const color=calendarEventColor({color_key:$('eventColor').value,event_type:$('eventType').value,memo_only:$('eventMode').value==='memo',event_status:$('eventStatus').value});$('colorPreview').style.setProperty('--preview-color',color.line);$('colorPreview').style.background=color.bg}
+  function setEventMode(mode){
+    $('eventMode').value=mode;
+    const memo=mode==='memo';
+    $('openEstimate').classList.toggle('hidden',memo);
+    $('issueNumber').classList.toggle('hidden',memo);
+    $('eventFlowNote').classList.toggle('memo',memo);
+    $('eventFlowNote').textContent=memo?'表へ直接入力した共有メモです。カレンダー内だけに保存し、台帳へは連携しません。':'管理番号がある予定だけ台帳へ自動連携します。管理番号がない予定はカレンダーに保存され、「管理番号を取得」後に台帳へ連携します。';
+    ['eventType','startTime','endTime','eventStaff','eventStatus','eventColor','additionalStaff','managementNumber'].forEach(id=>$(id)?.closest('.form-grid > div')?.classList.toggle('memo-detail-hidden',memo));
+    if(memo)$('eventStatus').value='メモ';
+    updateColorPreview();
+  }
+  function resetAdditional(values=[]){$('additionalStaff').innerHTML=staffOptions('');[...$('additionalStaff').options].forEach(option=>option.selected=values.includes(option.value))}
+  function newEvent(date=isoDate(new Date())){$('eventForm').reset();setTimeSelect('startTime');setTimeSelect('endTime');$('eventId').value='';$('eventDate').value=date;$('eventStaff').innerHTML=staffOptions($('staffFilter').value||employees[0]||'');$('eventColor').value='auto';resetAdditional();setEventMode('linked');$('modalTitle').textContent='予定を登録';$('deleteEvent').classList.add('hidden');$('modalBack').classList.remove('hidden')}
+  function newMemoFromQuick(pointer,quickKey){
+    pointer.preventDefault();pointer.stopPropagation();hideEventTooltip();
+    const group=[...document.querySelectorAll('[data-quick-key]')].filter(element=>element.dataset.quickKey===quickKey);
+    const content=group.find(element=>element.dataset.role==='content');
+    const start=group.find(element=>element.dataset.role==='start')?.value||'';
+    const end=group.find(element=>element.dataset.role==='end')?.value||'';
+    const [dateKey,staffName]=String(quickKey||'').split('|');
+    $('eventForm').reset();
+    $('eventId').value='';
+    $('eventDate').value=content?.dataset.date||dateKey||isoDate(new Date());
+    $('eventStaff').innerHTML=staffOptions(content?.dataset.staff||staffName||employees[0]||'');
+    setTimeSelect('startTime',start);
+    setTimeSelect('endTime',end);
+    $('propertyName').value=content?.value.trim()||'';
+    $('eventColor').value='auto';
+    resetAdditional();
+    setEventMode('memo');
+    $('modalTitle').textContent='共有メモを登録';
+    $('deleteEvent').classList.add('hidden');
+    $('modalBack').classList.remove('hidden');
+  }
+  function editEvent(id){
+    const event=events.find(row=>String(row.id)===String(id));
+    if(!event)return;
+    $('modalBack').classList.remove('hidden');
+    $('eventId').value=event.id;
+    $('eventDate').value=event.event_date;
+    $('eventType').value=event.event_type;
+    setTimeSelect('startTime',event.start_text??event.start_time);
+    setTimeSelect('endTime',event.return_status_text??event.end_time??(event.event_status!=='メモ'?event.event_status:''));
+    $('eventStaff').innerHTML=staffOptions(event.staff_name);
+    $('eventStatus').value=event.event_status||'予定';
+    $('eventColor').value=event.color_key||'auto';
+    resetAdditional(event.additional_staff_names||[]);
+    $('managementNumber').value=event.management_number||'';
+    $('clientName').value=event.client_name||'';
+    $('propertyName').value=event.property_name||'';
+    $('roomNumber').value=event.room_number||'';
+    $('eventWorkName').value=event.work_name||'';
+    $('eventAddress').value=event.address||'';
+    $('contactName').value=event.contact_name||'';
+    $('phone').value=event.phone||'';
+    $('eventNotes').value=event.memo_only&&event.notes===event.property_name?'':event.notes||'';
+    setEventMode(event.memo_only||event.event_status==='メモ'?'memo':'linked');
+    $('modalTitle').textContent=event.memo_only||event.event_status==='メモ'?'共有メモを編集':'予定を編集';
+    $('deleteEvent').classList.remove('hidden');
+  }
+  function closeModal(){$('modalBack').classList.add('hidden')}
+  function eventPayload(){const memo=$('eventMode').value==='memo',startText=$('startTime').value.trim(),returnText=$('endTime').value.trim();return {event_date:$('eventDate').value,start_text:startText||null,return_status_text:returnText||null,start_time:startText&&validNormalizedTime(startText)?normalizeManualTime(startText):null,end_time:returnText&&validNormalizedTime(returnText)?normalizeManualTime(returnText):null,event_type:$('eventType').value,event_status:memo?'メモ':$('eventStatus').value,staff_name:$('eventStaff').value,additional_staff_names:selectedAdditional().filter(name=>name!==$('eventStaff').value),management_number:memo?null:$('managementNumber').value.trim()||null,client_name:memo?null:$('clientName').value.trim()||null,property_name:$('propertyName').value.trim()||null,room_number:memo?null:$('roomNumber').value.trim()||null,work_name:memo?null:$('eventWorkName').value.trim()||null,address:memo?null:$('eventAddress').value.trim()||null,contact_name:memo?null:$('contactName').value.trim()||null,phone:memo?null:$('phone').value.trim()||null,notes:$('eventNotes').value.trim()||null,color_key:$('eventColor').value||'auto',memo_only:memo,updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||''}}
+  async function saveEvent(options={}){
+    if(!$('eventForm').reportValidity())return false;
+    const originalId=$('eventId').value,payload=eventPayload();
+    if(!originalId){payload.created_by=currentUser.id;payload.created_by_name=currentProfile?.display_name||currentUser?.email||''}
+    else payload.revision=(events.find(event=>event.id===originalId)?.revision||0)+1;
+    const {data,error}=await persistCalendarEvent(originalId,payload);
+    if(error){alert('保存できません：'+error.message);return false}
+    const savedId=data?.id||originalId;
+    $('eventId').value=savedId;
+    const syncError=await syncCalendarEventToLedger(savedId,payload);
+    if(options?.close!==false)closeModal();
+    await loadEvents();
+    if(syncError)alert('予定は保存しましたが、台帳への連携に失敗しました：'+syncError.message);
+    return savedId;
+  }
+  async function deleteEvent(){const id=$('eventId').value;if(!id||!confirm('この予定を削除しますか？'))return;if(!confirm('削除後は通常画面に表示されません。本当に削除しますか？'))return;const {error}=await db.from('calendar_events').update({deleted_at:new Date().toISOString(),deleted_by:currentUser.id,deletion_reason:'カレンダー画面から削除',updated_by:currentUser.id}).eq('id',id);if(error){alert('削除できません：'+error.message);return}closeModal();await loadEvents()}
+  async function openEstimate(){if(!$('eventForm').reportValidity())return;const id=await saveEvent({close:false});if(!id)return;await db.from('calendar_events').update({estimate_opened_at:new Date().toISOString(),event_status:'見積作成',updated_by:currentUser.id,updated_at:new Date().toISOString()}).eq('id',id);const url=estimateDocumentUrl();url.searchParams.set('schedule_id',id);const managementNumber=$('managementNumber').value.trim();if(managementNumber)url.searchParams.set('management_number',managementNumber);window.open(url.href,'_blank','noopener');closeModal();await loadEvents()}
+  async function issueNumberFromEvent(){if(!$('eventForm').reportValidity())return;const id=await saveEvent({close:false});if(!id)return;const url=new URL('index.html',location.href);url.searchParams.set('calendar_event_id',id);window.open(url.href,'_blank','noopener')}
+  function formatEditorTime(value){if(!value)return'日時不明';const date=new Date(value);if(Number.isNaN(date.getTime()))return String(value);const pad=value=>String(value).padStart(2,'0');return `${date.getFullYear()}.${pad(date.getMonth()+1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`}
+  function eventEditorLabel(event){return event.updated_by_name||editorDirectory[event.updated_by]||event.created_by_name||editorDirectory[event.created_by]||'利用者'}
+  function showEventTooltip(pointer,id){const event=events.find(row=>row.id===id);if(!event)return;const tooltip=$('eventTooltip');tooltip.innerHTML=`${esc(formatEditorTime(event.updated_at||event.created_at))}　<b>${esc(eventEditorLabel(event))}</b><br>最終更新`;tooltip.classList.remove('hidden');moveEventTooltip(pointer)}
+  function moveEventTooltip(pointer){const tooltip=$('eventTooltip'),margin=12,width=tooltip.offsetWidth||220,height=tooltip.offsetHeight||52;tooltip.style.left=`${Math.min(pointer.clientX,innerWidth-width-margin)}px`;tooltip.style.top=`${Math.min(pointer.clientY,innerHeight-height-margin)}px`}
+  function hideEventTooltip(){$('eventTooltip').classList.add('hidden')}
+  function changeDateRows(pointer,dateKey,delta){pointer.preventDefault();pointer.stopPropagation();const shownStaff=$('staffFilter').value?[$('staffFilter').value]:employees,maxEvents=Math.max(1,...shownStaff.map(name=>events.filter(event=>event.event_date===dateKey&&assignedTo(event,name)).length)),current=Math.max(rowsForDate(dateKey),maxEvents);dayRows[dateKey]=Math.max(maxEvents,Math.min(20,current+delta));localStorage.setItem('izumiCalendarDayRowsV2',JSON.stringify(dayRows));render()}
+  setTimeSelect('startTime');setTimeSelect('endTime');
+  $('login').onclick=async()=>{const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else await showApp()};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;
+  db.auth.onAuthStateChange((_event,session)=>{if(session)showApp()});db.auth.getSession().then(({data:{session}})=>{if(session)showApp()});
+  </script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

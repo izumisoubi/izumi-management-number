@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>イズミ装美 ユーザー設定</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><link rel="stylesheet" href="管理ポータル.css?v=20260720-UX22"></head>
+<body>
+<header><div class="header-inner"><div><h1>ユーザー設定</h1><div class="sub">自分の表示名・パスワードを管理</div></div><div class="header-actions"><a href="工事リスト.html">一覧メニュー</a><button onclick="signOut()">ログアウト</button></div></div></header>
+<main class="wrap narrow">
+  <section class="card"><h2>アカウント情報</h2><p id="loginSummary" class="notice">ログイン情報を確認中…</p><div class="grid" style="margin-top:12px"><div class="full"><label>メールアドレス</label><input id="email" readonly></div><div class="full"><label>表示名</label><input id="displayName" placeholder="社員名"></div></div><div class="button-row"><button class="primary" onclick="saveProfile()">表示名を保存</button></div><div id="profileStatus" class="status"></div></section>
+  <section class="card"><h2>パスワード変更</h2><p class="notice">現在ログイン中の場合は、ここで新しいパスワードへ直接変更できます。</p><div class="grid" style="margin-top:12px"><div class="full"><label>新しいパスワード</label><input id="password" type="password" minlength="8" autocomplete="new-password"></div><div class="full"><label>パスワード（確認）</label><input id="password2" type="password" minlength="8" autocomplete="new-password"></div></div><div class="button-row"><button class="primary" onclick="changePassword()">パスワードを変更</button><button onclick="sendReset()">再設定メールを送る</button></div><div id="passwordStatus" class="status"></div></section>
+</main>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id);let currentUser=null;
+function status(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'success')}
+async function init(){const {data:{session}}=await db.auth.getSession();if(!session)return location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search));const {data:enabled,error:accessError}=await db.rpc('is_current_app_user_enabled');if(accessError||enabled!==true){await db.auth.signOut();return location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search))}currentUser=session.user;$('email').value=currentUser.email;$('loginSummary').textContent=`${currentUser.email} でログイン中です。`;const {data,error}=await db.rpc('get_my_app_profile');const profile=data?.[0];$('displayName').value=error||!profile?currentUser.user_metadata?.display_name||'':profile.display_name||''}
+async function saveProfile(){const {error}=await db.rpc('update_my_display_name',{p_display_name:$('displayName').value});if(error)return status('profileStatus',error.message,true);await db.auth.updateUser({data:{display_name:$('displayName').value.trim()}});status('profileStatus','表示名を保存しました。')}
+async function changePassword(){const password=$('password').value;if(password.length<8)return status('passwordStatus','8文字以上で入力してください。',true);if(password!==$('password2').value)return status('passwordStatus','確認用パスワードが一致しません。',true);const {error}=await db.auth.updateUser({password});if(error)return status('passwordStatus',error.message,true);$('password').value='';$('password2').value='';status('passwordStatus','パスワードを変更しました。')}
+async function sendReset(){const {error}=await db.auth.resetPasswordForEmail(currentUser.email,{redirectTo:new URL('auth.html?mode=recovery',location.href).href});if(error)return status('passwordStatus',error.message,true);status('passwordStatus','再設定メールを送りました。')}
+async function signOut(){await db.auth.signOut();location.replace('auth.html')}
+init();
+</script></body></html>

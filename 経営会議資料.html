@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#078b4b">
+  <title>イズミ装美 経営会議資料</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root{--green:#00ad55;--deep:#087a45;--navy:#153b67;--line:#b8c5d8;--bg:#edf2f8;--text:#162033;--red:#cb2d3e}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+    .hidden{display:none!important}.top{min-height:56px;background:linear-gradient(135deg,#12365f,#1d4f86);color:#fff;padding:8px max(18px,calc((100vw - 1600px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 3px 12px #102d4d26}.top h1{font-size:18px;margin:0;letter-spacing:.02em}.top nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}.top a{color:#fff;font-size:11px;font-weight:700;text-decoration:none;margin:0;padding:7px 10px;border-radius:7px;background:#ffffff12}.top a:hover{background:#ffffff24}
+    .login{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:9px;padding:20px}.login h2{margin-top:0}.login label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px}.login input{width:100%;height:34px;border:1px solid var(--line);border-radius:5px;padding:5px 8px}.status{font-size:10px;color:#b42331;margin-top:8px}
+    button{border:0;border-radius:5px;padding:7px 11px;font-weight:700;cursor:pointer}.primary{background:var(--navy);color:#fff}.green{background:var(--green);color:#fff}.light{background:#e5edf8;color:var(--navy)}
+    .controls{max-width:1600px;margin:14px auto 0;background:#fff;border:1px solid #d8e1ec;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:end;flex-wrap:wrap;box-shadow:0 4px 16px #153b6712}.field label{display:block;font-size:10px;color:#65738c;font-weight:700;margin-bottom:4px}.field select,.field input{height:34px;border:1px solid var(--line);border-radius:7px;padding:4px 9px;background:#fff}.field input{width:120px;text-align:right}.print{margin-left:auto}
+    .viewer-box{width:100%;display:flex;align-items:center;gap:8px;padding-top:9px;border-top:1px solid #e3e9f1}.viewer-box strong{font-size:10px;color:#65738c}.viewer-box input{width:260px;height:32px;border:1px solid var(--line);border-radius:7px;padding:4px 9px}.viewer-list{display:flex;gap:5px;flex-wrap:wrap}.viewer-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border:1px solid #c9d6e7;border-radius:999px;background:#f7f9fc;font-size:9px}.viewer-chip button{padding:0;background:transparent;color:#b42331}
+    .financial-editor{width:100%;border-top:1px solid #e3e9f1;padding-top:8px}.financial-editor summary{cursor:pointer;font-size:11px;font-weight:800;color:var(--navy)}.financial-inputs{margin-top:8px;display:grid;grid-template-columns:repeat(5,minmax(125px,1fr));gap:7px;user-select:none}.financial-inputs label{display:flex;flex-direction:column;gap:3px;font-size:9px;font-weight:700;color:#66748c}.financial-inputs input,.financial-inputs textarea{width:100%;min-height:31px;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:#fff;color:var(--text);text-align:right;user-select:text}.financial-inputs input:focus,.financial-inputs textarea:focus{outline:2px solid #4f8ee8;border-color:#4f8ee8;background:#eef6ff}.financial-inputs input.financial-selected,.financial-inputs textarea.financial-selected{outline:2px solid #2f6fe4!important;border-color:#2f6fe4!important;background:#e8f1ff!important}.financial-inputs textarea{grid-column:span 2;min-height:54px;text-align:left;resize:vertical}.financial-actions{display:flex;align-items:center;gap:8px;margin-top:8px}.financial-actions small{color:#69758a}
+    .report{max-width:1600px;margin:14px auto 32px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 10px 32px #163b6d1c}.hero{background:linear-gradient(135deg,#078b4b,#00ad55);color:#fff;padding:22px 28px}.hero h2{font-size:30px;margin:0}.hero p{margin:5px 0 0;font-size:13px}
+    .section{padding:18px 26px;border-bottom:1px solid #dce4ef}.section h3{margin:0 0 12px;font-size:20px;color:var(--deep)}.section h3 small{font-size:11px;color:#6c7890;margin-left:8px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-heading h3{margin-bottom:12px}.copy-image{margin:-1px 0 11px;background:#e9f7ee;color:#087a45;border:1px solid #a7dabc;font-size:10px;white-space:nowrap}.copy-image:disabled{opacity:.65;cursor:wait}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.kpi{border:1px solid var(--line);border-top:5px solid var(--green);padding:10px 12px;min-height:86px}.kpi span{font-size:10px;color:#66748c}.kpi b{display:block;font-size:24px;margin-top:5px;font-variant-numeric:tabular-nums}.kpi em{font-style:normal;font-size:10px;color:#60708a}.bad{color:var(--red)!important}.good{color:var(--deep)!important}
+    .summary-box{border-left:6px solid var(--green);background:#f1faf5;padding:12px 15px;font-size:14px;line-height:1.8;white-space:pre-line}.note{font-size:10px;color:#69758a;margin-top:6px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.chart{border:1px solid var(--line);padding:10px}.chart-row{display:grid;grid-template-columns:34px 1fr 78px;align-items:center;gap:6px;margin:6px 0;font-size:10px}.bar-bg{height:17px;background:#eef1f5;position:relative}.bar{height:100%;background:linear-gradient(90deg,var(--deep),var(--green));min-width:1px}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.line-card{margin-top:16px;border:1px solid var(--line);padding:12px}.line-card h4{margin:0 0 8px}.line-chart{width:100%;height:250px;display:block;background:linear-gradient(#f6f8fb 1px,transparent 1px);background-size:100% 48px}.line-chart text{font-size:10px;fill:#56657d}.line-sales{fill:none;stroke:#00a957;stroke-width:4}.line-profit{fill:none;stroke:#2563eb;stroke-width:4}.line-dot-sales{fill:#00a957}.line-dot-profit{fill:#2563eb}.line-legend{display:flex;gap:18px;justify-content:center;margin-top:6px;font-size:10px}.line-legend i{display:inline-block;width:18px;height:4px;margin-right:5px;vertical-align:middle}
+    .financial-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,.6fr);gap:16px}.mix-card{display:flex;align-items:center;justify-content:center;gap:20px;border:1px solid var(--line);padding:14px}.donut{width:165px;height:165px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0 25%,#8db9e8 25% 75%,#e7a34f 75% 100%);position:relative}.donut::after{content:"";width:93px;height:93px;border-radius:50%;background:#fff;position:absolute}.donut-label{position:relative;z-index:1;text-align:center;font-size:10px}.donut-label b{display:block;font-size:18px;color:var(--deep)}.mix-legend{font-size:11px;line-height:2}.mix-legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:2px}
+    table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px}th{background:var(--deep);color:#fff;padding:5px 4px;border:1px solid #08703f}td{padding:4px;border:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}td.num{text-align:right;font-variant-numeric:tabular-nums}tfoot td{font-weight:800;background:#edf8f2}.rank{width:35px;text-align:center}.small-table td,.small-table th{font-size:9px}
+    .footer{padding:9px 26px;text-align:right;font-size:9px;color:#66748c}.error{color:#b42331}
+    @media(max-width:850px){.kpis,.grid2,.financial-grid{grid-template-columns:1fr 1fr}.financial-inputs{grid-template-columns:repeat(2,minmax(120px,1fr))}.report{margin:6px}.section{padding:14px}.hero{padding:16px}.controls{margin:6px}.print{margin-left:0}}
+    @media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.top,.controls{display:none!important}.report{box-shadow:none;max-width:none;margin:0}.hero{padding:12px 18px}.hero h2{font-size:24px}.section{padding:11px 18px;break-inside:avoid}.section h3{font-size:16px;margin-bottom:8px}.kpi{min-height:68px;padding:7px}.kpi b{font-size:19px}.footer{padding:5px 18px}.page-break{break-before:page}}
+  </style>
+</head>
+<body>
+  <header class="top"><h1>イズミ装美　経営会議資料</h1><nav><a href="calendar.html">カレンダー</a><a href="estimate.html" target="_blank" rel="noopener">見積を開く</a><a href="工事リスト.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="請求.html">請求管理</a><a href="ユーザー設定.html">ユーザー設定</a></nav></header>
+  <section id="loginCard" class="login">
+    <h2>経営会議閲覧者ログイン</h2>
+    <div>飯田・出町・大島・田中、および閲覧者設定で追加したアカウントが利用できます。</div>
+    <label>メールアドレス</label><input id="email" type="email">
+    <label>パスワード</label><input id="password" type="password">
+    <button class="primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button>
+    <div id="loginStatus" class="status"></div>
+  </section>
+  <main id="app" class="hidden">
+    <section class="controls">
+      <div class="field"><label>年度</label><select id="fiscalYear"><option value="26">2026年度</option><option value="27">2027年度</option></select></div>
+      <div class="field"><label>対象月</label><select id="targetMonth"></select></div>
+      <button class="green" onclick="renderReport()">集計更新</button>
+      <button class="primary print" onclick="window.print()">印刷 / PDF</button>
+      <span id="loadStatus" class="status"></span>
+      <details class="financial-editor">
+        <summary>前年度実績・目標・販管費を入力（全閲覧者で共有）</summary>
+        <div class="financial-inputs">
+          <label>前年度売上<input id="previousSales" inputmode="numeric"></label>
+          <label>売上目標<input id="salesTarget" inputmode="numeric"></label>
+          <label>前年度原価<input id="previousCost" inputmode="numeric"></label>
+          <label>原価目標<input id="targetCost" inputmode="numeric"></label>
+          <label>粗利率目標（%）<input id="marginTarget" inputmode="decimal" value="22"></label>
+          <label>前年度粗利益<input id="previousGrossProfit" inputmode="numeric"></label>
+          <label>粗利益目標<input id="targetGrossProfit" inputmode="numeric"></label>
+          <label>前年度販管費<input id="previousSga" inputmode="numeric"></label>
+          <label>販管費目標<input id="targetSga" inputmode="numeric"></label>
+          <label>人件費（当月実績）<input id="personnelCost" inputmode="numeric"></label>
+          <label>支払手数料（当月実績）<input id="paymentFees" inputmode="numeric"></label>
+          <label>地代家賃（当月実績）<input id="rentExpense" inputmode="numeric"></label>
+          <label>採用教育費（当月実績）<input id="recruitingTraining" inputmode="numeric"></label>
+          <label>顧問費用（当月実績）<input id="advisorFees" inputmode="numeric"></label>
+          <label>その他販管費（当月実績）<input id="otherSga" inputmode="numeric"></label>
+          <textarea id="financialNotes" placeholder="総括で補足したい内容"></textarea>
+        </div>
+        <div class="financial-actions"><button class="light" onclick="saveTargets()">共有入力を保存</button><small>対象年度・対象月ごとにSupabaseへ保存します。Excelから複数セルをコピーし、任意の入力欄で貼り付けできます。</small></div>
+      </details>
+      <div id="viewerBox" class="viewer-box hidden"><strong>閲覧者設定（管理者）</strong><input id="viewerEmail" type="email" placeholder="追加するメールアドレス"><button class="light" onclick="addViewer()">追加</button><div id="viewerList" class="viewer-list"></div></div>
+    </section>
+    <article class="report">
+      <section class="hero"><h2 id="reportTitle">月次経営会議</h2><p id="reportDate"></p></section>
+      <section id="performanceSummary" class="section">
+        <div class="section-heading"><h3>業績サマリー <small>対象月に請求書を提出した案件を、請求書提出日基準で自動集計</small></h3><button class="copy-image" onclick="copySectionImage('performanceSummary','業績サマリー')">画像をコピー</button></div>
+        <div id="kpis" class="kpis"></div>
+        <h3>月次総括</h3>
+        <div id="autoComment" class="summary-box"></div>
+        <div class="note">数値に基づく自動コメントです。生成AIを使わず、社外へデータを送信しない安全な判定方式です。</div>
+      </section>
+      <section id="financialComparison" class="section">
+        <div class="section-heading"><h3>前年度・目標・実績比較</h3><button class="copy-image" onclick="copySectionImage('financialComparison','前年度目標実績比較')">画像をコピー</button></div>
+        <div class="financial-grid">
+          <table><thead><tr><th>項目</th><th>前年度</th><th>目標</th><th>当月実績</th><th>目標比</th><th>前年比</th></tr></thead><tbody id="financialRows"></tbody></table>
+          <div class="mix-card"><div id="profitDonut" class="donut"><div class="donut-label">粗利率<b id="profitDonutValue">0%</b></div></div><div id="profitLegend" class="mix-legend"></div></div>
+        </div>
+      </section>
+      <section id="salesTrend" class="section">
+        <div class="section-heading"><h3>月次売上・粗利益推移</h3><button class="copy-image" onclick="copySectionImage('salesTrend','月次売上推移')">画像をコピー</button></div>
+        <div class="grid2"><div><h4>売上（税抜）</h4><div id="salesChart" class="chart"></div></div><div><h4>粗利益（税抜）</h4><div id="profitChart" class="chart"></div></div></div>
+        <div class="line-card"><h4>年度推移（折れ線）</h4><svg id="monthlyLineChart" class="line-chart" viewBox="0 0 1200 250" preserveAspectRatio="none" role="img" aria-label="月次売上と粗利益の折れ線グラフ"></svg><div class="line-legend"><span><i style="background:#00a957"></i>売上</span><span><i style="background:#2563eb"></i>粗利益</span></div></div>
+      </section>
+      <section id="clientPerformance" class="section page-break">
+        <div class="section-heading"><h3>取引先別業績</h3><button class="copy-image" onclick="copySectionImage('clientPerformance','取引先別業績')">画像をコピー</button></div>
+        <table><thead><tr><th class="rank">順位</th><th>得意先名</th><th>売上</th><th>原価</th><th>手数料</th><th>粗利益</th><th>利益率</th><th>案件数</th></tr></thead><tbody id="clientRows"></tbody><tfoot id="clientTotal"></tfoot></table>
+      </section>
+      <section id="staffPerformance" class="section">
+        <div class="section-heading"><h3>担当別工事実績</h3><button class="copy-image" onclick="copySectionImage('staffPerformance','担当別工事実績')">画像をコピー</button></div>
+        <table><thead><tr><th>担当者</th><th>売上</th><th>原価</th><th>粗利益</th><th>利益率</th><th>案件数</th><th>未入金</th></tr></thead><tbody id="staffRows"></tbody></table>
+      </section>
+      <section id="billingStatus" class="section">
+        <div class="section-heading"><h3>請求・入金状況</h3><button class="copy-image" onclick="copySectionImage('billingStatus','請求・入金状況')">画像をコピー</button></div>
+        <div class="grid2">
+          <div><table class="small-table"><thead><tr><th>管理番号</th><th>物件</th><th>客先</th><th>請求額</th><th>未入金</th></tr></thead><tbody id="outstandingRows"></tbody></table></div>
+          <div><table class="small-table"><thead><tr><th>管理番号</th><th>物件</th><th>担当</th><th>売上</th><th>状態</th></tr></thead><tbody id="meetingRows"></tbody></table></div>
+        </div>
+      </section>
+      <footer class="footer">Strictly Confidential　株式会社イズミ装美</footer>
+    </article>
+  </main>
+  <script>
+    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+    const ALLOWED=['iida@izumisoubi.co.jp','demachi@izumisoubi.co.jp','ooshima@izumisoubi.co.jp','tanaka@izumisoubi.co.jp'];
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const $=id=>document.getElementById(id);
+    const num=value=>{const parsed=Number(String(value??'').replace(/[,，¥￥\s]/g,''));return Number.isFinite(parsed)?parsed:0};
+    const yen=value=>'¥'+Math.round(num(value)).toLocaleString('ja-JP');
+    const pct=value=>`${num(value).toFixed(1)}%`;
+    const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const monthValue=value=>{const match=String(value||'').match(/\d{1,2}/);return match?Number(match[0]):0};
+    const dateParts=value=>{
+      const match=String(value||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
+    };
+    const fiscalCalendarYear=(fiscal,month)=>2000+Number(fiscal)-(month>=9?1:0);
+    const projectSales=project=>num(project.invoice_subtotal_ex_tax||project.sales_estimate_ex_tax);
+    const projectCost=project=>num(project.total_cost_ex_tax||project.external_cost_ex_tax);
+    const financialFieldIds={
+      previous_sales:'previousSales',target_sales:'salesTarget',previous_cost:'previousCost',target_cost:'targetCost',
+      previous_gross_profit:'previousGrossProfit',target_gross_profit:'targetGrossProfit',previous_sga:'previousSga',
+      target_sga:'targetSga',personnel_cost:'personnelCost',payment_fees:'paymentFees',rent:'rentExpense',
+      recruiting_training:'recruitingTraining',advisor_fees:'advisorFees',other_sga:'otherSga',notes:'financialNotes'
+    };
+    const financialPasteColumns=5;
+    let financialSelection={anchor:-1,focus:-1};
+    let financialDragging=false;
+    function financialPasteTargets(){
+      return [...document.querySelectorAll('.financial-inputs input,.financial-inputs textarea')];
+    }
+    function financialPoint(index){return{row:Math.floor(index/financialPasteColumns),col:index%financialPasteColumns}}
+    function financialIndex(row,col){return row*financialPasteColumns+col}
+    function financialRange(){
+      const anchor=financialPoint(Math.max(0,financialSelection.anchor));
+      const focus=financialPoint(Math.max(0,financialSelection.focus));
+      return{r1:Math.min(anchor.row,focus.row),r2:Math.max(anchor.row,focus.row),c1:Math.min(anchor.col,focus.col),c2:Math.max(anchor.col,focus.col)};
+    }
+    function financialSelectedControls(){
+      if(financialSelection.anchor<0)return[];
+      const controls=financialPasteTargets(),range=financialRange(),selected=[];
+      for(let row=range.r1;row<=range.r2;row++)for(let col=range.c1;col<=range.c2;col++){
+        const control=controls[financialIndex(row,col)];if(control)selected.push(control);
+      }
+      return selected;
+    }
+    function paintFinancialSelection(){
+      const selected=new Set(financialSelectedControls());
+      financialPasteTargets().forEach(control=>control.classList.toggle('financial-selected',selected.has(control)));
+    }
+    function selectFinancialControl(control,extend=false){
+      const index=financialPasteTargets().indexOf(control);if(index<0)return;
+      if(!extend||financialSelection.anchor<0)financialSelection={anchor:index,focus:index};
+      else financialSelection.focus=index;
+      paintFinancialSelection();
+    }
+    async function copyFinancialSelection(cut=false){
+      const controls=financialPasteTargets(),range=financialRange(),lines=[];
+      for(let row=range.r1;row<=range.r2;row++){
+        const values=[];
+        for(let col=range.c1;col<=range.c2;col++)values.push(controls[financialIndex(row,col)]?.value||'');
+        lines.push(values.join('\t'));
+      }
+      const text=lines.join('\r\n');
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+      else{
+        const area=document.createElement('textarea');area.value=text;area.style.cssText='position:fixed;opacity:0';document.body.append(area);area.select();document.execCommand('copy');area.remove();
+      }
+      if(cut){financialSelectedControls().forEach(control=>{control.value='';control.dispatchEvent(new Event('input',{bubbles:true}))});renderReport()}
+      $('loadStatus').textContent=`${financialSelectedControls().length}セルを${cut?'切り取り':'コピー'}しました。`;
+    }
+    function setFinancialValue(control,value){
+      if(!control)return false;
+      control.value=String(value??'').trim();
+      control.dispatchEvent(new Event('input',{bubbles:true}));
+      return true;
+    }
+    function applyFinancialPaste(text,target){
+      const controls=financialPasteTargets();
+      const targetIndex=controls.indexOf(target);
+      if(targetIndex<0)return false;
+      if(financialSelection.anchor<0)financialSelection={anchor:targetIndex,focus:targetIndex};
+      const rows=String(text||'').replace(/\r/g,'').split('\n');
+      while(rows.length>1&&rows[rows.length-1]==='')rows.pop();
+      const matrix=rows.map(row=>row.split('\t'));
+      const clipRows=matrix.length,clipCols=Math.max(1,...matrix.map(row=>row.length));
+      matrix.forEach(row=>{while(row.length<clipCols)row.push('')});
+      const range=financialRange(),rangeRows=range.r2-range.r1+1,rangeCols=range.c2-range.c1+1;
+      const fillSelection=(rangeRows>1||rangeCols>1)&&rangeRows%clipRows===0&&rangeCols%clipCols===0;
+      const pasteRows=fillSelection?rangeRows:clipRows,pasteCols=fillSelection?rangeCols:clipCols;
+      let changed=0;
+      for(let rowOffset=0;rowOffset<pasteRows;rowOffset++)for(let colOffset=0;colOffset<pasteCols;colOffset++){
+        if(setFinancialValue(controls[financialIndex(range.r1+rowOffset,range.c1+colOffset)],matrix[rowOffset%clipRows][colOffset%clipCols]))changed++;
+      }
+      financialSelection={anchor:financialIndex(range.r1,range.c1),focus:financialIndex(range.r1+pasteRows-1,range.c1+pasteCols-1)};
+      paintFinancialSelection();
+      $('loadStatus').textContent=`Excelから${changed}セルを貼り付けました。内容を確認して「共有入力を保存」を押してください。`;
+      renderReport();
+      return true;
+    }
+    function pasteFinancialGrid(event){
+      const target=event.target.closest('.financial-inputs input,.financial-inputs textarea');
+      if(!target)return;
+      const text=event.clipboardData?.getData('text/plain')||'';
+      const selected=financialSelectedControls();
+      if(!/[\t\r\n]/.test(text)&&selected.length<=1)return;
+      event.preventDefault();
+      applyFinancialPaste(text,target);
+    }
+    function fillFinancialDown(){
+      const controls=financialPasteTargets(),range=financialRange();if(range.r2<=range.r1)return;
+      for(let row=range.r1+1;row<=range.r2;row++)for(let col=range.c1;col<=range.c2;col++){
+        setFinancialValue(controls[financialIndex(row,col)],controls[financialIndex(range.r1,col)]?.value||'');
+      }
+      $('loadStatus').textContent='選択範囲へ上端行をコピーしました。';renderReport();
+    }
+    function fillFinancialRight(){
+      const controls=financialPasteTargets(),range=financialRange();if(range.c2<=range.c1)return;
+      for(let row=range.r1;row<=range.r2;row++)for(let col=range.c1+1;col<=range.c2;col++){
+        setFinancialValue(controls[financialIndex(row,col)],controls[financialIndex(row,range.c1)]?.value||'');
+      }
+      $('loadStatus').textContent='選択範囲へ左端列をコピーしました。';renderReport();
+    }
+    function fillFinancialSelection(){
+      const controls=financialSelectedControls();if(controls.length<2)return;
+      const source=controls[0].value;controls.slice(1).forEach(control=>setFinancialValue(control,source));renderReport();
+    }
+    function clearFinancialSelection(){financialSelectedControls().forEach(control=>setFinancialValue(control,''));renderReport()}
+    function initFinancialExcel(){
+      const grid=document.querySelector('.financial-inputs');if(!grid)return;
+      grid.addEventListener('mousedown',event=>{const control=event.target.closest('input,textarea');if(!control)return;selectFinancialControl(control,event.shiftKey);financialDragging=true});
+      grid.addEventListener('mouseover',event=>{if(!financialDragging)return;const control=event.target.closest('input,textarea');if(control)selectFinancialControl(control,true)});
+      document.addEventListener('mouseup',()=>{financialDragging=false});
+      grid.addEventListener('paste',pasteFinancialGrid);
+      grid.addEventListener('keydown',event=>{
+        const control=event.target.closest('input,textarea');if(!control)return;
+        const key=event.key.toLowerCase(),hasTextSelection=typeof control.selectionStart==='number'&&control.selectionStart!==control.selectionEnd;
+        if((event.metaKey||event.ctrlKey)&&key==='c'&&!hasTextSelection){event.preventDefault();copyFinancialSelection(false);return}
+        if((event.metaKey||event.ctrlKey)&&key==='x'&&!hasTextSelection){event.preventDefault();copyFinancialSelection(true);return}
+        if((event.metaKey||event.ctrlKey)&&key==='d'&&financialSelectedControls().length>1){event.preventDefault();fillFinancialDown();return}
+        if((event.metaKey||event.ctrlKey)&&key==='r'&&financialSelectedControls().length>1){event.preventDefault();fillFinancialRight();return}
+        if((event.metaKey||event.ctrlKey)&&event.key==='Enter'&&financialSelectedControls().length>1){event.preventDefault();fillFinancialSelection();return}
+        if((event.key==='Delete'||event.key==='Backspace')&&financialSelectedControls().length>1&&!hasTextSelection){event.preventDefault();clearFinancialSelection();return}
+      });
+    }
+    let projects=[],managementOverrides=new Map(),billingOverrides=new Map(),meetingProjects=new Set(),orderCostByProject=new Map(),financialInput={},appOpening=false;
+    function setLoginStatus(text){$('loginStatus').textContent=text}
+    async function signIn(){
+      const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+      if(error)return setLoginStatus(error.message);
+      await authorize(data.user);
+    }
+    async function authorize(user){
+      if(!user||appOpening)return;
+      const email=String(user.email||'').toLowerCase();
+      const {data:enabled,error:enabledError}=await db.rpc('is_current_app_user_enabled');
+      if(enabledError||enabled!==true){
+        await db.auth.signOut();
+        return setLoginStatus(enabledError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。');
+      }
+      const {data:canView,error:accessError}=await db.rpc('can_view_meeting');
+      const fallbackAllowed=ALLOWED.includes(email);
+      const allowed=accessError?fallbackAllowed:canView===true;
+      if(!allowed){
+        await db.auth.signOut();
+        return setLoginStatus('この画面を利用できるアカウントではありません。');
+      }
+      const {data:isAdmin}=await db.rpc('is_management_admin');
+      $('viewerBox').classList.toggle('hidden',isAdmin!==true);
+      appOpening=true;
+      try{
+        $('loginCard').classList.add('hidden');
+        $('app').classList.remove('hidden');
+        if(isAdmin===true)await loadViewers();
+        await loadData();
+      }finally{
+        appOpening=false;
+      }
+    }
+    async function loadViewers(){
+      const {data,error}=await db.from('meeting_access_members').select('email,display_name,active').eq('active',true).order('email');
+      const members=error?ALLOWED.map(email=>({email,display_name:''})):(data||[]);
+      $('viewerList').innerHTML=members.map(member=>{
+        const label=member.display_name?`${member.display_name}（${member.email}）`:member.email;
+        return `<span class="viewer-chip">${esc(label)}<button type="button" title="閲覧者から外す" onclick="removeViewer('${encodeURIComponent(member.email)}')">×</button></span>`;
+      }).join('');
+      if(error)$('loadStatus').textContent='閲覧者設定はSQL更新後に利用できます。現在は既定4名で動作しています。';
+    }
+    async function addViewer(){
+      const email=$('viewerEmail').value.trim().toLowerCase();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return alert('正しいメールアドレスを入力してください。');
+      const {error}=await db.from('meeting_access_members').upsert({email,active:true},{onConflict:'email'});
+      if(error)return alert(`閲覧者を追加できません：${error.message}`);
+      $('viewerEmail').value='';
+      await loadViewers();
+    }
+    async function removeViewer(encodedEmail){
+      const email=decodeURIComponent(encodedEmail);
+      if(!confirm(`${email} を経営会議の閲覧者から外しますか？`))return;
+      const {data:{user}}=await db.auth.getUser();
+      if(String(user?.email||'').toLowerCase()===email)return alert('現在ログイン中の自分自身は削除できません。先に別の閲覧者でログインしてください。');
+      const {error}=await db.from('meeting_access_members').update({active:false}).eq('email',email);
+      if(error)return alert(`閲覧者を変更できません：${error.message}`);
+      await loadViewers();
+    }
+    async function fetchAll(table,{order=null,batchSize=1000,maxRows=100000}={}){
+      const rows=[];
+      for(let from=0;from<maxRows;from+=batchSize){
+        let query=db.from(table).select('*').range(from,from+batchSize-1);
+        if(order)query=query.order(order.column,{ascending:order.ascending});
+        const {data,error}=await query;
+        if(error)return {data:rows,error};
+        rows.push(...(data||[]));
+        if(!data||data.length<batchSize)break;
+      }
+      return {data:rows,error:null};
+    }
+    function fiscalCodeForDate(date=new Date()){
+      return String((date.getFullYear()+(date.getMonth()>=8?1:0))%100).padStart(2,'0');
+    }
+    function populateFiscalYears(){
+      const codes=new Set(projects.map(project=>String(project.management_number||'').match(/^(\d{2})-/)?.[1]).filter(Boolean));
+      codes.add(fiscalCodeForDate());
+      const options=[...codes].sort((a,b)=>Number(b)-Number(a));
+      const current=$('fiscalYear').value;
+      $('fiscalYear').innerHTML=options.map(code=>`<option value="${esc(code)}">20${esc(code)}年度</option>`).join('');
+      $('fiscalYear').value=options.includes(current)?current:fiscalCodeForDate();
+    }
+    function applyFinancialInput(input={}){
+      financialInput=input||{};
+      Object.entries(financialFieldIds).forEach(([field,id])=>{
+        const element=$(id);
+        if(!element)return;
+        const value=financialInput[field];
+        element.value=value===null||value===undefined?'':value;
+      });
+      const targetSales=num(financialInput.target_sales);
+      const targetProfit=num(financialInput.target_gross_profit);
+      if(!$('marginTarget').value&&targetSales)$('marginTarget').value=(targetProfit/targetSales*100).toFixed(1);
+    }
+    async function loadFinancialInput(){
+      if(!$('fiscalYear').value||!$('targetMonth').value)return;
+      const {data,error}=await db.from('meeting_financial_inputs').select('*')
+        .eq('fiscal_year',$('fiscalYear').value).eq('accounting_month',Number($('targetMonth').value)).maybeSingle();
+      if(error){
+        applyFinancialInput({
+          target_sales:localStorage.getItem('meetingSalesTarget')||'',
+          notes:''
+        });
+        $('marginTarget').value=localStorage.getItem('meetingMarginTarget')||'22';
+        $('loadStatus').textContent='前年度・目標入力はSQL更新後に共有保存できます。現在は端末保存を表示しています。';
+        renderReport();
+        return;
+      }
+      applyFinancialInput(data||{});
+      if(!$('marginTarget').value)$('marginTarget').value='22';
+      renderReport();
+    }
+    function financialPayload(){
+      const payload={fiscal_year:$('fiscalYear').value,accounting_month:Number($('targetMonth').value)};
+      Object.entries(financialFieldIds).forEach(([field,id])=>{
+        payload[field]=field==='notes'?$(id).value.trim():num($(id).value);
+      });
+      return payload;
+    }
+    async function loadData(){
+      $('loadStatus').textContent='読み込み中…';
+      const [projectResult,lineResult,overrideResult]=await Promise.all([
+        fetchAll('management_numbers',{order:{column:'management_number',ascending:false},maxRows:100000}),
+        fetchAll('project_line_items',{order:{column:'id',ascending:true},maxRows:200000}),
+        fetchAll('project_manual_overrides',{order:{column:'id',ascending:true},maxRows:100000})
+      ]);
+      const error=projectResult.error||lineResult.error||overrideResult.error;
+      if(error){$('loadStatus').textContent=error.message;return}
+      projects=(projectResult.data||[]).filter(project=>!project.deleted_at);
+      orderCostByProject=new Map();
+      (lineResult.data||[]).filter(line=>!line.deleted_at).forEach(line=>{
+        if(line.document_type!=='order'||!line.project_id)return;
+        orderCostByProject.set(line.project_id,(orderCostByProject.get(line.project_id)||0)+num(line.order_amount_ex_tax));
+      });
+      const overrides=overrideResult.data||[];
+      managementOverrides=new Map(overrides.filter(item=>item.view_key==='management').map(item=>[item.row_key,item.field_values||{}]));
+      billingOverrides=new Map(overrides.filter(item=>item.view_key==='billing').map(item=>[item.row_key,item.field_values||{}]));
+      meetingProjects=new Set(overrides.filter(item=>item.field_values?.meeting_checked).map(item=>item.project_id).filter(Boolean));
+      populateFiscalYears();
+      $('loadStatus').textContent=`${projects.length}案件を読み込み`;
+      await loadFinancialInput();
+    }
+    function mergedProject(project){
+      return {...project,...(managementOverrides.get(project.id)||{})};
+    }
+    function projectRecord(project){
+      const merged=mergedProject(project);
+      const billing=billingOverrides.get(project.id)||{};
+      const invoiceDate=Object.hasOwn(billing,'invoice_date')?billing.invoice_date:merged.invoice_date;
+      const invoiceParts=dateParts(invoiceDate);
+      const sales=Object.hasOwn(billing,'customer_invoice_amount')?num(billing.customer_invoice_amount):projectSales(merged);
+      const orderCost=orderCostByProject.get(project.id)||0;
+      const cost=projectCost(merged)||orderCost;
+      const fee=num(merged.fee_amount);
+      const profit=sales-cost-fee;
+      const invoiceTaxIn=Object.hasOwn(billing,'customer_invoice_amount')?Math.round(sales*1.1):(num(merged.sales_invoice_tax_in)||Math.round(sales*1.1));
+      const received=Object.hasOwn(billing,'received_amount')?num(billing.received_amount):(billing.received_checked||merged.payment_received_on?invoiceTaxIn:0);
+      return {
+        ...merged,sales,cost,fee,profit,margin:sales?profit/sales*100:0,invoiceTaxIn,received,
+        billing_client_name:Object.hasOwn(billing,'client_name')?billing.client_name:merged.billing_client_name,
+        property_name:Object.hasOwn(billing,'property_room')?billing.property_room:[merged.property_name,merged.room_number].filter(Boolean).join(' '),
+        outstanding:Math.max(0,invoiceTaxIn-received),
+        meetingChecked:meetingProjects.has(project.id),
+        invoice_date:invoiceDate,
+        invoiceYear:invoiceParts?.year||0,
+        invoiceMonth:invoiceParts?.month||0
+      };
+    }
+    async function saveTargets(){
+      const payload=financialPayload();
+      localStorage.setItem('meetingSalesTarget',String(payload.target_sales||''));
+      localStorage.setItem('meetingMarginTarget',$('marginTarget').value);
+      const {data:{user}}=await db.auth.getUser();
+      payload.updated_by=user?.id||null;
+      payload.updated_at=new Date().toISOString();
+      const {data,error}=await db.from('meeting_financial_inputs').upsert(payload,{onConflict:'fiscal_year,accounting_month'}).select().single();
+      if(error){
+        $('loadStatus').textContent=`共有保存できません：${error.message}（この端末には保存しました）`;
+        renderReport();
+        return;
+      }
+      applyFinancialInput(data);
+      $('loadStatus').textContent='前年度・目標・販管費を共有保存しました。';
+      renderReport();
+    }
+    async function copySectionImage(id,label){
+      const section=$(id);
+      const button=section?.querySelector('.copy-image');
+      if(!section||!window.html2canvas)return alert('画像作成用ライブラリを読み込めませんでした。ページを再読み込みしてください。');
+      const original=button?.textContent;
+      if(button){button.disabled=true;button.textContent='画像を作成中…'}
+      try{
+        const canvas=await window.html2canvas(section,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false});
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+        if(!blob)throw new Error('画像を作成できませんでした。');
+        if(navigator.clipboard?.write&&window.ClipboardItem){
+          await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+          $('loadStatus').textContent=`「${label}」を画像としてコピーしました。PowerPointで貼り付けてください。`;
+        }else{
+          const link=document.createElement('a');
+          link.href=URL.createObjectURL(blob);link.download=`${label}_${$('fiscalYear').value}_${$('targetMonth').value}月.png`;link.click();
+          setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+          $('loadStatus').textContent='お使いのブラウザでは画像コピーに対応していないため、PNGを保存しました。';
+        }
+      }catch(error){
+        $('loadStatus').textContent=`画像コピーに失敗しました：${error.message}`;
+      }finally{
+        if(button){button.disabled=false;button.textContent=original||'画像をコピー'}
+      }
+    }
+    function groupBy(records,keyFn){
+      const map=new Map();
+      records.forEach(record=>{
+        const key=keyFn(record)||'未設定';
+        const current=map.get(key)||{name:key,sales:0,cost:0,fee:0,profit:0,count:0,outstanding:0};
+        current.sales+=record.sales;current.cost+=record.cost;current.fee+=record.fee;current.profit+=record.profit;current.count++;current.outstanding+=record.outstanding;
+        map.set(key,current);
+      });
+      return [...map.values()].sort((a,b)=>b.sales-a.sales);
+    }
+    function meetingClientName(...values){
+      const raw=values.find(value=>String(value||'').trim())||'未設定';
+      const normalized=String(raw).normalize('NFKC').toUpperCase().replace(/[\s　・･.\-‐ー_株式会社㈱（）()]/g,'');
+      return normalized.includes('TAKUTO')?'その他':String(raw).trim();
+    }
+    function chartHtml(values,key){
+      const max=Math.max(1,...values.map(item=>Math.abs(item[key])));
+      return values.map(item=>`<div class="chart-row"><b>${item.month}月</b><div class="bar-bg"><div class="bar" style="width:${Math.max(0,Math.abs(item[key])/max*100)}%"></div></div><div class="chart-value">${yen(item[key])}</div></div>`).join('');
+    }
+    function renderLineChart(values){
+      const svg=$('monthlyLineChart');
+      if(!svg)return;
+      const series=values.flatMap(item=>[num(item.sales),num(item.profit)]);
+      const minimum=Math.min(0,...series),maximum=Math.max(1,...series);
+      const range=Math.max(1,maximum-minimum);
+      const left=52,right=1170,top=22,bottom=208;
+      const x=index=>left+(right-left)*(index/Math.max(1,values.length-1));
+      const y=value=>bottom-(num(value)-minimum)/range*(bottom-top);
+      const line=key=>values.map((item,index)=>`${x(index).toFixed(1)},${y(item[key]).toFixed(1)}`).join(' ');
+      const baseline=y(0);
+      const labels=values.map((item,index)=>`<text x="${x(index)}" y="238" text-anchor="middle">${item.month}月</text>`).join('');
+      const salesDots=values.map((item,index)=>`<circle class="line-dot-sales" cx="${x(index)}" cy="${y(item.sales)}" r="4"><title>${item.month}月 売上 ${yen(item.sales)}</title></circle>`).join('');
+      const profitDots=values.map((item,index)=>`<circle class="line-dot-profit" cx="${x(index)}" cy="${y(item.profit)}" r="4"><title>${item.month}月 粗利益 ${yen(item.profit)}</title></circle>`).join('');
+      svg.innerHTML=`<line x1="${left}" y1="${baseline}" x2="${right}" y2="${baseline}" stroke="#9aa8ba" stroke-width="1"/><polyline class="line-sales" points="${line('sales')}"/><polyline class="line-profit" points="${line('profit')}"/>${salesDots}${profitDots}${labels}<text x="8" y="${Math.max(12,top+3)}">${yen(maximum)}</text><text x="8" y="${Math.min(222,bottom+3)}">${yen(minimum)}</text>`;
+    }
+    function autoComment(monthRecords,totals,target,marginTarget,clientGroups,financial){
+      if(!monthRecords.length)return '対象月に請求書を提出した案件がありません。請求書提出日を確認してください。';
+      const lines=[];
+      const targetRate=target?totals.sales/target*100:0;
+      lines.push(`売上は${yen(totals.sales)}${target?`（目標比${pct(targetRate)}）`:''}、粗利益は${yen(totals.profit)}、粗利率は${pct(totals.margin)}となりました。`);
+      if(target)lines.push(targetRate>=100?'売上は目標を達成しています。':`売上は目標を${yen(Math.max(0,target-totals.sales))}下回っています。完工・請求予定案件の確認が必要です。`);
+      lines.push(totals.margin>=marginTarget?`粗利率は目標${pct(marginTarget)}を上回っています。`:`粗利率は目標${pct(marginTarget)}を下回っています。原価超過・追加工事・紹介料を確認してください。`);
+      if(totals.sga)lines.push(`販管費入力は${yen(totals.sga)}、EBITDA概算は${yen(totals.ebitda)}です。`);
+      if(totals.outstanding)lines.push(`未入金は${yen(totals.outstanding)}です。入金予定日と督促状況を確認してください。`);
+      const unchecked=monthRecords.filter(record=>!record.meetingChecked).length;
+      if(unchecked)lines.push(`経営会議チェック未完了の案件が${unchecked}件あります。`);
+      if(clientGroups[0]&&totals.sales&&clientGroups[0].sales/totals.sales>=.5)lines.push(`${clientGroups[0].name}の売上構成比が${pct(clientGroups[0].sales/totals.sales*100)}で、取引先集中度が高い状態です。`);
+      if(financial.notes)lines.push(`補足：${financial.notes}`);
+      return lines.join('\n');
+    }
+    function renderReport(){
+      if(!projects.length)return;
+      const fiscal=$('fiscalYear').value;
+      const month=Number($('targetMonth').value);
+      const records=projects.map(projectRecord);
+      const fiscalRecords=records.filter(record=>{
+        if(!record.invoiceYear||!record.invoiceMonth)return false;
+        return record.invoiceYear===fiscalCalendarYear(fiscal,record.invoiceMonth);
+      });
+      const monthRecords=fiscalRecords.filter(record=>record.invoiceYear===fiscalCalendarYear(fiscal,month)&&record.invoiceMonth===month);
+      const sum=key=>monthRecords.reduce((total,record)=>total+num(record[key]),0);
+      const totals={sales:sum('sales'),cost:sum('cost'),fee:sum('fee'),profit:sum('profit'),outstanding:sum('outstanding'),received:sum('received')};
+      totals.margin=totals.sales?totals.profit/totals.sales*100:0;
+      const financial=financialPayload();
+      totals.sga=['personnel_cost','payment_fees','rent','recruiting_training','advisor_fees','other_sga'].reduce((sum,key)=>sum+num(financial[key]),0);
+      totals.ebitda=totals.profit-totals.sga;
+      const target=num(financial.target_sales),marginTarget=num($('marginTarget').value||22);
+      const clientGroups=groupBy(monthRecords,record=>meetingClientName(record.customer_name,record.billing_client_name,record.client_name));
+      const staffGroups=groupBy(monthRecords,record=>record.staff_name);
+      $('reportTitle').textContent=`20${fiscal}年${month}月度 経営会議`;
+      $('reportDate').textContent=`株式会社イズミ装美　${new Date().toLocaleDateString('ja-JP')}`;
+      const kpiItems=[
+        ['売上（税抜）',totals.sales,target?`目標比 ${pct(totals.sales/target*100)}`:'目標未設定',target&&totals.sales<target],
+        ['原価（税抜）',totals.cost,`${monthRecords.length}案件`,false],
+        ['粗利益（税抜）',totals.profit,`粗利率 ${pct(totals.margin)}`,totals.margin<marginTarget],
+        ['販管費（入力）',totals.sga,`目標 ${yen(financial.target_sga)}`,financial.target_sga&&totals.sga>financial.target_sga],
+        ['EBITDA概算',totals.ebitda,`粗利益－販管費`,totals.ebitda<0],
+        ['未入金（税込）',totals.outstanding,`入金済 ${yen(totals.received)}`,totals.outstanding>0],
+        ['手数料',totals.fee,'紹介料等',false],
+        ['経営会議対象',monthRecords.filter(record=>record.meetingChecked).length,`未チェック ${monthRecords.filter(record=>!record.meetingChecked).length}件`,false],
+        ['請求済案件',monthRecords.filter(record=>record.invoice_date).length,`全${monthRecords.length}件`,false],
+        ['完工済案件',monthRecords.filter(record=>record.completed_on).length,`全${monthRecords.length}件`,false]
+      ];
+      $('kpis').innerHTML=kpiItems.map(item=>`<div class="kpi"><span>${item[0]}</span><b class="${item[3]?'bad':'good'}">${typeof item[1]==='number'&&item[0].includes('案件')?`${item[1]}件`:typeof item[1]==='number'&&!['経営会議対象','請求済案件','完工済案件'].includes(item[0])?yen(item[1]):`${item[1]}件`}</b><em>${item[2]}</em></div>`).join('');
+      $('autoComment').textContent=autoComment(monthRecords,totals,target,marginTarget,clientGroups,financial);
+      const comparisonRows=[
+        ['売上',financial.previous_sales,financial.target_sales,totals.sales],
+        ['原価',financial.previous_cost,financial.target_cost,totals.cost],
+        ['粗利益',financial.previous_gross_profit,financial.target_gross_profit,totals.profit],
+        ['販管費',financial.previous_sga,financial.target_sga,totals.sga],
+        ['EBITDA',num(financial.previous_gross_profit)-num(financial.previous_sga),num(financial.target_gross_profit)-num(financial.target_sga),totals.ebitda]
+      ];
+      $('financialRows').innerHTML=comparisonRows.map(([label,previous,goal,actual])=>`<tr><td>${label}</td><td class="num">${yen(previous)}</td><td class="num">${yen(goal)}</td><td class="num">${yen(actual)}</td><td class="num">${goal?pct(actual/goal*100):'-'}</td><td class="num">${previous?pct(actual/previous*100):'-'}</td></tr>`).join('');
+      const salesBase=Math.max(1,totals.sales);
+      const costRate=Math.max(0,Math.min(100,totals.cost/salesBase*100));
+      const feeRate=Math.max(0,Math.min(100-costRate,totals.fee/salesBase*100));
+      const profitRate=Math.max(0,100-costRate-feeRate);
+      $('profitDonut').style.background=`conic-gradient(var(--green) 0 ${profitRate}%,#8db9e8 ${profitRate}% ${profitRate+costRate}%,#e7a34f ${profitRate+costRate}% 100%)`;
+      $('profitDonutValue').textContent=pct(totals.margin);
+      $('profitLegend').innerHTML=`<div><i style="background:var(--green)"></i>粗利益 ${yen(totals.profit)}</div><div><i style="background:#8db9e8"></i>原価 ${yen(totals.cost)}</div><div><i style="background:#e7a34f"></i>手数料 ${yen(totals.fee)}</div>`;
+      const months=[9,10,11,12,1,2,3,4,5,6,7,8].map(value=>{
+        const list=fiscalRecords.filter(record=>record.invoiceMonth===value);
+        return {month:value,sales:list.reduce((sum,record)=>sum+record.sales,0),profit:list.reduce((sum,record)=>sum+record.profit,0)};
+      });
+      $('salesChart').innerHTML=chartHtml(months,'sales');
+      $('profitChart').innerHTML=chartHtml(months,'profit');
+      renderLineChart(months);
+      $('clientRows').innerHTML=clientGroups.slice(0,15).map((group,index)=>`<tr><td class="rank">${index+1}</td><td title="${esc(group.name)}">${esc(group.name)}</td><td class="num">${yen(group.sales)}</td><td class="num">${yen(group.cost)}</td><td class="num">${yen(group.fee)}</td><td class="num">${yen(group.profit)}</td><td class="num">${pct(group.sales?group.profit/group.sales*100:0)}</td><td class="num">${group.count}</td></tr>`).join('');
+      $('clientTotal').innerHTML=`<tr><td colspan="2">総計</td><td class="num">${yen(totals.sales)}</td><td class="num">${yen(totals.cost)}</td><td class="num">${yen(totals.fee)}</td><td class="num">${yen(totals.profit)}</td><td class="num">${pct(totals.margin)}</td><td class="num">${monthRecords.length}</td></tr>`;
+      $('staffRows').innerHTML=staffGroups.map(group=>`<tr><td>${esc(group.name)}</td><td class="num">${yen(group.sales)}</td><td class="num">${yen(group.cost)}</td><td class="num">${yen(group.profit)}</td><td class="num">${pct(group.sales?group.profit/group.sales*100:0)}</td><td class="num">${group.count}</td><td class="num">${yen(group.outstanding)}</td></tr>`).join('');
+      $('outstandingRows').innerHTML=monthRecords.filter(record=>record.outstanding>0).sort((a,b)=>b.outstanding-a.outstanding).slice(0,20).map(record=>{const clientName=meetingClientName(record.customer_name,record.billing_client_name,record.client_name);return `<tr><td>${esc(record.management_number)}</td><td title="${esc(record.property_name)}">${esc(record.property_name)}</td><td title="${esc(clientName)}">${esc(clientName)}</td><td class="num">${yen(record.invoiceTaxIn)}</td><td class="num">${yen(record.outstanding)}</td></tr>`}).join('')||'<tr><td colspan="5">未入金案件はありません。</td></tr>';
+      $('meetingRows').innerHTML=monthRecords.filter(record=>record.meetingChecked).map(record=>`<tr><td>${esc(record.management_number)}</td><td title="${esc(record.property_name)}">${esc(record.property_name)}</td><td>${esc(record.staff_name)}</td><td class="num">${yen(record.sales)}</td><td>${record.completed_on?'完工':'進行中'}</td></tr>`).join('')||'<tr><td colspan="5">会議チェック済み案件はありません。</td></tr>';
+    }
+    $('targetMonth').innerHTML=Array.from({length:12},(_,index)=>`<option value="${index+1}">${index+1}月</option>`).join('');
+    $('targetMonth').value=String(new Date().getMonth()+1);
+    $('marginTarget').value=localStorage.getItem('meetingMarginTarget')||'22';
+    initFinancialExcel();
+    $('fiscalYear').addEventListener('change',loadFinancialInput);
+    $('targetMonth').addEventListener('change',loadFinancialInput);
+    db.auth.getSession().then(({data:{session}})=>{if(session)authorize(session.user)});
+  </script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>

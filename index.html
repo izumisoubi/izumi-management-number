@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#163b6d">
+  <title>イズミ装美 管理番号取得</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--navy:#163b6d;--blue:#2867d7;--line:#d6def0;--bg:#f3f6fb;--text:#172033;--muted:#64718b;}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+    header{background:var(--navy);color:#fff;padding:16px max(18px,calc((100% - 760px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}
+    h1{font-size:18px;margin:0}.sub{font-size:12px;opacity:.75;margin-top:3px}.wrap{max-width:760px;margin:0 auto;padding:18px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 3px 12px rgba(20,45,90,.05)}
+    h2{font-size:16px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{font-size:12px;font-weight:700;color:#40506c;display:block;margin-bottom:5px}input,select{width:100%;border:1px solid #bfcbe2;border-radius:8px;background:#fff;padding:11px;font:inherit;color:var(--text)}
+    button{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}.primary{width:100%;background:var(--blue);color:#fff;margin-top:17px;font-size:16px}.secondary{background:#edf2fc;color:var(--navy);font-size:13px}.danger{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45);padding:7px 10px;font-size:12px}
+    .notice{font-size:13px;line-height:1.6;background:#eef5ff;border-left:4px solid var(--blue);padding:10px 12px;border-radius:5px}.result{display:none;border:2px solid #2f8e59;background:#f1fff6;border-radius:12px;padding:16px;text-align:center;margin-bottom:15px}.result .number{font-size:30px;font-weight:800;color:#157143;letter-spacing:1px}.result p{margin:6px 0 0;font-size:13px}.hidden{display:none!important}.status{font-size:13px;color:var(--muted);padding:8px 0}.error{color:#bd2532}.list{padding:0;overflow:hidden}.list-item{padding:13px 15px;border-bottom:1px solid var(--line)}.list-item:last-child{border-bottom:0}.num{font-weight:800;color:var(--navy);font-size:16px}.meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}.login{max-width:440px;margin:42px auto}.user{font-size:12px;opacity:.9;text-align:right;line-height:1.9}.user a{color:#fff;margin-right:10px;font-weight:700;text-decoration:none;white-space:nowrap}.login-links{text-align:center;margin-top:12px;font-size:12px}.login-links a{color:var(--blue);font-weight:800;text-decoration:none}.login-links a:hover{text-decoration:underline}@media(max-width:560px){header{padding:14px 16px}.wrap{padding:14px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:15px}.result .number{font-size:28px}.user a{display:none}}
+  </style>
+</head>
+<body>
+  <header><div><h1>イズミ装美　管理番号取得</h1><div class="sub">同時取得でも番号は重複しません</div></div><div id="loginUser" class="user hidden"><a href="calendar.html">カレンダー</a><a href="estimate.html" target="_blank" rel="noopener">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト.html">一覧メニュー</a><a href="ユーザー設定.html">ユーザー設定</a><span id="adminLinks"></span><br><span id="userEmail"></span> <button class="danger" onclick="signOut()">ログアウト</button></div></header>
+  <main class="wrap">
+    <section id="loginCard" class="card login">
+      <h2>社員ログイン</h2><p class="notice">見積・発注・原価・請求・各台帳・予定カレンダーで共通の社員アカウントです。登録済みの会社メールアドレスと、ご自身で設定したパスワードを入力してください。</p>
+      <div class="grid" style="margin-top:14px"><div class="full"><label>メールアドレス</label><input id="email" type="email" autocomplete="email"></div><div class="full"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"></div></div>
+      <button class="primary" onclick="signIn()">ログイン</button><div class="login-links"><a href="auth.html?mode=signup&next=index.html">新しい社員の登録</a> ・ <a href="auth.html?mode=forgot&next=index.html">パスワードを忘れた方</a></div><div id="loginStatus" class="status"></div>
+    </section>
+    <section id="app" class="hidden">
+      <div id="result" class="result"><div>管理番号を取得しました</div><div id="issuedNumber" class="number"></div><p id="issuedDetail"></p></div>
+      <section class="card"><h2>新しい管理番号を取得</h2><div class="notice">「取得」を押した時点で番号を確保します。二重押ししないでください。</div>
+        <div class="grid" style="margin-top:14px">
+          <div><label>年度</label><select id="fiscalYear"><option value="22">2022年度（22-）</option><option value="23">2023年度（23-）</option><option value="24">2024年度（24-）</option><option value="25">2025年度（25-）</option><option value="26">2026年度（26-）</option><option value="27">2027年度（27-）</option><option value="28">2028年度（28-）</option><option value="29">2029年度（29-）</option><option value="30">2030年度（30-）</option></select></div>
+          <div><label>受付日</label><input id="receptionDate" type="date"></div>
+          <div><label>工事担当者 *</label><select id="staffName"><option value="">社員マスタから選択</option></select></div>
+          <div><label>請求先</label><input id="clientName" placeholder="会社名"></div>
+          <div><label>物件名</label><input id="propertyName" placeholder="物件名"></div>
+          <div><label>部屋番号</label><input id="roomNumber" placeholder="部屋番号"></div>
+          <div class="full"><label>作業件名</label><input id="workName" placeholder="作業件名"></div>
+        </div><button id="issueButton" class="primary" onclick="issueNumber()">管理番号を取得</button><div id="issueStatus" class="status"></div>
+      </section>
+      <section class="card list"><div style="padding:15px 15px 5px;display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">最近の取得履歴</h2><button class="secondary" onclick="loadRecent()">更新</button></div><div id="recent"></div></section>
+    </section>
+  </main>
+  <script>
+    function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
+    normalizeStablePageUrls();
+    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
+    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const $=id=>document.getElementById(id);
+    const esc=value=>String(value??'').replace(/[&<>"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
+    const todayLocal=()=>{const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());return now.toISOString().slice(0,10)};
+    $('receptionDate').value=todayLocal();
+    const linkedCalendarEventId=new URL(location.href).searchParams.get('calendar_event_id')||'';
+    const fiscalCodeFor=dateValue=>{const date=dateValue?new Date(`${dateValue}T00:00:00`):new Date();return String(date.getFullYear()+(date.getMonth()>=8?1:0)).slice(-2)};
+    $('fiscalYear').value=[...$('fiscalYear').options].some(option=>option.value===fiscalCodeFor())?fiscalCodeFor():'26';
+    function message(id,text,isError=false){const el=$(id);el.textContent=text;el.className='status'+(isError?' error':'');}
+    async function signIn(){message('loginStatus','ログイン中…');const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)return message('loginStatus',error.message,true);message('loginStatus','');await showApp();}
+    async function signOut(){await db.auth.signOut();$('app').classList.add('hidden');$('loginCard').classList.remove('hidden');$('loginUser').classList.add('hidden');}
+    async function loadEmployees(){const select=$('staffName');const previous=select.value;const {data,error}=await db.from('employee_master').select('name').eq('active',true).order('display_order',{ascending:true});if(error){message('issueStatus','社員マスタを読み込めません。ログイン後に更新してください。',true);return;}const names=[...new Set((data||[]).map(row=>row.name).filter(Boolean))];select.innerHTML='<option value="">社員マスタから選択</option>'+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join('');if(names.includes(previous))select.value=previous;}
+    async function loadCalendarDraft(){if(!linkedCalendarEventId)return;let result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,work_name,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();if(result.error&&/work_name|column|schema cache/i.test(result.error.message||''))result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();const {data,error}=result;if(error||!data){message('issueStatus','カレンダー予定を読み込めませんでした。',true);return}if(data.management_number){message('issueStatus',`この予定は管理番号 ${data.management_number} に連携済みです。`);return}$('receptionDate').value=data.event_date||todayLocal();$('fiscalYear').value=[...$('fiscalYear').options].some(option=>option.value===fiscalCodeFor(data.event_date))?fiscalCodeFor(data.event_date):$('fiscalYear').value;$('staffName').value=data.staff_name||'';$('clientName').value=data.client_name||'';$('propertyName').value=data.property_name||'';$('roomNumber').value=data.room_number||'';$('workName').value=data.work_name||data.event_type||'';message('issueStatus','カレンダーの登録内容を取り込みました。取得後は予定と台帳へ同じ管理番号を連携します。')}
+    async function showApp(){const {data:{user}}=await db.auth.getUser();if(!user)return;const {data:enabled,error:accessError}=await db.rpc('is_current_app_user_enabled');if(accessError||enabled!==true){await db.auth.signOut();message('loginStatus',accessError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。',true);return;}$('loginCard').classList.add('hidden');$('app').classList.remove('hidden');$('loginUser').classList.remove('hidden');$('userEmail').textContent=user.email;const {data:isAdmin}=await db.rpc('is_management_admin');$('adminLinks').innerHTML=isAdmin===true?'<a href="システム管理.html">システム管理</a><a href="バックアップ管理.html">バックアップ</a>':'';$('receptionDate').value=$('receptionDate').value||todayLocal();await loadEmployees();await Promise.all([loadRecent(),loadCalendarDraft()]);}
+    async function linkCalendarEvent(managementNumber){
+      if(!linkedCalendarEventId)return null;
+      const {data:{user}}=await db.auth.getUser();
+      const {error:eventError}=await db.from('calendar_events').update({management_number:managementNumber,event_status:'案件登録',updated_by:user?.id||null,updated_at:new Date().toISOString()}).eq('id',linkedCalendarEventId);
+      if(eventError)return eventError;
+      const {error:syncError}=await db.rpc('sync_calendar_event_to_project',{p_calendar_event_id:linkedCalendarEventId});
+      if(!syncError)return null;
+      const projectPatch={
+        reception_date:$('receptionDate').value||todayLocal(),
+        staff_name:$('staffName').value||null,
+        client_name:$('clientName').value.trim()||null,
+        property_name:$('propertyName').value.trim()||null,
+        room_number:$('roomNumber').value.trim()||null,
+        work_name:$('workName').value.trim()||null,
+        updated_by:user?.id||null,
+        updated_at:new Date().toISOString()
+      };
+      const {error:fallbackError}=await db.from('management_numbers').update(projectPatch).eq('management_number',managementNumber);
+      return fallbackError;
+    }
+    async function issueNumber(){const staff=$('staffName').value;if(!staff)return message('issueStatus','工事担当者を社員マスタから選択してください。',true);if(navigator.onLine===false)return message('issueStatus','現在オフラインのため管理番号を取得できません。番号の重複を防ぐため、通信復旧後にもう一度「管理番号を取得」を押してください。',true);const button=$('issueButton');button.disabled=true;button.textContent='取得中…';message('issueStatus','管理番号を安全に発行しています。この画面を閉じずにお待ちください…');let data,error;try{({data,error}=await db.rpc('issue_management_number',{p_fiscal_year:$('fiscalYear').value,p_staff_name:staff,p_reception_date:$('receptionDate').value||todayLocal(),p_property_name:$('propertyName').value,p_room_number:$('roomNumber').value,p_work_name:$('workName').value,p_client_name:$('clientName').value}))}catch(networkError){error=networkError}button.disabled=false;button.textContent='管理番号を取得';if(error)return message('issueStatus',navigator.onLine===false?'通信が切れたため管理番号は取得していません。通信復旧後に再度お試しください。':'管理番号を取得できませんでした。通信状態を確認し、しばらく待ってから再度お試しください。',true);const calendarError=await linkCalendarEvent(data.management_number);$('issuedNumber').textContent=data.management_number;$('issuedDetail').textContent=`${data.staff_name}　${data.property_name||''} ${data.room_number||''}`;$('result').style.display='block';message('issueStatus',calendarError?'管理番号は取得済みです。ただしカレンダー連携だけ失敗しました。番号を取り直さず、カレンダーから再連携してください。':'管理番号台帳とカレンダーへ連携しました。',Boolean(calendarError));window.scrollTo({top:0,behavior:'smooth'});await loadRecent();}
+    async function loadRecent(){const {data,error}=await db.from('management_numbers').select('management_number,reception_date,staff_name,property_name,room_number,work_name,status').order('created_at',{ascending:false}).limit(20);const target=$('recent');if(error){target.innerHTML='<div class="list-item error">履歴を読み込めません。DB設定後に更新してください。</div>';return;}target.innerHTML=data.length?data.map(row=>`<div class="list-item"><div class="num">${esc(row.management_number)} <span style="font-size:12px;font-weight:500;color:#64718b">${esc(row.status)}</span></div><div class="meta">${esc(row.reception_date||'')}　${esc(row.staff_name)}<br>${esc(row.property_name||'')} ${esc(row.room_number||'')}　${esc(row.work_name||'')}</div></div>`).join(''):'<div class="list-item meta">まだ取得履歴はありません。</div>';}
+    db.auth.onAuthStateChange((_event,session)=>{if(session)showApp();});
+    db.auth.getSession().then(({data:{session}})=>{if(session)showApp();});
+  </script>
+<script src="見積作業タブ.js?v=20260722"></script>
+</body>
+</html>
