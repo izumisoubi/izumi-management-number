@@ -1727,18 +1727,6 @@ async function saveRow(key){
     setStatus(`台帳表示は保存しましたが、正本DBへ反映できません：${canonicalError.message}`,true);
     return alert(`正本DBへ反映できません。\n${canonicalError.message}\n\nSUPABASE_UX16_統合更新.sql の最新版を確認してください。`);
   }
-  if(manualChanged&&source.projectId&&currentUser?.id){
-    const {error:auditError}=await db.from('project_audit_log').insert({
-      project_id:source.projectId,
-      management_number:source.auto.management_number||'',
-      action:'台帳更新',
-      source:config.viewKey,
-      before_data:{view_key:config.viewKey,row_key:key,values:previousManual},
-      after_data:{view_key:config.viewKey,row_key:key,values:manual},
-      changed_by:currentUser.id
-    });
-    if(auditError)console.warn('操作履歴の保存に失敗しました',auditError);
-  }
   if(manualChanged&&source.projectId){
     const requestedChanges={};
     config.fields.forEach(field=>{
