@@ -73,22 +73,29 @@ async function loadBase(){
 async function loadVendorOrders(){
   const vendorId=$('vendorSelect').value;if(!vendorId){$('orderLines').innerHTML='<div class="empty">業者を選択してください。</div>';return}
   setStatus('globalStatus','発注実績を読み込み中…');
-  const result=await db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false});
+  const result=await db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate),change_orders(id,co_no,reason,detail,amount,tax_rate,status,approved_at)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false});
   if(result.error){setStatus('globalStatus','発注実績を読み込めません：'+result.error.message,true);return}
   orders=result.data||[];renderOrderLines();setStatus('globalStatus',`${orders.length}件の発注書を確認しました。`);
 }
 function selectableLines(){
-  return orders.flatMap(order=>(order.purchase_order_lines||[]).filter(line=>!line.deleted_at).map(line=>({order,line})));
+  return orders.flatMap(order=>[
+    ...(order.purchase_order_lines||[]).map(line=>({order,line,kind:'po',sourceKey:line.id})),
+    ...(order.change_orders||[]).filter(change=>change.status==='approved').map(change=>({
+      order,kind:'co',sourceKey:`co-${change.id}`,change,
+      line:{id:`co-${change.id}`,description:`【変更注文 ${change.co_no}】${change.detail||change.reason}`,
+        quantity:1,unit:'式',unit_price:change.amount,amount:change.amount,tax_rate:change.tax_rate}
+    }))
+  ]);
 }
 function renderOrderLines(){
   const items=selectableLines();
-  $('orderLines').innerHTML=items.length?`<table class="line-select"><thead><tr><th></th><th>発注番号</th><th>管理番号</th><th>工事内容</th><th>状態</th><th>金額</th></tr></thead><tbody>${items.map(({order,line})=>`<tr><td><input class="source-line" type="checkbox" data-order="${order.id}" data-line="${line.id}" checked></td><td>${esc(order.po_no)}</td><td>${esc(order.management_number)}</td><td>${esc(line.description)}</td><td>${esc(order.status)}</td><td class="num">${yen(line.amount)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">通知対象にできる発注実績はありません。</div>';
+  $('orderLines').innerHTML=items.length?`<table class="line-select"><thead><tr><th></th><th>発注番号</th><th>管理番号</th><th>工事内容</th><th>状態</th><th>金額</th></tr></thead><tbody>${items.map(({order,line,kind,sourceKey})=>`<tr><td><input class="source-line" type="checkbox" data-order="${order.id}" data-line="${sourceKey}" checked></td><td>${esc(order.po_no)}</td><td>${esc(order.management_number)}</td><td>${esc(line.description)}</td><td>${kind==='co'?'承認済CO':esc(order.status)}</td><td class="num">${yen(line.amount)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">通知対象にできる発注実績はありません。</div>';
 }
 function selectedSourceLines(){
   const chosen=new Set([...document.querySelectorAll('.source-line:checked')].map(input=>input.dataset.order+'|'+input.dataset.line));
-  return selectableLines().filter(({order,line})=>chosen.has(order.id+'|'+line.id)).map(({order,line},index)=>({
+  return selectableLines().filter(({order,sourceKey})=>chosen.has(order.id+'|'+sourceKey)).map(({order,line,kind,change},index)=>({
     line_no:index+1,project_id:order.project_id,management_number_snapshot:order.management_number,
-    po_no_snapshot:order.po_no,co_no_snapshot:null,work_date_snapshot:order.completed_at?.slice(0,10)||null,
+    po_no_snapshot:order.po_no,co_no_snapshot:kind==='co'?change.co_no:null,work_date_snapshot:order.completed_at?.slice(0,10)||null,
     client_name_snapshot:null,property_name_snapshot:[order.property_name_snapshot,order.room_no_snapshot].filter(Boolean).join(' '),
     description_snapshot:line.description,quantity_snapshot:line.quantity,unit_snapshot:line.unit,
     unit_price_snapshot:line.unit_price,amount_snapshot:line.amount,tax_rate_snapshot:line.tax_rate
