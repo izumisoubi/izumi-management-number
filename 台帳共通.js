@@ -527,7 +527,8 @@ function buildBillingRows(){
         property_room:[project.property_name,project.room_number].filter(Boolean).join(' '),
         client_name:project.billing_client_name||project.customer_name||project.client_name||'',
         invoice_date:nullableDate(project.invoice_date),customer_invoice_amount:invoice,
-        received_checked:project.customer_payment_status==='入金済'||Boolean(project.payment_received_on),received_amount:paid,
+        received_checked:project.customer_payment_status==='入金済'||Boolean(project.payment_received_on),
+        payment_received_on:nullableDate(project.payment_received_on),received_amount:paid,
         outstanding_amount:invoice-numberValue(paid),external_cost:numberValue(project.external_cost_ex_tax),
         external_paid_checked:project.vendor_payment_status==='支払済'
       }
@@ -1572,6 +1573,7 @@ async function syncCanonicalRow(source,row){
     const externalCost=numberValue(valueOf('external_cost'));
     const externalPaid=Boolean(valueOf('external_paid_checked'));
     const invoiceDate=valueOf('invoice_date')||null;
+    const paymentReceivedOn=valueOf('payment_received_on')||null;
     const accountingMonth=valueOf('accounting_month')||null;
     const existing=projectFor(source.projectId);
     const {data,error}=await db.rpc('save_billing_ledger_row',{
@@ -1580,7 +1582,7 @@ async function syncCanonicalRow(source,row){
       p_patch:{
         invoice_amount:invoiceAmount,received_amount:receivedAmount,received_checked:receivedChecked,
         external_cost:externalCost,external_paid:externalPaid,invoice_date:invoiceDate,
-        accounting_month:accountingMonth
+        payment_received_on:paymentReceivedOn,accounting_month:accountingMonth
       }
     });
     if(error)return error;
@@ -1591,6 +1593,7 @@ async function syncCanonicalRow(source,row){
       invoice_date:patch.invoice_date||'',
       received_amount:numberValue(patch.received_amount_ex_tax),
       received_checked:patch.customer_payment_status==='入金済',
+      payment_received_on:patch.payment_received_on||'',
       completed_on:patch.completed_on||'',
       external_cost:numberValue(patch.external_cost_ex_tax),
       external_paid_checked:patch.vendor_payment_status==='支払済',
