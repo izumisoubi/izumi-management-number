@@ -83,11 +83,18 @@ async function loadUsedNoticeSources(vendorId){
     if(result.error)return result;rows.push(...(result.data||[]));if((result.data||[]).length<1000)break;
   }return{data:rows,error:null};
 }
+async function loadVendorPurchaseOrders(vendorId,selectColumns){
+  const rows=[];for(let offset=0;offset<100000;offset+=1000){
+    const result=await db.from('purchase_orders').select(selectColumns).eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false}).range(offset,offset+999);
+    if(result.error)return result;rows.push(...(result.data||[]));if((result.data||[]).length<1000)return{data:rows,error:null};
+  }
+  return{data:null,error:{message:'発注実績が10万件を超えています。期間を分けて処理してください。'}};
+}
 async function loadVendorOrders(){
   const vendorId=$('vendorSelect').value;if(!vendorId){$('orderLines').innerHTML='<div class="empty">業者を選択してください。</div>';return}
   setStatus('globalStatus','発注実績を読み込み中…');
   const [result,usedResult]=await Promise.all([
-    db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate),change_orders(id,co_no,reason,detail,amount,tax_rate,status,approved_at)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false}),
+    loadVendorPurchaseOrders(vendorId,'id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate),change_orders(id,co_no,reason,detail,amount,tax_rate,status,approved_at)'),
     loadUsedNoticeSources(vendorId)
   ]);
   if(result.error||usedResult.error){setStatus('globalStatus','発注実績を読み込めません：'+(result.error||usedResult.error).message,true);return}
@@ -170,7 +177,7 @@ async function createCorrection(){
   if(!activeNotice||activeNotice.status!=='disputed'||!isAdmin)return;
   setStatus('editorStatus','承認済み変更注文を確認中…');
   const [orderResult,usedResult]=await Promise.all([
-    db.from('purchase_orders').select('id,project_id,po_no,management_number,property_name_snapshot,room_no_snapshot,completed_at,change_orders(id,co_no,reason,detail,amount,tax_rate,status)').eq('vendor_id',activeNotice.vendor_id).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null),
+    loadVendorPurchaseOrders(activeNotice.vendor_id,'id,project_id,po_no,management_number,property_name_snapshot,room_no_snapshot,completed_at,change_orders(id,co_no,reason,detail,amount,tax_rate,status)'),
     loadUsedNoticeSources(activeNotice.vendor_id)
   ]);
   if(orderResult.error||usedResult.error)return setStatus('editorStatus',(orderResult.error||usedResult.error).message,true);

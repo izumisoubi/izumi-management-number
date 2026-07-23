@@ -5085,6 +5085,34 @@ const managementDb=window.supabase?.createClient(MANAGEMENT_SUPABASE_URL,MANAGEM
 let managementMasterItems=[];
 let pendingOnlineManagementNumber='';
 
+async function enforceEstimateAccess(){
+  const overlay=document.createElement('div');
+  overlay.id='estimateAccessGate';
+  overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:#07101f;display:flex;align-items:center;justify-content:center;color:#e7edf8;font-family:sans-serif';
+  overlay.innerHTML='<div style="max-width:420px;padding:28px;text-align:center"><div style="font-size:18px;font-weight:800;margin-bottom:10px">社員認証を確認しています…</div><div style="font-size:12px;color:#9eabc0">見積・発注・印鑑を含む業務画面です。</div></div>';
+  document.body.appendChild(overlay);
+  if(!managementDb){
+    overlay.querySelector('div').innerHTML='<div style="font-size:16px;font-weight:800">接続できません</div><p>ネット接続を確認してください。</p>';
+    return false;
+  }
+  const {data:{session}}=await managementDb.auth.getSession();
+  if(!session){
+    const next=encodeURIComponent(location.pathname+location.search);
+    location.replace(`auth.html?next=${next}`);
+    return false;
+  }
+  const {data:enabled,error}=await managementDb.rpc('is_current_app_user_enabled');
+  if(error||enabled!==true){
+    await managementDb.auth.signOut();
+    overlay.querySelector('div').innerHTML='<div style="font-size:16px;font-weight:800">利用できません</div><p>この社員アカウントは未登録または利用停止中です。</p>';
+    return false;
+  }
+  overlay.remove();
+  return true;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enforceEstimateAccess,{once:true});
+else enforceEstimateAccess();
+
 async function loadMasterList(){
   if(!managementDb){showToastMsg('Supabaseの読み込みに失敗しました。ネット接続を確認してください。');return;}
   const session=await getOnlineSession();
@@ -6908,7 +6936,23 @@ function ordSfNum(id,f,v,el){
   if(qa){const q=parseFloat(r.qty)||0,u=parseFloat(r.orderCost)||0;qa.textContent=Math.round(q*u)?yen(Math.round(q*u)):'';}
   renderOrdLeft();
 }
-function setVendor(id,v){
+const vendorUnitPriceCache=new Map();
+async function applyVendorUnitPrice(row){
+  if(!managementDb||!row?.vendor||!row.name||row._orderCostManual)return false;
+  const key=[row.vendor,row.name,row.unit||''].join('\u0001');
+  let effective=vendorUnitPriceCache.get(key);
+  if(effective===undefined){
+    const {data,error}=await managementDb.from('vendor_effective_unit_prices').select('effective_price')
+      .eq('vendor_name',row.vendor).eq('name',row.name).eq('unit',row.unit||'').limit(1).maybeSingle();
+    if(error){console.warn('業者別単価を取得できません',error);return false;}
+    effective=data?Number(data.effective_price):null;vendorUnitPriceCache.set(key,effective);
+  }
+  if(effective===null||!Number.isFinite(effective)||row._orderCostManual)return false;
+  row.orderCost=effective;row._vendorUnitPriceAuto=true;saveOrdRows();renderOrdTable();renderOrdLeft();
+  showToastMsg(`${row.vendor} の設定単価を自動反映しました`);
+  return true;
+}
+async function setVendor(id,v){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
   if(r.vendor===v)return;
   pushOrdUndo();
@@ -6918,8 +6962,10 @@ function setVendor(id,v){
   if(td2) td2.style.borderLeft=v?`3px solid ${vColor(v)}`:'';
   const tr=document.querySelector(`#ordtbody tr[data-rid="${id}"]`);
   if(tr) tr.className=v?'ord-has-vendor':'';
+  saveOrdRows();
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
+  if(v&&!r._orderCostManual)await applyVendorUnitPrice(r);
 }
 function setOrderCost(id,val){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
@@ -6939,6 +6985,7 @@ function setOrderCost(id,val){
   if(qa) qa.textContent=Math.round(q*u)?yen(Math.round(q*u)):'';
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
+  if(!r._orderCostManual&&r.vendor)applyVendorUnitPrice(r);
 }
 
 function handleOrdPaste(e){
@@ -7648,6 +7695,7 @@ function saveProperties(){ try{localStorage.setItem(LS_PROPS2,JSON.stringify(pro
 
 // ===== 全社員共通マスタ（クラウド正本） =====
 let sharedMasterAdmin=false,sharedMastersReady=false;
+let employeeStampRevisions={};
 function masterRecordsForSeed(){
   const clean=data=>{const copy={...data};delete copy._cloudId;return copy};
   return [
@@ -7675,7 +7723,13 @@ async function loadSharedMastersFromCloud(){
     if(seed.error){console.warn('共通マスタの初期移行に失敗しました',seed.error);return false}
     result=await managementDb.rpc('list_shared_master_records');
   }
-  applySharedMasterRows(result.data||[]);sharedMastersReady=true;return true;
+  applySharedMasterRows(result.data||[]);
+  const stampResult=await managementDb.rpc('list_employee_stamps');
+  if(!stampResult.error)(stampResult.data||[]).forEach(row=>{
+    const employee=employeeList.find(emp=>(emp.email||'').toLowerCase()===String(row.employee_email||'').toLowerCase());
+    if(employee){employee.stamp=row.stamp_data_url||'';employeeStampRevisions[row.employee_email]=Number(row.revision||1);}
+  });
+  sharedMastersReady=true;saveEmployees();refreshEmployeeStamps();renderEmployeeGrid();return true;
 }
 async function saveSharedMasterRecord(type,existing,updated){
   if(!managementDb)return{error:{message:'クラウドへ接続できません'}};
@@ -8089,19 +8143,20 @@ function renderEmployeeGrid(){
       <div style="font-size:13px;font-weight:800;color:var(--tt);margin-bottom:2px">${esc(emp.name)}</div>
       <div style="font-size:9px;color:var(--tm);margin-bottom:4px">${esc(emp.title||'')}　${esc(emp.access||'')}</div>
       <div style="height:18px;margin-bottom:5px">${emp.isBoss?'<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(79,142,247,.15);color:var(--ta);font-size:9px;font-weight:800">承認印</span>':''}</div>
-      <div style="width:72px;height:72px;margin:0 auto 10px;border:2px solid ${emp.stamp?'var(--ta)':'var(--tbr)'};border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ti);cursor:pointer" onclick="uploadEmployeeStamp(${i})" title="クリックで印鑑を登録">
+      <div style="width:72px;height:72px;margin:0 auto 10px;border:2px solid ${emp.stamp?'var(--ta)':'var(--tbr)'};border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ti);${sharedMasterAdmin?'cursor:pointer':''}" ${sharedMasterAdmin?`onclick="uploadEmployeeStamp(${i})" title="クリックで印鑑を登録"`:'title="印鑑の変更は最高権限のみ"'}>
         ${emp.stamp?`<img src="${emp.stamp}" style="width:100%;height:100%;object-fit:contain">`:
           `<span style="font-size:9px;color:var(--tm)">印鑑<br>未登録</span>`}
       </div>
       <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
-        <button class="ubtn" onclick="openEmpModal(${i})" style="font-size:10px;padding:3px 8px">編集</button>
+        ${sharedMasterAdmin?`<button class="ubtn" onclick="openEmpModal(${i})" style="font-size:10px;padding:3px 8px">編集</button>
         <button class="ubtn" onclick="uploadEmployeeStamp(${i})" style="font-size:10px;padding:3px 8px">印鑑</button>
-        ${emp.stamp?`<button class="ubtn" onclick="clearStamp(${i})" style="font-size:10px;padding:3px 6px;color:var(--tr);border-color:var(--tr)">✕</button>`:''}
+        ${emp.stamp?`<button class="ubtn" onclick="clearStamp(${i})" style="font-size:10px;padding:3px 6px;color:var(--tr);border-color:var(--tr)">✕</button>`:''}`:'<span style="font-size:9px;color:var(--tm)">閲覧のみ</span>'}
       </div>
       <input type="file" id="empStampInput${i}" accept="image/*" style="display:none" onchange="onEmpStampUpload(${i},this)">
     </div>`).join('');
 }
 function openEmpModal(idx){
+  if(!sharedMasterAdmin){showToastMsg('社員・印鑑の変更には最高権限が必要です。');return;}
   const isNew=idx<0;
   const emp=isNew?{name:'',title:'',email:'',access:'従業員権限',isBoss:false}:employeeList[idx];
   const body=mf('社員名','em-name','氏名',undefined,emp.name)+mf('役職','em-title','例：営業',undefined,emp.title||'')+
@@ -8129,14 +8184,30 @@ function openEmpModal(idx){
   );
 }
 function addEmployee(){ openEmpModal(-1); }
-function uploadEmployeeStamp(i){ document.getElementById('empStampInput'+i)?.click(); }
+function uploadEmployeeStamp(i){ if(!sharedMasterAdmin){showToastMsg('印鑑の変更には最高権限が必要です。');return;}document.getElementById('empStampInput'+i)?.click(); }
 function onEmpStampUpload(i,input){
+  if(!sharedMasterAdmin){input.value='';showToastMsg('印鑑の変更には最高権限が必要です。');return;}
   const f=input.files[0]; if(!f) return;
+  if(!employeeList[i]?.email){input.value='';showToastMsg('会社メールがない社員の印鑑は登録できません。');return;}
+  if(f.size>375000){input.value='';showToastMsg('印鑑画像は375KB以下にしてください。');return;}
   const r=new FileReader();
-  r.onload=e=>{ employeeList[i].stamp=e.target.result; saveEmployees(); renderEmployeeGrid(); refreshEmployeeStamps(); showToastMsg('印鑑を登録しました：'+employeeList[i].name); };
+  r.onload=async e=>{
+    const dataUrl=String(e.target.result||''),bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(dataUrl));
+    const sha256=[...new Uint8Array(bytes)].map(value=>value.toString(16).padStart(2,'0')).join('');
+    const email=employeeList[i].email.toLowerCase();
+    const result=await managementDb.rpc('set_employee_stamp',{p_employee_email:email,p_employee_name:employeeList[i].name,p_stamp_data_url:dataUrl,p_sha256:sha256,p_expected_revision:employeeStampRevisions[email]||null});
+    if(result.error){input.value='';showToastMsg(result.error.message);return;}
+    employeeStampRevisions[email]=Number(result.data);employeeList[i].stamp=dataUrl;saveEmployees();renderEmployeeGrid();refreshEmployeeStamps();showToastMsg('印鑑を登録しました：'+employeeList[i].name);
+  };
   r.readAsDataURL(f);
 }
-function clearStamp(i){ employeeList[i].stamp=''; saveEmployees(); renderEmployeeGrid(); refreshEmployeeStamps(); }
+async function clearStamp(i){
+  if(!sharedMasterAdmin){showToastMsg('印鑑の変更には最高権限が必要です。');return;}
+  const email=(employeeList[i]?.email||'').toLowerCase();if(!email){showToastMsg('会社メールがない社員です。');return;}
+  const result=await managementDb.rpc('set_employee_stamp',{p_employee_email:email,p_employee_name:employeeList[i].name,p_stamp_data_url:null,p_sha256:null,p_expected_revision:employeeStampRevisions[email]||null});
+  if(result.error){showToastMsg(result.error.message);return;}
+  employeeStampRevisions[email]=Number(result.data);employeeList[i].stamp='';saveEmployees();renderEmployeeGrid();refreshEmployeeStamps();
+}
 function getStampByName(name){ const emp=employeeList.find(e=>e.name===name); return emp?emp.stamp:''; }
 function rebuildStaffSelect(preferredValue){
   const sel=document.getElementById('b-staff'); if(!sel)return;
