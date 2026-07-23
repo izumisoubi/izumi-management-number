@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173e70"><title>イズミ装美 電子取引検索</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><link rel="stylesheet" href="業務基盤.css?v=20260724-UX36">
+  <style>
+    main{max-width:1300px}.filters{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:9px}.filters label{font-size:10px;font-weight:800}.filters input{margin-top:4px}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:8px;border-bottom:1px solid #d7e0ed;text-align:left;font-size:11px}th{background:#eef3f9}.num{text-align:right}.hash{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace}@media(max-width:760px){.filters{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<header><div class="head"><div><h1>電子取引データ検索</h1><div>取引日・取引金額・取引先を範囲および組合せで検索します</div></div><nav><a href="工事リスト.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
+<section id="loginCard" class="login-card"><h2>社員ログイン</h2><label>メールアドレス<input id="email" type="email"></label><label>パスワード<input id="password" type="password"></label><button class="btn primary" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
+<main id="app" class="hidden">
+  <section class="panel"><div class="filters"><label>取引日（開始）<input id="dateFrom" type="date"></label><label>取引日（終了）<input id="dateTo" type="date"></label><label>金額（下限）<input id="amountMin" inputmode="numeric"></label><label>金額（上限）<input id="amountMax" inputmode="numeric"></label><label>取引先<input id="vendor" placeholder="業者名の一部"></label></div><div class="toolbar"><button class="btn primary" onclick="searchRecords()">検索</button><button class="btn secondary" onclick="clearFilters()">解除</button><button class="btn secondary" onclick="downloadCsv()">CSV</button><span id="status" class="status"></span></div></section>
+  <section class="panel"><div class="table-scroll"><table><thead><tr><th>通知番号</th><th>版</th><th>取引日</th><th>取引先</th><th>登録番号</th><th>税抜</th><th>消費税</th><th>税込</th><th>状態</th><th>送信日時</th><th>PDF SHA-256</th></tr></thead><tbody id="body"></tbody></table></div></section>
+</main>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),yen=v=>'¥'+Math.round(Number(v)||0).toLocaleString('ja-JP');
+let records=[];
+function setStatus(text,error=false){$('status').textContent=text;$('status').className='status '+(error?'error':'')}
+async function signIn(){const result=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(result.error){$('loginStatus').textContent=result.error.message;return}await ready(result.data.session)}
+async function ready(session){if(!session){$('loginCard').classList.remove('hidden');$('app').classList.add('hidden');return}const enabled=await db.rpc('is_current_app_user_enabled');if(enabled.error||enabled.data!==true){await db.auth.signOut();return ready(null)}$('userBox').innerHTML=`${esc(session.user.email)} <button class="btn secondary" onclick="db.auth.signOut().then(()=>location.reload())">ログアウト</button>`;$('loginCard').classList.add('hidden');$('app').classList.remove('hidden');await searchRecords()}
+function moneyValue(id){const value=$(id).value.trim();if(!value)return null;const parsed=Number(value.replace(/[,，¥￥\s]/g,''));return Number.isFinite(parsed)?parsed:null}
+async function searchRecords(){
+  setStatus('検索中…');let query=db.from('payment_notices').select('id,version,status,vendor_name_snapshot,vendor_invoice_reg_no_snapshot,issue_date,subtotal_snapshot,tax_snapshot,total_snapshot,sent_at,document_sha256,payment_notice_groups(notice_no)').in('status',['sent','agreed','confirmed','disputed','superseded']).is('deleted_at',null).order('issue_date',{ascending:false}).limit(5000);
+  if($('dateFrom').value)query=query.gte('issue_date',$('dateFrom').value);if($('dateTo').value)query=query.lte('issue_date',$('dateTo').value);const min=moneyValue('amountMin'),max=moneyValue('amountMax');if(min!==null)query=query.gte('total_snapshot',min);if(max!==null)query=query.lte('total_snapshot',max);if($('vendor').value.trim())query=query.ilike('vendor_name_snapshot','%'+$('vendor').value.trim().replace(/[%_]/g,'')+'%');
+  const result=await query;if(result.error)return setStatus(/does not exist|schema cache|could not find/i.test(result.error.message)?'支払通知書DBは安全確認後に適用予定です。':result.error.message,true);records=result.data||[];render();setStatus(`${records.length.toLocaleString('ja-JP')}件を表示しています。`)
+}
+function render(){$('body').innerHTML=records.length?records.map(row=>`<tr><td>${esc(row.payment_notice_groups?.notice_no||'')}</td><td>${row.version}</td><td>${esc(row.issue_date)}</td><td>${esc(row.vendor_name_snapshot)}</td><td>${esc(row.vendor_invoice_reg_no_snapshot||'')}</td><td class="num">${yen(row.subtotal_snapshot)}</td><td class="num">${yen(row.tax_snapshot)}</td><td class="num">${yen(row.total_snapshot)}</td><td>${esc(row.status)}</td><td>${esc(row.sent_at?new Date(row.sent_at).toLocaleString('ja-JP'):'')}</td><td class="hash" title="${esc(row.document_sha256||'')}">${esc(row.document_sha256||'')}</td></tr>`).join(''):'<tr><td colspan="11">該当する電子取引はありません。</td></tr>'}
+function clearFilters(){['dateFrom','dateTo','amountMin','amountMax','vendor'].forEach(id=>$(id).value='');searchRecords()}
+function downloadCsv(){const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['通知番号','版','取引日','取引先','登録番号','税抜','消費税','税込','状態','送信日時','PDF SHA-256'],...records.map(r=>[r.payment_notice_groups?.notice_no,r.version,r.issue_date,r.vendor_name_snapshot,r.vendor_invoice_reg_no_snapshot,r.subtotal_snapshot,r.tax_snapshot,r.total_snapshot,r.status,r.sent_at,r.document_sha256])];const blob=new Blob(['\ufeff'+rows.map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`イズミ装美_電子取引検索_${new Date().toLocaleDateString('sv-SE')}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+db.auth.getSession().then(({data})=>ready(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)ready(null)});
+</script>
+</body></html>
