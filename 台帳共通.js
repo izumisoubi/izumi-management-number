@@ -38,7 +38,7 @@ const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
 const currentCalendarYear=new Date().getFullYear();
 const fiscalYearMax=Math.max(2030,currentCalendarYear+3);
 const fiscalYearOptions=['',...Array.from({length:fiscalYearMax-2023+1},(_,index)=>`${fiscalYearMax-index}年度`)];
-let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
+let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
 let currentPage=1,pageSize=0,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
@@ -666,6 +666,7 @@ async function loadData(){
     if(!employees.some(employee=>employee.name===name))employees.push({name,display_order:900+index});
   });
   overrides=new Map((overrideResult.data||[]).map(item=>[item.row_key,item.field_values||{}]));
+  overrideRevisions=new Map((overrideResult.data||[]).map(item=>[item.row_key,numberValue(item.revision)]));
   populateYearFilter();
   populateStaffFilter();
   allRows=buildRows();
@@ -1564,7 +1565,6 @@ async function syncCanonicalRow(source,row){
     const input=row.querySelector(`[data-field="${fieldKey}"]`);
     return input&&field?rawInputValue(input,field):undefined;
   };
-  const now=new Date().toISOString();
   if(config.viewKey==='billing'){
     const invoiceAmount=numberValue(valueOf('customer_invoice_amount'));
     const receivedAmount=numberValue(valueOf('received_amount'));
@@ -1573,42 +1573,27 @@ async function syncCanonicalRow(source,row){
     const externalPaid=Boolean(valueOf('external_paid_checked'));
     const invoiceDate=valueOf('invoice_date')||null;
     const accountingMonth=valueOf('accounting_month')||null;
-    const customerStatus=receivedChecked||receivedAmount>=invoiceAmount&&invoiceAmount>0
-      ?'入金済'
-      :receivedAmount>0?'一部入金'
-      :invoiceDate?'請求済':'未請求';
-    const vendorStatus=externalPaid?'支払済':externalCost>0?'未請求':'未発注';
     const existing=projectFor(source.projectId);
-    const paymentReceivedOn=customerStatus==='入金済'
-      ?existing.payment_received_on||new Date().toISOString().slice(0,10)
-      :null;
-    const completedOn=customerStatus==='入金済'
-      ?existing.completed_on||paymentReceivedOn
-      :existing.completed_on||null;
-    const patch={
-      accounting_month:accountingMonth,
-      invoice_date:invoiceDate,
-      received_amount_ex_tax:receivedAmount,
-      customer_payment_status:customerStatus,
-      payment_received_on:paymentReceivedOn,
-      completed_on:completedOn,
-      external_cost_ex_tax:externalCost,
-      vendor_payment_status:vendorStatus,
-      revision:numberValue(existing.revision)+1,
-      updated_by:currentUser?.id||null,
-      updated_at:now
-    };
-    const {error}=await db.from('management_numbers').update(patch).eq('id',source.projectId).is('deleted_at',null);
+    const {data,error}=await db.rpc('save_billing_ledger_row',{
+      p_project_id:source.projectId,
+      p_expected_revision:numberValue(existing.revision),
+      p_patch:{
+        invoice_amount:invoiceAmount,received_amount:receivedAmount,received_checked:receivedChecked,
+        external_cost:externalCost,external_paid:externalPaid,invoice_date:invoiceDate,
+        accounting_month:accountingMonth
+      }
+    });
     if(error)return error;
+    const patch=data||{};
     Object.assign(existing,patch);
     Object.assign(source.auto,{
-      accounting_month:normalizeMonth(accountingMonth),
-      invoice_date:invoiceDate||'',
-      received_amount:receivedAmount,
-      received_checked:customerStatus==='入金済',
-      completed_on:completedOn||'',
-      external_cost:externalCost,
-      external_paid_checked:vendorStatus==='支払済',
+      accounting_month:normalizeMonth(patch.accounting_month),
+      invoice_date:patch.invoice_date||'',
+      received_amount:numberValue(patch.received_amount_ex_tax),
+      received_checked:patch.customer_payment_status==='入金済',
+      completed_on:patch.completed_on||'',
+      external_cost:numberValue(patch.external_cost_ex_tax),
+      external_paid_checked:patch.vendor_payment_status==='支払済',
       outstanding_amount:invoiceAmount-receivedAmount
     });
     return null;
@@ -1620,46 +1605,29 @@ async function syncCanonicalRow(source,row){
     const reminderRequired=Boolean(valueOf('reminder_required'));
     const paid=Boolean(paymentDate);
     const basis=source.lines.reduce((sum,line)=>sum+numberValue(line.order_amount_ex_tax),0);
-    let distributed=0;
+    let distributed=0;const linePatches=[];
     for(let index=0;index<source.lines.length;index++){
       const line=source.lines[index];
       const lineAmount=index===source.lines.length-1
         ?invoiceTotal-distributed
         :Math.round(invoiceTotal*(basis?numberValue(line.order_amount_ex_tax)/basis:1/source.lines.length));
       distributed+=lineAmount;
-      const lineStatus=paid?'支払済':invoiceDate||lineAmount>0?'請求済':line.ordered?'発注済':'未発注';
-      const linePatch={
-        supplier_invoice_amount_ex_tax:lineAmount,
-        supplier_invoice_date:invoiceDate,
-        supplier_payment_date:paymentDate,
-        supplier_paid:paid,
-        reminder_required:reminderRequired,
-        line_status:lineStatus,
-        revision:numberValue(line.revision)+1,
-        updated_by:currentUser?.id||null,
-        updated_at:now
-      };
-      const {error}=await db.from('project_line_items').update(linePatch).eq('id',line.id).is('deleted_at',null);
-      if(error)return error;
-      Object.assign(line,linePatch);
+      linePatches.push({id:line.id,expected_revision:numberValue(line.revision),invoice_amount:lineAmount,
+        invoice_date:invoiceDate,payment_date:paymentDate,reminder_required:reminderRequired});
     }
     const project=projectFor(source.projectId);
-    const orderedProjectLines=lineItems.filter(line=>line.project_id===source.projectId&&line.ordered===true);
-    const vendorStatus=!orderedProjectLines.length?'未発注'
-      :orderedProjectLines.every(line=>Boolean(line.supplier_paid)||line.line_status==='支払済')?'支払済'
-      :orderedProjectLines.some(line=>line.supplier_invoice_date||numberValue(line.supplier_invoice_amount_ex_tax)>0)?'請求済':'未請求';
-    const projectStatus=!orderedProjectLines.length?'未発注'
-      :project.completed_on?'施工済':'発注済';
-    const projectPatch={
-      vendor_payment_status:vendorStatus,
-      project_status:projectStatus,
-      revision:numberValue(project.revision)+1,
-      updated_by:currentUser?.id||null,
-      updated_at:now
-    };
-    const {error}=await db.from('management_numbers').update(projectPatch).eq('id',source.projectId).is('deleted_at',null);
+    const {data,error}=await db.rpc('save_cost_ledger_row',{
+      p_project_id:source.projectId,p_expected_project_revision:numberValue(project.revision),p_lines:linePatches
+    });
     if(error)return error;
-    Object.assign(project,projectPatch);
+    const result=data||{},lineResults=new Map((result.lines||[]).map(item=>[String(item.id),item]));
+    source.lines.forEach((line,index)=>{const saved=lineResults.get(String(line.id));Object.assign(line,{
+      supplier_invoice_amount_ex_tax:linePatches[index].invoice_amount,
+      supplier_invoice_date:invoiceDate,supplier_payment_date:paymentDate,supplier_paid:paid,
+      reminder_required:reminderRequired,line_status:saved?.line_status||line.line_status,
+      revision:saved?.revision??line.revision
+    })});
+    Object.assign(project,{vendor_payment_status:result.vendor_payment_status,project_status:result.project_status,revision:result.project_revision});
     Object.assign(source.auto,{
       invoice_amount_ex_tax:invoiceTotal||'',
       invoice_from_vendor_date:invoiceDate||'',
@@ -1692,17 +1660,19 @@ async function applyLedgerBlanksToEstimate(source,manual){
   return {applied:Array.isArray(data?.applied)?data.applied:[],error};
 }
 async function persistManualOverride(source,key,manual){
-  if(Object.keys(manual).length){
-    const result=await db.from('project_manual_overrides').upsert({
-      view_key:config.viewKey,row_key:key,project_id:source.projectId||null,
-      field_values:manual,updated_at:new Date().toISOString(),updated_by:currentUser?.id||null
-    },{onConflict:'view_key,row_key'});
-    if(!result.error)overrides.set(key,manual);
-    return result.error;
+  const {data,error}=await db.rpc('save_project_manual_override',{
+    p_view_key:config.viewKey,p_row_key:key,p_project_id:source.projectId||null,
+    p_field_values:manual,p_expected_revision:overrideRevisions.get(key)||0
+  });
+  if(error)return error;
+  if(data?.deleted){
+    overrides.delete(key);
+    overrideRevisions.delete(key);
+  }else{
+    overrides.set(key,manual);
+    overrideRevisions.set(key,numberValue(data?.revision));
   }
-  const result=await db.from('project_manual_overrides').delete().eq('view_key',config.viewKey).eq('row_key',key);
-  if(!result.error)overrides.delete(key);
-  return result.error;
+  return null;
 }
 async function saveRow(key){
   clearTimeout(saveTimers.get(key));
