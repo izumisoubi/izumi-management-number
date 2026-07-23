@@ -15,8 +15,8 @@
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{position:relative;display:flex;gap:14px;min-height:126px;padding:19px;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 7px 22px #17345f0c;transition:transform .15s,border-color .15s,box-shadow .15s}.card:hover{transform:translateY(-2px);border-color:#88a9e8;box-shadow:0 12px 28px #17345f18}
     .icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:#eaf2ff;color:#285da8;font-size:13px;font-weight:900}.card b{display:block;color:var(--navy);font-size:16px;margin:2px 0 7px}.card span{display:block;color:#59687f;font-size:11px;line-height:1.75}.card em{display:block;margin-top:9px;color:var(--blue);font-size:10px;font-style:normal;font-weight:800}
     .meeting-card{grid-column:1/-1;background:linear-gradient(115deg,#fffdf3,#fff);border-color:#ead48a}.meeting-card .icon{background:#fff1bd;color:#765600}.meeting-card b{color:#674d00}.meeting-card::after{content:"限定";position:absolute;right:15px;top:14px;padding:3px 8px;border-radius:999px;background:#fff1bd;color:#674d00;font-size:9px;font-weight:900}
-    .footer{display:flex;gap:14px;margin-top:20px}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.hidden{display:none!important}
-    @media(max-width:720px){.header-inner{min-height:64px;padding:12px 14px}.wrap{padding:18px 14px}.grid{grid-template-columns:1fr}.meeting-card{grid-column:auto}.intro{align-items:flex-start;flex-direction:column}.card{min-height:112px}}
+    .more-menu{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}.more-menu summary{cursor:pointer;padding:16px 19px;color:var(--navy);font-weight:900}.more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 14px 14px}.more-grid .card{min-height:100px;box-shadow:none}.footer{display:flex;gap:14px;margin-top:20px}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.hidden{display:none!important}
+    @media(max-width:720px){.header-inner{min-height:64px;padding:12px 14px}.wrap{padding:18px 14px}.grid,.more-grid{grid-template-columns:1fr}.meeting-card,.more-menu{grid-column:auto}.intro{align-items:flex-start;flex-direction:column}.card{min-height:112px}}
   </style>
 </head>
 <body>
@@ -39,12 +39,15 @@
       <a class="card" href="工事リスト・未発注.html"><span class="icon">4 未発注</span><span><b>工事リスト・未発注</b><span>未割当、業者未設定、または注文確認書をまだ発行していない明細だけを表示します。</span><em>未発注を確認する →</em></span></a>
       <a class="card" href="工事リスト・原価.html"><span class="icon">5 原価</span><span><b>工事リスト・原価</b><span>発注済みの明細を業者・カテゴリ単位で表示し、外注請求額、差異、支払状況を確認します。</span><em>原価を管理する →</em></span></a>
       <a class="card" href="請求.html"><span class="icon">6 請求</span><span><b>請求管理</b><span>客先への請求・入金と、業者への外注費支払を案件単位で確認します。双方完了で緑表示になります。</span><em>請求状況を見る →</em></span></a>
-      <a class="card" href="操作履歴.html"><span class="icon">7 履歴</span><span><b>操作履歴</b><span>誰が、いつ、どの管理番号で、保存・変更・削除・採番を行ったか確認します。</span><em>詳細ログを見る →</em></span></a>
-      <a class="card" href="ユーザー設定.html"><span class="icon">8 設定</span><span><b>ユーザー設定</b><span>自分の表示名・パスワードを変更します。忘れた場合は再設定メールを送れます。</span><em>自分の設定を開く →</em></span></a>
-      <a class="card" href="配布用案内.html"><span class="icon">案内</span><span><b>ご利用案内・簡単な使い方</b><span>初回ログイン、予定登録、管理番号、見積保存、印刷、台帳確認までの基本手順を確認できます。</span><em>使い方を見る →</em></span></a>
-      <a class="card" href="データ取込.html"><span class="icon">移行</span><span><b>データ取込・出力</b><span>過去の工事リストをオンライン台帳へ移行し、再取込できるExcel形式で書き出します。取込は管理者専用です。</span><em>過去データを管理する →</em></span></a>
-      <a id="adminCard" class="card hidden" href="システム管理.html"><span class="icon">管理</span><span><b>システム管理</b><span>社員の利用許可、管理者権限、初回登録URL、利用停止を管理します。</span><em>利用者を管理する →</em></span></a>
-      <a id="backupCard" class="card hidden" href="バックアップ管理.html"><span class="icon">保全</span><span><b>バックアップ管理</b><span>週次バックアップ、手動バックアップ、復旧用JSONを管理します。</span><em>バックアップを確認する →</em></span></a>
+      <a class="card" href="マスタ管理.html"><span class="icon">7 設定</span><span><b>マスタ管理</b><span>自社・社員・印鑑、業者、取引先、物件、単価を一か所で管理します。</span><em>基本設定を開く →</em></span></a>
+      <details class="more-menu"><summary>その他・管理・ヘルプを開く</summary><div class="more-grid">
+        <a class="card" href="操作履歴.html"><span class="icon">履歴</span><span><b>操作履歴</b><span>保存・変更・削除・採番の履歴を確認します。</span></span></a>
+        <a class="card" href="ユーザー設定.html"><span class="icon">個人</span><span><b>ユーザー設定</b><span>表示名・パスワードを変更します。</span></span></a>
+        <a class="card" href="配布用案内.html"><span class="icon">案内</span><span><b>使い方</b><span>基本操作を確認します。</span></span></a>
+        <a class="card" href="データ取込.html"><span class="icon">移行</span><span><b>データ取込・出力</b><span>旧データの取込とExcel出力を行います。</span></span></a>
+        <a id="adminCard" class="card hidden" href="システム管理.html"><span class="icon">管理</span><span><b>システム管理</b><span>利用者と権限を管理します。</span></span></a>
+        <a id="backupCard" class="card hidden" href="バックアップ管理.html"><span class="icon">保全</span><span><b>バックアップ管理</b><span>保存状態と復旧用データを管理します。</span></span></a>
+      </div></details>
       <a id="meetingCasesCard" class="card meeting-card hidden" href="会議用案件一覧.html"><span class="icon">案件</span><span><b>会議用案件一覧</b><span>会議チェック、管理番号、物件・部屋、担当者名、売上請求、原価、粗利、粗利率、入金済、備考を一覧表示します。</span><em>会議対象を確認する →</em></span></a>
       <a id="meetingCard" class="card meeting-card hidden" href="経営会議資料.html"><span class="icon">会議</span><span><b>経営会議資料</b><span>対象月の業績、推移、担当者別・取引先別実績、入金状況を集計し、各資料を画像コピーできます。</span><em>経営会議資料を開く →</em></span></a>
     </div>

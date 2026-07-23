@@ -1302,7 +1302,7 @@ function setupDateActions(){
     const todayButton=document.createElement('button'); todayButton.type='button'; todayButton.textContent='本日';
     const lockButton=document.createElement('button'); lockButton.type='button';
     [todayButton,lockButton].forEach(button=>button.style.cssText='border:1px solid var(--tbr);background:var(--tb);color:var(--tt);border-radius:4px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer;flex:none;');
-    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'変更':'確定';};
+    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付を固定';lockButton.title='入力値はこの操作をしなくても自動保存・台帳転記されます。これは誤変更防止だけの機能です。';};
     todayButton.onclick=()=>{input.value=new Date().toISOString().slice(0,10);input.dispatchEvent(new Event('input',{bubbles:true}));scheduleOnlineAutosave(250);};
     lockButton.onclick=()=>{locks[id]=!locks[id];saveDateLocks(locks);update();};
     input.addEventListener('input',()=>{if(locks[id]){locks[id]=false;saveDateLocks(locks);update();}});
@@ -7407,6 +7407,17 @@ var INIT_VENDORS_FULL = [
   {name:'(有)ケーアンドワイコーポレーション',category:'設備',zip:'',addr:'',tel:'',fax:'',contact:'',note:''},
 ];
 var INIT_EMPLOYEES = ['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田'];
+const EMPLOYEE_PROFILES = {
+  '大島':{title:'取締役',email:'ooshima@izumisoubi.co.jp',access:'最高権限'},
+  '花田':{title:'営業',email:'hanada@izumisoubi.co.jp',access:'従業員権限'},
+  '大塚':{title:'営業',email:'ootsuka@izumisoubi.co.jp',access:'最高権限'},
+  '池野':{title:'営業',email:'ikeno@izumisoubi.co.jp',access:'従業員権限'},
+  '古磯':{title:'営業',email:'koiso@izumisoubi.co.jp',access:'従業員権限'},
+  '田中':{title:'事務',email:'tanaka@izumisoubi.co.jp',access:'最高権限'},
+  '出町':{title:'事務',email:'demachi@izumisoubi.co.jp',access:'最高権限'},
+  '水口':{title:'事務',email:'mizuguchi@izumisoubi.co.jp',access:'従業員権限'},
+  '飯田':{title:'管理部長',email:'iida@izumisoubi.co.jp',access:'最高権限'}
+};
 const BUNDLED_EMPLOYEE_STAMPS = {
   '大島':'assets/stamps/oshima.png?v=20260720',
   '水口':'assets/stamps/mizuguchi.png?v=20260720',
@@ -7420,8 +7431,7 @@ const BUNDLED_EMPLOYEE_STAMPS = {
 };
 function needsBundledEmployeeStamp(stamp){
   return !stamp
-    || stamp.includes('見積書システムv46_印鑑/')
-    || stamp.includes('見積書システムv37_印鑑/')
+    || stamp.includes('見積書システム')
     || /^assets\/stamps\/[^?]+\.svg(?:\?|$)/.test(stamp);
 }
 
@@ -7451,6 +7461,10 @@ function loadAllMasters(){
       employeeList.push({name,stamp});
       employeeStampsUpdated=true;
     }
+  });
+  employeeList.forEach(employee=>{
+    const profile=EMPLOYEE_PROFILES[employee.name];if(!profile)return;
+    employee.title=profile.title;employee.email=profile.email;employee.access=profile.access;
   });
   if(employeeStampsUpdated)saveEmployees();
   let bossFound=false;
@@ -7902,8 +7916,9 @@ function renderEmployeeGrid(){
   const wrap=document.getElementById('employeeGrid'); if(!wrap) return;
   wrap.innerHTML=employeeList.map((emp,i)=>`
     <div style="background:var(--tc);border:1px solid var(--tbr);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-size:13px;font-weight:800;color:var(--tt);margin-bottom:4px">${esc(emp.name)}</div>
-      <div style="height:18px;margin-bottom:5px">${emp.isBoss?'<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(79,142,247,.15);color:var(--ta);font-size:9px;font-weight:800">上司</span>':''}</div>
+      <div style="font-size:13px;font-weight:800;color:var(--tt);margin-bottom:2px">${esc(emp.name)}</div>
+      <div style="font-size:9px;color:var(--tm);margin-bottom:4px">${esc(emp.title||'')}　${esc(emp.access||'')}</div>
+      <div style="height:18px;margin-bottom:5px">${emp.isBoss?'<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(79,142,247,.15);color:var(--ta);font-size:9px;font-weight:800">承認印</span>':''}</div>
       <div style="width:72px;height:72px;margin:0 auto 10px;border:2px solid ${emp.stamp?'var(--ta)':'var(--tbr)'};border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ti);cursor:pointer" onclick="uploadEmployeeStamp(${i})" title="クリックで印鑑を登録">
         ${emp.stamp?`<img src="${emp.stamp}" style="width:100%;height:100%;object-fit:contain">`:
           `<span style="font-size:9px;color:var(--tm)">印鑑<br>未登録</span>`}
@@ -7918,8 +7933,10 @@ function renderEmployeeGrid(){
 }
 function openEmpModal(idx){
   const isNew=idx<0;
-  const emp=isNew?{name:'',title:'',isBoss:false}:employeeList[idx];
+  const emp=isNew?{name:'',title:'',email:'',access:'従業員権限',isBoss:false}:employeeList[idx];
   const body=mf('社員名','em-name','氏名',undefined,emp.name)+mf('役職','em-title','例：営業',undefined,emp.title||'')+
+    mf('会社メール','em-email','name@izumisoubi.co.jp',undefined,emp.email||'')+
+    `<label style="${fl_style}">システム権限</label><select id="em-access" style="${fi_style}"><option${emp.access==='従業員権限'?' selected':''}>従業員権限</option><option${emp.access==='最高権限'?' selected':''}>最高権限</option></select>`+
     `<label style="${fl_style}">印鑑承認区分</label><select id="em-boss" style="${fi_style}">
       <option value="0"${emp.isBoss?'':' selected'}>一般社員</option>
       <option value="1"${emp.isBoss?' selected':''}>上司（承認印・1名のみ）</option>
@@ -7931,7 +7948,7 @@ function openEmpModal(idx){
       const selectedStaff=document.getElementById('b-staff')?.value||'';
       const isBoss=mfi('em-boss')==='1';
       if(isBoss) employeeList.forEach((other,i)=>{if(isNew||i!==idx)other.isBoss=false;});
-      const updated={...emp,name:mfi('em-name'),title:mfi('em-title'),isBoss:isBoss};
+      const updated={...emp,name:mfi('em-name'),title:mfi('em-title'),email:mfi('em-email').trim().toLowerCase(),access:mfi('em-access'),isBoss:isBoss};
       if(isNew) employeeList.push(updated);
       else employeeList[idx]=updated;
       saveEmployees(); closeMasterModal(); renderEmployeeGrid();
@@ -8339,6 +8356,7 @@ document.addEventListener('DOMContentLoaded',function(){
   loadAllMasters();
   rebuildStaffSelect();
   refreshEmployeeStamps();
+  renderEmployeeGrid();
   loadSharedMastersFromCloud().then(loaded=>{if(loaded)refreshSharedMasterScreens()});
 });
 
