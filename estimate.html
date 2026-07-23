@@ -5488,6 +5488,137 @@ function onlineProjectSummary(data,orderLines){
   };
 }
 
+const LS_PO_CLOUD_STATUS='izumi_po_cloud_sync_status_v1';
+let purchaseOrderCloudAvailable=null;
+function rememberPurchaseOrderCloudStatus(status,detail={}){
+  try{localStorage.setItem(LS_PO_CLOUD_STATUS,JSON.stringify({status,at:new Date().toISOString(),...detail}))}catch(_error){}
+}
+function purchaseOrderCloudUnavailable(error){
+  const message=String(error?.message||error||'');
+  return /purchase_orders|vendors|create_purchase_order|save_purchase_order_draft|schema cache|does not exist|could not find/i.test(message);
+}
+function normalizedVendorName(value){
+  return String(value||'').replace(/\s+/g,'').trim();
+}
+function purchaseOrderGroups(){
+  const groups=new Map();
+  onlineMeaningfulOrderRows().forEach(row=>{
+    const vendorName=String(row.vendor||'').trim();
+    if(!vendorName)return;
+    if(!groups.has(vendorName))groups.set(vendorName,[]);
+    groups.get(vendorName).push(row);
+  });
+  return groups;
+}
+function purchaseOrderHeader(data){
+  return {
+    work_name:data.basic?.summary||'',
+    property_name_snapshot:data.basic?.property||'',
+    room_no_snapshot:data.basic?.room||'',
+    period_from:data.basic?.uketsuke||'',
+    period_to:data.basic?.kanko_date||data.basic?.completedOn||'',
+    key_info:data.basic?.key||data.basic?.keyInfo||''
+  };
+}
+function purchaseOrderLines(rows){
+  return rows.map((row,index)=>{
+    const quantity=numberValue(row.qty)||1;
+    const unitPrice=numberValue(row.orderCost!==''&&row.orderCost!==undefined?row.orderCost:row.cost);
+    return {
+      line_no:index+1,
+      description:row.name||'',
+      quantity,
+      unit:row.unit||'式',
+      unit_price:unitPrice,
+      amount:Math.round(quantity*unitPrice),
+      tax_rate:0.10,
+      price_source:row._orderCostManual?'manual':'estimate'
+    };
+  });
+}
+async function syncPurchaseOrdersOnline(projectId,data,managementNumber){
+  const groups=purchaseOrderGroups();
+  const unassigned=onlineMeaningfulOrderRows().filter(row=>!String(row.vendor||'').trim()).length;
+  if(!groups.size){
+    rememberPurchaseOrderCloudStatus('local_only',{management_number:managementNumber,unassigned});
+    return {synced:0,unassigned,unmatched:[]};
+  }
+  if(purchaseOrderCloudAvailable===false){
+    rememberPurchaseOrderCloudStatus('schema_pending',{management_number:managementNumber,unassigned});
+    return {synced:0,unassigned,unmatched:[]};
+  }
+  const [vendorResult,orderResult]=await Promise.all([
+    managementDb.from('vendors').select('id,name').eq('active',true).is('deleted_at',null),
+    managementDb.from('purchase_orders').select('id,vendor_id,status,revision,po_no')
+      .eq('project_id',projectId).is('deleted_at',null)
+  ]);
+  const firstError=vendorResult.error||orderResult.error;
+  if(firstError){
+    if(purchaseOrderCloudUnavailable(firstError))purchaseOrderCloudAvailable=false;
+    rememberPurchaseOrderCloudStatus('schema_pending',{management_number:managementNumber,message:firstError.message});
+    return {synced:0,unassigned,unmatched:[],error:firstError};
+  }
+  purchaseOrderCloudAvailable=true;
+  const vendorByName=new Map((vendorResult.data||[]).map(vendor=>[normalizedVendorName(vendor.name),vendor]));
+  const ordersByVendor=new Map((orderResult.data||[]).map(order=>[order.vendor_id,order]));
+  const unmatched=[],conflicts=[],issued=[],synced=[],activeVendorIds=new Set();
+  for(const [vendorName,rows] of groups){
+    const vendor=vendorByName.get(normalizedVendorName(vendorName));
+    if(!vendor){unmatched.push(vendorName);continue}
+    activeVendorIds.add(vendor.id);
+    let order=ordersByVendor.get(vendor.id);
+    if(order&&order.status!=='draft'){issued.push({vendor:vendorName,po_no:order.po_no});continue}
+    if(!order){
+      const created=await managementDb.rpc('create_purchase_order',{p_project_id:projectId,p_vendor_id:vendor.id});
+      if(created.error){
+        if(purchaseOrderCloudUnavailable(created.error))purchaseOrderCloudAvailable=false;
+        unmatched.push(vendorName);continue;
+      }
+      order=Array.isArray(created.data)?created.data[0]:created.data;
+    }
+    const saved=await managementDb.rpc('save_purchase_order_draft',{
+      p_po_id:order.id,
+      p_expected_revision:Number(order.revision||1),
+      p_header:purchaseOrderHeader(data),
+      p_lines:purchaseOrderLines(rows)
+    });
+    if(saved.error){
+      if(/別の端末で更新|再読込/.test(saved.error.message||'')){
+        conflicts.push(vendorName);
+        try{localStorage.setItem(`izumi_po_conflict_${managementNumber}_${vendor.id}`,JSON.stringify({
+          saved_at:new Date().toISOString(),management_number:managementNumber,vendor_name:vendorName,
+          expected_revision:order.revision,header:purchaseOrderHeader(data),lines:purchaseOrderLines(rows)
+        }))}catch(_error){}
+      }else if(purchaseOrderCloudUnavailable(saved.error))purchaseOrderCloudAvailable=false;
+      continue;
+    }
+    synced.push(vendorName);
+  }
+  // 画面から業者割当を外した場合、古い下書きだけがクラウドに残らないよう空明細へ更新する。
+  // 一件でも業者名不一致があると改名移行中の可能性があるため、その保存回では消去しない。
+  if(!unmatched.length){
+    for(const order of orderResult.data||[]){
+      if(order.status!=='draft'||activeVendorIds.has(order.vendor_id))continue;
+      const cleared=await managementDb.rpc('save_purchase_order_draft',{
+        p_po_id:order.id,p_expected_revision:Number(order.revision||1),
+        p_header:purchaseOrderHeader(data),p_lines:[]
+      });
+      if(cleared.error&&/別の端末で更新|再読込/.test(cleared.error.message||'')){
+        conflicts.push(`発注書 ${order.po_no}`);
+      }
+    }
+  }
+  const status=conflicts.length?'conflict':(unmatched.length||issued.length||unassigned)?'partial':'synced';
+  rememberPurchaseOrderCloudStatus(status,{
+    management_number:managementNumber,synced,unmatched,issued,conflicts,unassigned
+  });
+  if(conflicts.length){
+    setOnlineSaveStatus('発注書の更新競合・端末へ退避','error');
+    showToastMsg('業者別発注書で別端末との競合がありました。入力は端末内へ退避しています。');
+  }
+  return {synced:synced.length,unassigned,unmatched,issued,conflicts};
+}
+
 async function saveProjectOnline(options={}){
   const silent=Boolean(options.silent);
   const automatic=Boolean(options.automatic);
@@ -5553,6 +5684,8 @@ async function saveProjectOnline(options={}){
   history.replaceState(null,'',`${location.pathname}?${params.toString()}`);
   await linkActiveScheduleManagementNumber(managementNumber);
   await subscribeOnlineProjectUpdates(managementNumber);
+  const poSync=await syncPurchaseOrdersOnline(project.id,data,managementNumber);
+  if(poSync?.error&&purchaseOrderCloudAvailable!==false)console.warn('業者別発注書の同期を保留しました',poSync.error);
   try{localStorage.setItem('izumi-ledger-refresh',JSON.stringify({at:Date.now(),managementNumber}));}catch(error){}
   if(!automatic)showToastMsg('💾 保存完了：'+managementNumber);
   return true;
@@ -7547,12 +7680,29 @@ async function loadSharedMastersFromCloud(){
 async function saveSharedMasterRecord(type,existing,updated){
   if(!managementDb)return{error:{message:'クラウドへ接続できません'}};
   const data={...updated};delete data._cloudId;
-  return managementDb.rpc('save_shared_master_record',{p_id:existing?._cloudId||null,p_master_type:type,p_data:data});
+  const result=await managementDb.rpc('save_shared_master_record',{p_id:existing?._cloudId||null,p_master_type:type,p_data:data});
+  if(!result.error&&type==='vendor'){
+    const mirrored=await managementDb.rpc('sync_vendor_business_master',{
+      p_shared_master_id:result.data||existing?._cloudId||null,
+      p_name:data.name||'',p_email:data.email||null,p_phone:data.tel||data.phone||null,p_active:true
+    });
+    if(mirrored.error&&!purchaseOrderCloudUnavailable(mirrored.error)){
+      console.warn('発注用業者マスタへの反映を保留しました',mirrored.error);
+    }
+  }
+  return result;
 }
-async function deleteSharedMasterRecord(existing){
+async function deleteSharedMasterRecord(type,existing){
   if(!sharedMasterAdmin)return{error:{message:'マスタの削除は管理者へ依頼してください'}};
   if(!existing?._cloudId)return{error:{message:'クラウド移行前のデータです。画面を再読み込みしてください'}};
-  return managementDb.rpc('delete_shared_master_record',{p_id:existing._cloudId,p_reason:'マスタ画面から削除'});
+  const result=await managementDb.rpc('delete_shared_master_record',{p_id:existing._cloudId,p_reason:'マスタ画面から削除'});
+  if(!result.error&&type==='vendor'){
+    const deactivated=await managementDb.rpc('deactivate_vendor_business_master',{p_shared_master_id:existing._cloudId});
+    if(deactivated.error&&!purchaseOrderCloudUnavailable(deactivated.error)){
+      console.warn('発注用業者マスタの停止を保留しました',deactivated.error);
+    }
+  }
+  return result;
 }
 function refreshSharedMasterScreens(){renderVendorMaster();renderClientMaster();renderPropertyMaster();renderOrdTable();renderOrdLeft()}
 
@@ -7698,7 +7848,7 @@ function openVendorModal(idx){
       showToastMsg((isNew?'追加':'更新')+'しました：'+updated.name);
     },
     isNew||!sharedMasterAdmin ? null : async ()=>{ // delete
-      const v2=vendorDetails[idx],deleted=await deleteSharedMasterRecord(v2);
+      const v2=vendorDetails[idx],deleted=await deleteSharedMasterRecord('vendor',v2);
       if(deleted.error){alert(deleted.error.message);return;}
       rows.forEach(r=>{if(r.vendor===v2.name)r.vendor='';});ordRows.forEach(r=>{if(r.vendor===v2.name)r.vendor='';});
       saveOrdRows();
@@ -7828,7 +7978,7 @@ function openClientModal(idx){
       if(saved.error){alert('取引先を保存できません：'+saved.error.message);return;}
       await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();
     },
-    isNew||!sharedMasterAdmin?null:async ()=>{const deleted=await deleteSharedMasterRecord(clientList2[idx]);if(deleted.error){alert(deleted.error.message);return;}await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();}
+    isNew||!sharedMasterAdmin?null:async ()=>{const deleted=await deleteSharedMasterRecord('client',clientList2[idx]);if(deleted.error){alert(deleted.error.message);return;}await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();}
   );
 }
 function addClient(){ openClientModal(-1); }
@@ -7917,7 +8067,7 @@ function openPropertyModal(idx){
       if(saved.error){alert('物件を保存できません：'+saved.error.message);return;}
       await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();
     },
-    isNew||!sharedMasterAdmin?null:async ()=>{const deleted=await deleteSharedMasterRecord(propertyList[idx]);if(deleted.error){alert(deleted.error.message);return;}await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();}
+    isNew||!sharedMasterAdmin?null:async ()=>{const deleted=await deleteSharedMasterRecord('property',propertyList[idx]);if(deleted.error){alert(deleted.error.message);return;}await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();}
   );
 }
 function addProperty(){ openPropertyModal(-1); }
