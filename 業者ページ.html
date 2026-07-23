@@ -17,8 +17,9 @@
   <section id="loading" class="panel"><h2>確認内容を読み込んでいます</h2><p class="muted">画面を閉じずにお待ちください。</p></section>
   <section id="errorCard" class="panel hidden"><div class="error-box"><b>確認できませんでした</b><p id="errorText"></p></div><p class="muted">URLの途中が切れていないか確認してください。期限切れの場合はイズミ装美の担当者へ新しいURLをご依頼ください。</p></section>
   <section id="noticeCard" class="panel hidden">
-    <div class="hero"><small id="noticeNo"></small><h2 id="vendorName"></h2><div id="issueInfo"></div></div>
-    <h3>お支払対象</h3><div class="table-scroll"><table class="lines"><thead><tr><th>管理番号</th><th>物件</th><th>工事内容</th><th>数量</th><th>単位</th><th>金額</th></tr></thead><tbody id="lineBody"></tbody></table></div>
+    <div class="hero"><small id="noticeNo"></small><h2 id="vendorName"></h2><div id="vendorRegistration"></div><div id="issueInfo"></div></div>
+    <h3>お支払対象</h3><div class="table-scroll"><table class="lines"><thead><tr><th>取引日</th><th>管理番号</th><th>物件</th><th>工事内容</th><th>数量</th><th>単位</th><th>金額</th></tr></thead><tbody id="lineBody"></tbody></table></div>
+    <div id="taxBreakdown" class="panel" style="margin:10px 0;padding:10px"></div>
     <div class="summary"><div><span>税抜</span><strong id="subtotal"></strong></div><div><span>消費税</span><strong id="tax"></strong></div><div><span>税込支払額</span><strong id="total"></strong></div></div>
     <p class="notice">内容に相違がある場合は、確認期間内に「相違内容を連絡」からお知らせください。確認期間内に相違連絡がない場合は、事前に合意した取決めに基づき確認済みとして扱われる場合があります。</p>
     <div id="actions">
@@ -41,8 +42,10 @@ async function loadNotice(){
   const result=await db.rpc('get_payment_notice_by_token',{p_token:token});if(result.error)return fail(result.error.message||'確認URLが無効です。');
   payload=result.data;const notice=payload.notice||{},lines=payload.lines||[];
   $('noticeNo').textContent=`通知番号 ${payload.notice_no||''}　版 ${notice.version||''}`;$('vendorName').textContent=(notice.vendor_name_snapshot||'')+' 御中';
+  $('vendorRegistration').textContent=`登録番号 ${notice.vendor_invoice_reg_no_snapshot||'未登録'}　作成者 ${notice.issuer_name_snapshot||'株式会社イズミ装美'}`;
   $('issueInfo').textContent=`発行日 ${notice.issue_date||'-'}　支払期日 ${notice.payment_due_date||'-'}`;
-  $('lineBody').innerHTML=lines.map(line=>`<tr><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.property_name_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('');
+  $('lineBody').innerHTML=lines.map(line=>`<tr><td>${esc(line.work_date_snapshot||'')}</td><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.property_name_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('');
+  $('taxBreakdown').innerHTML=(payload.tax_totals||[]).map(row=>`<div>${Math.round(Number(row.tax_rate_snapshot)*100)}%対象額 ${yen(row.taxable_amount_snapshot)} ／ 消費税額 ${yen(row.tax_amount_snapshot)}</div>`).join('');
   $('subtotal').textContent=yen(notice.subtotal_snapshot);$('tax').textContent=yen(notice.tax_snapshot);$('total').textContent=yen(notice.total_snapshot);
   $('agreeButton').classList.toggle('hidden',!payload.can_agree);$('disputeButton').classList.toggle('hidden',!payload.can_dispute);
   if(!payload.can_agree&&!payload.can_dispute){$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent=notice.status==='agreed'||notice.status==='confirmed'?'確認手続きは完了しています。':notice.status==='disputed'?'相違内容を受け付けました。イズミ装美からご連絡します。':'この通知書の受付は終了しています。'}
