@@ -4,6 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>イズミ装美 支払通知書</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link rel="stylesheet" href="管理ポータル.css?v=20260724-UX34">
   <style>
     .layout{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(440px,1.25fr);gap:15px}.toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.toolbar>div{min-width:190px;flex:1}
@@ -21,7 +22,7 @@
 <main class="wrap">
   <section id="loginCard" class="card narrow hidden"><h2>社員ログイン</h2><div class="grid"><div class="full"><label>メールアドレス</label><input id="email" type="email" autocomplete="username"></div><div class="full"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"></div></div><div class="button-row"><button class="primary" onclick="signIn()">ログイン</button></div><div id="loginStatus" class="status"></div></section>
   <div id="app" class="hidden">
-    <section class="card"><div class="notice warning"><b>送信前安全運用：</b>この画面は下書き作成まで自動保存します。業者への実送信は、PDFを固定保存してSHA-256を記録できる状態になるまで実行できません。</div><div id="globalStatus" class="status"></div></section>
+    <section class="card"><div class="notice warning"><b>送信前安全運用：</b>送信時にPDFを生成・非公開保存し、SHA-256とメール配送証跡を固定します。配送基盤の設定完了までは送信時に安全に停止します。</div><div id="globalStatus" class="status"></div></section>
     <div class="layout">
       <div>
         <section class="card"><h2>作成対象</h2><div class="toolbar"><div><label>業者</label><select id="vendorSelect"></select></div><button onclick="loadVendorOrders()">発注実績を更新</button></div><div id="orderLines" class="table-wrap" style="margin-top:12px"></div><div class="button-row"><button id="createButton" class="primary" onclick="createDraft()">選択明細で下書きを作成</button></div></section>
@@ -31,7 +32,7 @@
         <div class="grid"><div><label>通知番号</label><input id="noticeNo" readonly></div><div><label>状態</label><input id="noticeStatus" readonly></div><div><label>発行日</label><input id="issueDate" type="date"></div><div><label>支払期日</label><input id="paymentDueDate" type="date"></div><div><label>確認期間（日）</label><input id="approvalDays" type="number" min="1" max="60"></div><div><label>業者</label><input id="vendorName" readonly></div></div>
         <div id="draftLines" class="table-wrap" style="margin-top:13px"></div>
         <div class="totals"><div><span>税抜</span><strong id="subtotal">¥0</strong></div><div><span>消費税</span><strong id="tax">¥0</strong></div><div><span>税込支払額</span><strong id="total">¥0</strong></div></div>
-        <div class="button-row"><button onclick="saveDraft(false)">今すぐ保存</button><button onclick="window.print()">印刷プレビュー</button><button id="voidButton" class="danger" onclick="voidDraft()">下書きを取消</button><button id="sendButton" class="primary" disabled title="PDF固定保存機能の接続後に有効化">業者へ送信</button></div><div id="editorStatus" class="status"></div>
+        <div class="button-row"><button onclick="saveDraft(false)">今すぐ保存</button><button onclick="window.print()">印刷プレビュー</button><button id="voidButton" class="danger" onclick="voidDraft()">下書きを取消</button><button id="sendButton" class="primary" onclick="sendNotice()">PDF固定・業者へ送信</button></div><div id="editorStatus" class="status"></div>
       </div></section>
     </div>
   </div>
@@ -111,7 +112,7 @@ async function openNotice(index){
   if(result.error)return setStatus('editorStatus',result.error.message,true);
   activeNotice={...summary};activeLines=result.data||[];$('editorEmpty').classList.add('hidden');$('editor').classList.remove('hidden');
   $('noticeNo').value=summary.payment_notice_groups?.notice_no||'';$('noticeStatus').value=summary.status;$('issueDate').value=summary.issue_date||'';$('paymentDueDate').value=summary.payment_due_date||'';$('approvalDays').value=summary.approval_days||7;$('vendorName').value=summary.vendor_name_snapshot||'';
-  const editable=summary.status==='draft'&&isAdmin;['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).disabled=!editable);$('voidButton').disabled=!editable;
+  const editable=summary.status==='draft'&&isAdmin;['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).disabled=!editable);$('voidButton').disabled=!editable;$('sendButton').disabled=!editable;
   renderDraftLines();renderTotals();renderNoticeList();setStatus('editorStatus',editable?'入力を変更すると約1.2秒後に自動保存します。':'送信後の内容は固定されています。');
 }
 function renderDraftLines(){
@@ -127,12 +128,28 @@ function renderPrint(){
 }
 function scheduleSave(){if(!activeNotice||activeNotice.status!=='draft'||!isAdmin)return;clearTimeout(saveTimer);setStatus('editorStatus','自動保存待ち…');saveTimer=setTimeout(()=>saveDraft(true),1200)}
 async function saveDraft(automatic){
-  if(!activeNotice||activeNotice.status!=='draft')return;clearTimeout(saveTimer);setStatus('editorStatus','保存中…');
+  if(!activeNotice||activeNotice.status!=='draft')return false;clearTimeout(saveTimer);setStatus('editorStatus','保存中…');
   const result=await db.rpc('save_payment_notice_draft',{p_notice_id:activeNotice.id,p_expected_revision:activeNotice.revision,p_header:headerPayload(),p_lines:activeLines});
-  if(result.error){if(/別の端末/.test(result.error.message||''))return setStatus('editorStatus','別の端末で更新されています。再読込してください。',true);return setStatus('editorStatus',result.error.message,true)}
+  if(result.error){if(/別の端末/.test(result.error.message||''))setStatus('editorStatus','別の端末で更新されています。再読込してください。',true);else setStatus('editorStatus',result.error.message,true);return false}
   activeNotice.revision=Number(result.data);activeNotice.issue_date=$('issueDate').value;activeNotice.payment_due_date=$('paymentDueDate').value;activeNotice.approval_days=Number($('approvalDays').value);renderPrint();setStatus('editorStatus',automatic?'自動保存しました。':'保存しました。');
+  return true;
 }
 async function voidDraft(){if(!activeNotice||activeNotice.status!=='draft')return;const reason=prompt('取消理由を入力してください。');if(!reason?.trim())return;const result=await db.rpc('transition_payment_notice',{p_notice_id:activeNotice.id,p_expected_revision:activeNotice.revision,p_new_status:'void',p_reason:reason.trim(),p_document_storage_path:null,p_document_sha256:null});if(result.error)return setStatus('editorStatus',result.error.message,true);activeNotice=null;activeLines=[];$('editor').classList.add('hidden');$('editorEmpty').classList.remove('hidden');await loadBase()}
+async function sendNotice(){
+  if(!activeNotice||activeNotice.status!=='draft'||!isAdmin)return;
+  if(!activeNotice.vendor_invoice_reg_no_snapshot)return setStatus('editorStatus','業者マスタのT番号を設定してください。',true);
+  if(activeLines.some(line=>!line.work_date_snapshot))return setStatus('editorStatus','取引日が未設定の明細があります。完工日を確認してください。',true);
+  if(!confirm(`${activeNotice.vendor_name_snapshot}へ支払通知書をメール送信します。送信後は内容を変更できません。続けますか？`))return;
+  $('sendButton').disabled=true;setStatus('editorStatus','PDFを生成して固定保存中…');
+  try{
+    if(!(await saveDraft(false)))throw new Error('下書きを保存できないため送信を停止しました。');
+    const pdf=await html2pdf().set({margin:8,filename:'支払通知書.pdf',html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from($('printNotice')).outputPdf('blob');
+    const form=new FormData();form.append('notice_id',activeNotice.id);form.append('expected_revision',String(activeNotice.revision));form.append('pdf',pdf,`${activeNotice.payment_notice_groups?.notice_no||'payment-notice'}-v${activeNotice.version}.pdf`);
+    const result=await db.functions.invoke('notice-send',{body:form});
+    if(result.error||result.data?.error)throw new Error(result.data?.error||result.error.message);
+    setStatus('editorStatus','PDFを固定保存し、業者メールの受付を確認しました。');await loadBase();
+  }catch(error){$('sendButton').disabled=false;setStatus('editorStatus',error.message||'送信できませんでした。',true)}
+}
 ['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).addEventListener('input',()=>{renderPrint();scheduleSave()}));
 $('vendorSelect').addEventListener('change',loadVendorOrders);
 db.auth.getSession().then(({data})=>sessionReady(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)sessionReady(null)});
