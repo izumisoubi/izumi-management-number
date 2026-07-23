@@ -1,39 +1,147 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>業者・単価管理</title><link rel="stylesheet" href="業務基盤.css"></head><body>
-<header><div class="head"><div><h1>業者・単価管理</h1><div>共通の標準単価＋業者ごとの個別設定</div></div><a href="業務フロー.html">業務フロー</a></div></header><main>
-<section class="panel"><div class="toolbar"><div style="min-width:260px"><label for="vendor"><b>対象業者</b></label><select id="vendor"></select></div><button class="btn secondary" id="newVendor">業者を追加</button><span class="status" id="vendorStatus"></span></div>
-<hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><div class="toolbar"><button class="btn primary" id="add">工事項目を追加</button><label class="btn secondary">CSV/JSONを取り込む<input class="hidden" id="file" type="file" accept=".csv,.json"></label><button class="btn secondary" id="template">入力テンプレートを保存</button><span class="status" id="status">現在はこの端末へ仮保存（共有DB適用前）</span></div><p class="notice">共通単価は全業者へ適用されます。選択した業者の個別単価を入力した場合だけ個別値を優先し、個別値を消すと最新の共通単価が自動復活します。</p>
-<table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（全業者）</th><th>業者別単価（手入力）</th><th>適用単価</th><th></th></tr></thead><tbody id="rows"></tbody></table><div class="mobile-cards" id="cards"></div></section></main>
-<script src="業務基盤.js"></script><script>
-const LS_VENDOR='izumi_vendors_v3',LS_LEGACY='izumi_vendor_price_drafts_v1',LS_COMMON='izumi_common_prices_v1',LS_OVERRIDES='izumi_vendor_price_overrides_v2';
-let fallbackVendors=[
-  {name:'株式会社美装'}, {name:'染谷住宅サービス'}, {name:'有限会社林硝子工業所'},
-  {name:'RE・BOX株式会社'}, {name:'ネックス株式会社'}, {name:'稲垣機材株式会社'}
-],currentVendor='',commonItems=[],vendorOverrides={};
-try{const loaded=JSON.parse(localStorage.getItem(LS_VENDOR)||'null');if(Array.isArray(loaded)&&loaded.length)fallbackVendors=loaded}catch{}
-function baseItems(){return[{id:'wallpaper',name:'クロス貼替',unit:'㎡',common:1200},{id:'cleaning',name:'ハウスクリーニング',unit:'式',common:25000}]}
-try{commonItems=JSON.parse(localStorage.getItem(LS_COMMON)||'null')||[]}catch{}
-try{vendorOverrides=JSON.parse(localStorage.getItem(LS_OVERRIDES)||'{}')||{}}catch{}
-if(!commonItems.length){
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173e70"><title>業者・単価管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="業務基盤.css?v=20260724-UX29">
+  <style>
+    .login-card{max-width:480px;margin:22px auto}.save-mark{font-size:9px;color:var(--muted);min-width:58px}.save-mark.saving{color:#986c00}.save-mark.saved{color:#168657}.save-mark.error{color:#c93442}
+    .desktop-table input{min-width:90px}.desktop-table input[data-k=name]{min-width:190px}.price-auto{color:#168657;font-weight:800}.price-manual{color:#2868d8;font-weight:900}.cloud-note{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+<header><div class="head"><div><h1>業者・単価管理</h1><div>共通の標準単価＋業者ごとの個別設定</div></div><div class="toolbar"><a href="工事リスト.html">一覧メニュー</a><a href="マスタ管理.html">マスタ管理</a><button id="logoutButton" class="btn secondary hidden" onclick="signOut()">ログアウト</button></div></div></header>
+<main>
+  <section id="loginCard" class="panel login-card hidden"><h2>社員ログイン</h2><label>メールアドレス</label><input id="email" type="email" autocomplete="username"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button class="btn primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
+  <section id="priceApp" class="panel hidden">
+    <div class="toolbar"><div style="min-width:260px"><label for="vendor"><b>対象業者</b></label><select id="vendor"></select></div><button class="btn secondary" id="newVendor">業者を追加・編集</button><span class="status" id="vendorStatus"></span></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <div class="toolbar"><button class="btn primary" id="add">工事項目を追加</button><label class="btn secondary">CSV/JSONを取り込む<input class="hidden" id="file" type="file" accept=".csv,.json"></label><button class="btn secondary" id="template">入力テンプレートを保存</button></div>
+    <div class="cloud-note"><span class="status" id="status">接続状態を確認中…</span><button id="migrateButton" class="btn primary hidden" onclick="migrateLocalPrices()">端末単価を共有DBへ移行</button><span id="sessionUser" class="muted"></span></div>
+    <p class="notice">共通単価は全社員・全業者へ適用されます。選択した業者の個別単価だけを優先し、個別値を空欄に戻すと、その時点の最新共通単価が自動復活します。入力後約1.2秒で共有保存します。</p>
+    <table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（全業者）</th><th>業者別単価（手入力）</th><th>適用単価</th><th>保存</th><th></th></tr></thead><tbody id="rows"></tbody></table><div class="mobile-cards" id="cards"></div>
+  </section>
+</main>
+<script src="業務基盤.js"></script>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id),LS_VENDOR='izumi_vendors_v3',LS_LEGACY='izumi_vendor_price_drafts_v1',LS_COMMON='izumi_common_prices_v1',LS_OVERRIDES='izumi_vendor_price_overrides_v2';
+let fallbackVendors=[{name:'株式会社美装'},{name:'染谷住宅サービス'},{name:'有限会社林硝子工業所'},{name:'RE・BOX株式会社'},{name:'ネックス株式会社'},{name:'稲垣機材株式会社'}];
+let currentVendor='',currentVendorId='',commonItems=[],vendorOverrides={},cloudVendors=[],cloudOverrides=new Map(),pendingOverrides=new Map(),cloudReady=false,isAdmin=false,saveTimers=new Map();
+const schemaMissing=error=>/work_items|vendor_unit_prices|vendors|save_work_item|save_vendor_unit_price|schema cache|does not exist|could not find/i.test(error?.message||'');
+function baseItems(){return[{id:'wallpaper',name:'クロス貼替',unit:'㎡',common:1200,revision:0},{id:'cleaning',name:'ハウスクリーニング',unit:'式',common:25000,revision:0}]}
+function vendorName(value){return typeof value==='string'?value:value?.name||''}
+function loadLocal(){
+  try{const loaded=JSON.parse(localStorage.getItem(LS_VENDOR)||'null');if(Array.isArray(loaded)&&loaded.length)fallbackVendors=loaded}catch{}
+  try{commonItems=JSON.parse(localStorage.getItem(LS_COMMON)||'null')||[]}catch{}
+  try{vendorOverrides=JSON.parse(localStorage.getItem(LS_OVERRIDES)||'{}')||{}}catch{}
+  if(commonItems.length)return;
   let legacy={};try{legacy=JSON.parse(localStorage.getItem(LS_LEGACY)||'{}')||{}}catch{}
   const firstRows=Object.values(legacy).find(Array.isArray);
-  commonItems=(firstRows?.length?firstRows.map((x,i)=>({id:`legacy-${i}`,name:x.name||'',unit:x.unit||'式',common:Number(x.common)||0})):baseItems());
-  Object.entries(legacy).forEach(([vendorName,rows])=>{
-    if(!Array.isArray(rows))return;
-    vendorOverrides[vendorName]={};
-    rows.forEach((row,i)=>{if(row.override!==null&&row.override!==''&&commonItems[i])vendorOverrides[vendorName][commonItems[i].id]=Number(row.override)});
-  });
-  localStorage.setItem(LS_COMMON,JSON.stringify(commonItems));localStorage.setItem(LS_OVERRIDES,JSON.stringify(vendorOverrides));
+  commonItems=firstRows?.length?firstRows.map((item,index)=>({id:`legacy-${index}`,name:item.name||'',unit:item.unit||'式',common:Number(item.common)||0,revision:0})):baseItems();
+  Object.entries(legacy).forEach(([name,list])=>{if(!Array.isArray(list))return;vendorOverrides[name]={};list.forEach((row,index)=>{if(row.override!==null&&row.override!==''&&commonItems[index])vendorOverrides[name][commonItems[index].id]=Number(row.override)})});
+  saveLocal();
 }
-function vendorName(v){return typeof v==='string'?v:v?.name||''}
-function saveCommon(){localStorage.setItem(LS_COMMON,JSON.stringify(commonItems))}
-function saveOverrides(){localStorage.setItem(LS_OVERRIDES,JSON.stringify(vendorOverrides))}
-function overrideFor(item){const value=vendorOverrides[currentVendor]?.[item.id];return value===undefined?null:value}
-function loadVendor(name){currentVendor=name;render();vendorStatus.textContent=`${name} の個別設定`}
-vendor.innerHTML=fallbackVendors.map(v=>`<option>${escapeHtml(vendorName(v))}</option>`).join('');loadVendor(vendor.value);
-vendor.onchange=()=>loadVendor(vendor.value);
-newVendor.onclick=()=>{const name=prompt('追加する業者名を入力してください');if(!name?.trim())return;const clean=name.trim();if(!fallbackVendors.some(v=>vendorName(v)===clean)){fallbackVendors.push({name:clean});localStorage.setItem(LS_VENDOR,JSON.stringify(fallbackVendors))}const option=document.createElement('option');option.textContent=clean;vendor.append(option);vendor.value=clean;loadVendor(clean)};
-function render(){rows.innerHTML=commonItems.map((x,i)=>{const override=overrideFor(x);return `<tr><td><input value="${escapeHtml(x.name)}" data-i="${i}" data-k="name"></td><td><input value="${escapeHtml(x.unit)}" data-i="${i}" data-k="unit"></td><td><input inputmode="numeric" value="${x.common}" data-i="${i}" data-k="common" aria-label="共通単価"></td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-i="${i}" data-k="override"></td><td class="${override==null?'price-auto':'price-manual'}">¥${effectiveValue(x.common,override).toLocaleString()}</td><td><button class="btn danger" data-delete="${i}">削除</button></td></tr>`}).join('');cards.innerHTML=commonItems.map(x=>{const override=overrideFor(x);return `<div class="mobile-card"><b>${escapeHtml(x.name)}</b><p>${escapeHtml(x.unit)} ／ 適用 ¥${effectiveValue(x.common,override).toLocaleString()}</p><span class="badge">${override==null?'共通単価':'業者別単価'}</span></div>`}).join('')}
-document.addEventListener('input',e=>{const i=e.target.dataset.i;if(i===undefined)return;const item=commonItems[Number(i)],k=e.target.dataset.k;if(!item)return;if(k==='override'){vendorOverrides[currentVendor]??={};const normalized=normalizeNumber(e.target.value);if(normalized==='')delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=Number(normalized);saveOverrides()}else if(k==='common'){item.common=Number(normalizeNumber(e.target.value))||0;saveCommon()}else{item[k]=e.target.value;saveCommon()}render()});
-document.addEventListener('click',e=>{if(e.target.dataset.delete!==undefined){const i=Number(e.target.dataset.delete),id=commonItems[i]?.id;commonItems.splice(i,1);Object.values(vendorOverrides).forEach(map=>{if(map&&id)delete map[id]});saveCommon();saveOverrides();render()}});
-add.onclick=()=>{commonItems.push({id:crypto.randomUUID(),name:'新しい工事項目',unit:'式',common:0});saveCommon();render()};template.onclick=()=>downloadJson('単価入力テンプレート.json',{vendor_name:currentVendor,items:[{name:'',unit:'',common_price:0,vendor_override:null}]});file.onchange=()=>status.textContent='取込内容は自動確定せず、差分確認画面へ送ります';render();
-</script></body></html>
+function saveLocal(){try{localStorage.setItem(LS_COMMON,JSON.stringify(commonItems));localStorage.setItem(LS_OVERRIDES,JSON.stringify(vendorOverrides));localStorage.setItem(LS_VENDOR,JSON.stringify((cloudVendors.length?cloudVendors:fallbackVendors).map(v=>({name:vendorName(v)}))))}catch{}}
+function localOverride(item){const value=vendorOverrides[currentVendor]?.[item.id];return value===undefined?null:value}
+function cloudOverride(item){return cloudOverrides.get(`${currentVendorId}|${item.id}`)||null}
+function overrideFor(item){const key=`${currentVendorId}|${item.id}`;return cloudReady&&pendingOverrides.has(key)?pendingOverrides.get(key):(cloudReady?(cloudOverride(item)?.value??null):localOverride(item))}
+function mark(itemId,text,kind=''){const element=document.querySelector(`[data-save="${CSS.escape(itemId)}"]`);if(element){element.textContent=text;element.className='save-mark '+kind}}
+function populateVendors(){
+  const list=cloudReady?cloudVendors:fallbackVendors;$('vendor').innerHTML=list.map(v=>`<option value="${cloudReady?v.id:escapeHtml(vendorName(v))}">${escapeHtml(vendorName(v))}</option>`).join('');
+  if(list.length)loadVendor($('vendor').value);else{$('vendorStatus').textContent='業者マスタへ業者を登録してください';render()}
+}
+function loadVendor(value){
+  if(cloudReady){const selected=cloudVendors.find(v=>v.id===value);currentVendorId=selected?.id||'';currentVendor=selected?.name||''}else{currentVendorId='';currentVendor=value}
+  render();$('vendorStatus').textContent=currentVendor?`${currentVendor} の個別設定`:'業者未選択';
+}
+function render(){
+  $('rows').innerHTML=commonItems.map((item,index)=>{const override=overrideFor(item),effective=effectiveValue(item.common,override);return `<tr data-item="${item.id}"><td><input value="${escapeHtml(item.name)}" data-i="${index}" data-k="name"></td><td><input value="${escapeHtml(item.unit)}" data-i="${index}" data-k="unit"></td><td><input inputmode="numeric" value="${item.common}" data-i="${index}" data-k="common" aria-label="共通単価"></td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-i="${index}" data-k="override" aria-label="${escapeHtml(currentVendor)}の個別単価"></td><td data-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-save="${item.id}"></span></td><td><button class="btn danger" data-delete="${index}" ${cloudReady&&!isAdmin?'disabled title="削除は最高権限のみ"':''}>削除</button></td></tr>`}).join('');
+  $('cards').innerHTML=commonItems.map(item=>{const override=overrideFor(item);return `<div class="mobile-card"><b>${escapeHtml(item.name)}</b><p>${escapeHtml(item.unit)} ／ 適用 ¥${effectiveValue(item.common,override).toLocaleString()}</p><span class="badge">${override==null?'共通単価':'業者別単価'}</span></div>`}).join('');
+}
+function refreshEffective(item,index){
+  const override=overrideFor(item),target=document.querySelector(`[data-effective="${CSS.escape(item.id)}"]`);if(target){target.textContent='¥'+effectiveValue(item.common,override).toLocaleString();target.className=override==null?'price-auto':'price-manual'}
+  const card=$('cards').children[index];if(card){card.querySelector('p').textContent=`${item.unit} ／ 適用 ¥${effectiveValue(item.common,override).toLocaleString()}`;card.querySelector('.badge').textContent=override==null?'共通単価':'業者別単価'}
+}
+function scheduleItemSave(item,index,kind){
+  const key=`${item.id}|${kind}`;clearTimeout(saveTimers.get(key));mark(item.id,'保存待ち','saving');saveTimers.set(key,setTimeout(()=>kind==='override'?saveOverride(item,index):saveCommonItem(item,index),1200));
+}
+async function saveCommonItem(item,index){
+  if(!cloudReady){saveLocal();return mark(item.id,'端末保存','saved')}
+  mark(item.id,'保存中','saving');const result=await db.rpc('save_work_item',{p_id:item._new?null:item.id,p_expected_revision:item.revision||0,p_name:item.name,p_unit:item.unit,p_common_price:Number(item.common)||0});
+  if(result.error){mark(item.id,/別の端末/.test(result.error.message||'')?'競合・再読込':'保存失敗','error');if(/別の端末/.test(result.error.message||''))$('status').textContent='別の社員が先に更新しました。画面を更新してください。';return}
+  const saved=Array.isArray(result.data)?result.data[0]:result.data;if(item._new&&saved?.id){const oldId=item.id;item.id=saved.id;delete item._new;Object.values(vendorOverrides).forEach(map=>{if(map?.[oldId]!==undefined){map[item.id]=map[oldId];delete map[oldId]}})}item.revision=Number(saved?.revision||item.revision+1);saveLocal();render();mark(item.id,'共有済','saved');
+}
+async function saveOverride(item,index){
+  const value=overrideFor(item);
+  if(!cloudReady){saveLocal();refreshEffective(item,index);return mark(item.id,'端末保存','saved')}
+  const existing=cloudOverride(item);if(value===null&&!existing)return mark(item.id,'共通へ復帰','saved');
+  mark(item.id,'保存中','saving');const result=await db.rpc('save_vendor_unit_price',{p_vendor_id:currentVendorId,p_work_item_id:item.id,p_expected_revision:existing?.revision||0,p_override_price:value});
+  if(result.error){mark(item.id,/別の端末/.test(result.error.message||'')?'競合・再読込':'保存失敗','error');return}
+  const saved=Array.isArray(result.data)?result.data[0]:result.data,key=`${currentVendorId}|${item.id}`;
+  if(value===null)cloudOverrides.delete(key);else cloudOverrides.set(key,{id:saved?.id,value,revision:Number(saved?.revision||1)});pendingOverrides.delete(key);
+  saveLocal();refreshEffective(item,index);mark(item.id,value===null?'共通へ復帰':'共有済','saved');
+}
+document.addEventListener('input',event=>{
+  const index=Number(event.target.dataset.i);if(!Number.isInteger(index))return;const item=commonItems[index],key=event.target.dataset.k;if(!item)return;
+  if(key==='override'){const normalized=normalizeNumber(event.target.value),value=normalized===''?null:Number(normalized);vendorOverrides[currentVendor]??={};if(value===null)delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=value;if(cloudReady)pendingOverrides.set(`${currentVendorId}|${item.id}`,value);refreshEffective(item,index);scheduleItemSave(item,index,'override')}
+  else{item[key]=key==='common'?(Number(normalizeNumber(event.target.value))||0):event.target.value;refreshEffective(item,index);scheduleItemSave(item,index,'common')}
+});
+document.addEventListener('click',async event=>{
+  if(event.target.dataset.delete===undefined)return;const index=Number(event.target.dataset.delete),item=commonItems[index];if(!item)return;
+  if(cloudReady){if(!isAdmin)return;const reason=prompt(`「${item.name}」を削除する理由を入力してください。`);if(!reason?.trim())return;const result=await db.rpc('deactivate_work_item',{p_id:item.id,p_expected_revision:item.revision,p_reason:reason.trim()});if(result.error)return alert(result.error.message)}
+  commonItems.splice(index,1);Object.values(vendorOverrides).forEach(map=>{if(map)delete map[item.id]});saveLocal();render();
+});
+$('vendor').onchange=()=>loadVendor($('vendor').value);
+$('newVendor').onclick=()=>location.href='estimate.html?open_tab=vendormaster';
+$('add').onclick=()=>{const item={id:crypto.randomUUID(),name:'新しい工事項目',unit:'式',common:0,revision:0,_new:cloudReady};commonItems.push(item);saveLocal();render();const index=commonItems.length-1;document.querySelector(`[data-item="${CSS.escape(item.id)}"] input[data-k="name"]`)?.focus();if(cloudReady)scheduleItemSave(item,index,'common')};
+$('template').onclick=()=>downloadJson('単価入力テンプレート.json',{vendor_name:currentVendor,items:[{name:'',unit:'',common_price:0,vendor_override:null}]});
+$('file').onchange=()=>$('status').textContent='取込内容は自動確定しません。差分確認後に反映します。';
+async function loadCloud(){
+  const localItems=commonItems.map(item=>({...item})),localOverrideSnapshot=JSON.parse(JSON.stringify(vendorOverrides||{}));
+  const [vendorResult,itemResult,priceResult]=await Promise.all([
+    db.from('vendors').select('id,name').eq('active',true).is('deleted_at',null).order('name'),
+    db.from('work_items').select('id,name,unit,common_price,revision').eq('active',true).is('deleted_at',null).order('code'),
+    db.from('vendor_unit_prices').select('id,vendor_id,work_item_id,override_price,revision').is('deleted_at',null)
+  ]);
+  const error=vendorResult.error||itemResult.error||priceResult.error;if(error){cloudReady=false;$('status').textContent=schemaMissing(error)?'共有DB適用前：この端末へ仮保存':'共有DBを読み込めません：'+error.message;populateVendors();return}
+  cloudReady=true;cloudVendors=vendorResult.data||[];
+  if(!(itemResult.data||[]).length&&localItems.length){
+    commonItems=localItems.map(item=>({...item,_new:true,revision:0}));vendorOverrides=localOverrideSnapshot;$('migrateButton').classList.toggle('hidden',!isAdmin);populateVendors();$('status').textContent=isAdmin?'共有DBは空です。内容確認後に初期移行してください。':'共有DBの初期移行を最高権限者へ依頼してください。';return;
+  }
+  $('migrateButton').classList.add('hidden');commonItems=(itemResult.data||[]).map(item=>({id:item.id,name:item.name,unit:item.unit,common:Number(item.common_price),revision:Number(item.revision)}));cloudOverrides=new Map((priceResult.data||[]).map(price=>[`${price.vendor_id}|${price.work_item_id}`,{id:price.id,value:Number(price.override_price),revision:Number(price.revision)}]));
+  vendorOverrides={};cloudVendors.forEach(v=>vendorOverrides[v.name]={});for(const [key,value] of cloudOverrides){const [vendorId,itemId]=key.split('|'),name=cloudVendors.find(v=>v.id===vendorId)?.name;if(name)vendorOverrides[name][itemId]=value.value}
+  saveLocal();populateVendors();$('status').textContent='全社員共有DBへ接続済み';
+}
+async function migrateLocalPrices(){
+  if(!isAdmin||!cloudReady||!commonItems.length)return;if(!confirm(`この端末の工事項目 ${commonItems.length}件を共有DBへ初期移行します。元データは消しません。続けますか？`))return;
+  $('migrateButton').disabled=true;$('status').textContent='共通単価を移行中…';
+  const oldToNew=new Map();
+  for(const item of commonItems){
+    const oldId=item.id,result=await db.rpc('save_work_item',{p_id:null,p_expected_revision:0,p_name:item.name,p_unit:item.unit,p_common_price:Number(item.common)||0});
+    if(result.error){$('status').textContent='移行を停止しました：'+result.error.message;$('migrateButton').disabled=false;return}
+    const saved=Array.isArray(result.data)?result.data[0]:result.data;oldToNew.set(oldId,saved.id);
+  }
+  $('status').textContent='業者別単価を移行中…';
+  for(const [vendorName,map] of Object.entries(vendorOverrides)){
+    const vendorRecord=cloudVendors.find(v=>v.name===vendorName);if(!vendorRecord)continue;
+    for(const [oldItemId,value] of Object.entries(map||{})){
+      const newId=oldToNew.get(oldItemId);if(!newId)continue;
+      const saved=await db.rpc('save_vendor_unit_price',{p_vendor_id:vendorRecord.id,p_work_item_id:newId,p_expected_revision:0,p_override_price:Number(value)});
+      if(saved.error){$('status').textContent=`${vendorName} の個別単価で移行停止：${saved.error.message}`;$('migrateButton').disabled=false;return}
+    }
+  }
+  $('status').textContent='初期移行が完了しました。再読込します。';await loadCloud();
+}
+async function sessionReady(session){
+  if(!session){$('loginCard').classList.remove('hidden');$('priceApp').classList.add('hidden');$('logoutButton').classList.add('hidden');return}
+  const enabled=await db.rpc('is_current_app_user_enabled');if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
+  const admin=await db.rpc('is_management_admin');isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';$('loginCard').classList.add('hidden');$('priceApp').classList.remove('hidden');$('logoutButton').classList.remove('hidden');await loadCloud();
+}
+async function signIn(){$('loginStatus').textContent='確認中…';const result=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(result.error){$('loginStatus').textContent=result.error.message;return}await sessionReady(result.data.session)}
+async function signOut(){await db.auth.signOut();location.reload()}
+loadLocal();db.auth.getSession().then(({data})=>sessionReady(data.session));
+</script>
+</body>
+</html>

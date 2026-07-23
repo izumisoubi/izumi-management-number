@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173e70"><title>イズミ装美 支払通知書</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="管理ポータル.css?v=20260724-UX34">
+  <style>
+    .layout{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(440px,1.25fr);gap:15px}.toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.toolbar>div{min-width:190px;flex:1}
+    .notice-list{display:grid;gap:7px;max-height:420px;overflow:auto}.notice-item{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;padding:10px}.notice-item.active{border-color:var(--blue);background:#eef5ff}
+    .notice-item small{display:block;color:var(--muted);margin-top:3px}.line-select{width:100%;border-collapse:collapse;min-width:720px}.line-select th,.line-select td{border-bottom:1px solid var(--line);padding:7px;font-size:11px;text-align:left}.line-select th{background:#f0f4fa}.line-select td.num{text-align:right}
+    .state{display:inline-flex;padding:3px 7px;border-radius:999px;background:#edf2f8;color:#53637b;font-size:9px;font-weight:900}.state.sent,.state.agreed{background:#fff3cf;color:#805b00}.state.confirmed{background:#e7f7ee;color:#167349}.state.disputed{background:#ffeaec;color:#a72c38}
+    .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.totals div{background:#f6f8fc;border:1px solid var(--line);border-radius:9px;padding:10px;text-align:right}.totals span{display:block;color:var(--muted);font-size:10px}.totals strong{font-size:17px}
+    #printNotice{display:none}.empty{padding:22px;text-align:center;color:var(--muted)}
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:14px 10px}.card{padding:14px}.table-wrap{overflow:auto}.header-actions .session-user{display:none}}
+    @media print{body>*:not(#printNotice){display:none!important}#printNotice{display:block!important;background:#fff;color:#111;padding:12mm;font-family:"Yu Mincho","Hiragino Mincho ProN",serif}#printNotice table{width:100%;border-collapse:collapse}#printNotice th,#printNotice td{border:1px solid #555;padding:5px;font-size:10pt}#printNotice .num{text-align:right}#printNotice h1{text-align:center;font-size:19pt;margin:0 0 12mm}#printNotice .issuer{text-align:right;margin:8mm 0}}
+  </style>
+</head>
+<body>
+<header><div class="header-inner"><div><h1>支払通知書</h1><div class="sub">業者別の発注実績から作成・版管理・確認証跡を保存</div></div><div class="header-actions"><span id="sessionUser" class="session-user"></span><a href="工事リスト.html">一覧メニュー</a><a href="請求.html">請求管理</a><button type="button" onclick="signOut()">ログアウト</button></div></div></header>
+<main class="wrap">
+  <section id="loginCard" class="card narrow hidden"><h2>社員ログイン</h2><div class="grid"><div class="full"><label>メールアドレス</label><input id="email" type="email" autocomplete="username"></div><div class="full"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"></div></div><div class="button-row"><button class="primary" onclick="signIn()">ログイン</button></div><div id="loginStatus" class="status"></div></section>
+  <div id="app" class="hidden">
+    <section class="card"><div class="notice warning"><b>送信前安全運用：</b>この画面は下書き作成まで自動保存します。業者への実送信は、PDFを固定保存してSHA-256を記録できる状態になるまで実行できません。</div><div id="globalStatus" class="status"></div></section>
+    <div class="layout">
+      <div>
+        <section class="card"><h2>作成対象</h2><div class="toolbar"><div><label>業者</label><select id="vendorSelect"></select></div><button onclick="loadVendorOrders()">発注実績を更新</button></div><div id="orderLines" class="table-wrap" style="margin-top:12px"></div><div class="button-row"><button id="createButton" class="primary" onclick="createDraft()">選択明細で下書きを作成</button></div></section>
+        <section class="card"><h2>保存済み通知書</h2><div id="noticeList" class="notice-list"></div></section>
+      </div>
+      <section class="card"><h2>通知書編集</h2><div id="editorEmpty" class="empty">左側で明細を選び、下書きを作成してください。</div><div id="editor" class="hidden">
+        <div class="grid"><div><label>通知番号</label><input id="noticeNo" readonly></div><div><label>状態</label><input id="noticeStatus" readonly></div><div><label>発行日</label><input id="issueDate" type="date"></div><div><label>支払期日</label><input id="paymentDueDate" type="date"></div><div><label>確認期間（日）</label><input id="approvalDays" type="number" min="1" max="60"></div><div><label>業者</label><input id="vendorName" readonly></div></div>
+        <div id="draftLines" class="table-wrap" style="margin-top:13px"></div>
+        <div class="totals"><div><span>税抜</span><strong id="subtotal">¥0</strong></div><div><span>消費税</span><strong id="tax">¥0</strong></div><div><span>税込支払額</span><strong id="total">¥0</strong></div></div>
+        <div class="button-row"><button onclick="saveDraft(false)">今すぐ保存</button><button onclick="window.print()">印刷プレビュー</button><button id="voidButton" class="danger" onclick="voidDraft()">下書きを取消</button><button id="sendButton" class="primary" disabled title="PDF固定保存機能の接続後に有効化">業者へ送信</button></div><div id="editorStatus" class="status"></div>
+      </div></section>
+    </div>
+  </div>
+</main>
+<section id="printNotice"></section>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
+let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false;
+const schemaMissing=error=>/payment_notice|purchase_orders|vendors|schema cache|does not exist|could not find/i.test(error?.message||'');
+function setStatus(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'')}
+async function sessionReady(session){
+  if(!session){$('loginCard').classList.remove('hidden');$('app').classList.add('hidden');return}
+  const enabled=await db.rpc('is_current_app_user_enabled');if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
+  const admin=await db.rpc('is_management_admin');isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';
+  $('loginCard').classList.add('hidden');$('app').classList.remove('hidden');$('createButton').disabled=!isAdmin;
+  if(!isAdmin)setStatus('globalStatus','閲覧専用です。支払通知書の作成・訂正・送信は最高権限の社員だけが行えます。');
+  await loadBase();
+}
+async function signIn(){setStatus('loginStatus','確認中…');const result=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(result.error)return setStatus('loginStatus',result.error.message,true);await sessionReady(result.data.session)}
+async function signOut(){await db.auth.signOut();location.reload()}
+async function loadBase(){
+  setStatus('globalStatus','業者・通知書を読み込み中…');
+  const [vendorResult,noticeResult]=await Promise.all([
+    db.from('vendors').select('id,name').eq('active',true).is('deleted_at',null).order('name'),
+    db.from('payment_notices').select('id,group_id,version,status,vendor_id,vendor_name_snapshot,issue_date,payment_due_date,approval_days,subtotal_snapshot,tax_snapshot,total_snapshot,revision,updated_at,payment_notice_groups(notice_no)').is('deleted_at',null).order('created_at',{ascending:false}).limit(500)
+  ]);
+  if(vendorResult.error||noticeResult.error){
+    const error=vendorResult.error||noticeResult.error;
+    setStatus('globalStatus',schemaMissing(error)?'支払通知書DBは安全確認後に適用予定です。現在は既存の請求・発注機能をそのまま利用できます。':'読込エラー：'+error.message,true);
+    $('createButton').disabled=true;return;
+  }
+  vendors=vendorResult.data||[];notices=noticeResult.data||[];
+  $('vendorSelect').innerHTML='<option value="">業者を選択</option>'+vendors.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('');
+  renderNoticeList();setStatus('globalStatus',`業者 ${vendors.length}社・通知書 ${notices.length}件を読み込みました。`); 
+}
+async function loadVendorOrders(){
+  const vendorId=$('vendorSelect').value;if(!vendorId){$('orderLines').innerHTML='<div class="empty">業者を選択してください。</div>';return}
+  setStatus('globalStatus','発注実績を読み込み中…');
+  const result=await db.from('purchase_orders').select('id,project_id,po_no,management_number,status,work_name,property_name_snapshot,room_no_snapshot,completed_at,total,purchase_order_lines(id,line_no,description,quantity,unit,unit_price,amount,tax_rate)').eq('vendor_id',vendorId).in('status',['issued','acknowledged','in_progress','completed','closed']).is('deleted_at',null).order('created_at',{ascending:false});
+  if(result.error){setStatus('globalStatus','発注実績を読み込めません：'+result.error.message,true);return}
+  orders=result.data||[];renderOrderLines();setStatus('globalStatus',`${orders.length}件の発注書を確認しました。`);
+}
+function selectableLines(){
+  return orders.flatMap(order=>(order.purchase_order_lines||[]).filter(line=>!line.deleted_at).map(line=>({order,line})));
+}
+function renderOrderLines(){
+  const items=selectableLines();
+  $('orderLines').innerHTML=items.length?`<table class="line-select"><thead><tr><th></th><th>発注番号</th><th>管理番号</th><th>工事内容</th><th>状態</th><th>金額</th></tr></thead><tbody>${items.map(({order,line})=>`<tr><td><input class="source-line" type="checkbox" data-order="${order.id}" data-line="${line.id}" checked></td><td>${esc(order.po_no)}</td><td>${esc(order.management_number)}</td><td>${esc(line.description)}</td><td>${esc(order.status)}</td><td class="num">${yen(line.amount)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">通知対象にできる発注実績はありません。</div>';
+}
+function selectedSourceLines(){
+  const chosen=new Set([...document.querySelectorAll('.source-line:checked')].map(input=>input.dataset.order+'|'+input.dataset.line));
+  return selectableLines().filter(({order,line})=>chosen.has(order.id+'|'+line.id)).map(({order,line},index)=>({
+    line_no:index+1,project_id:order.project_id,management_number_snapshot:order.management_number,
+    po_no_snapshot:order.po_no,co_no_snapshot:null,work_date_snapshot:order.completed_at?.slice(0,10)||null,
+    client_name_snapshot:null,property_name_snapshot:[order.property_name_snapshot,order.room_no_snapshot].filter(Boolean).join(' '),
+    description_snapshot:line.description,quantity_snapshot:line.quantity,unit_snapshot:line.unit,
+    unit_price_snapshot:line.unit_price,amount_snapshot:line.amount,tax_rate_snapshot:line.tax_rate
+  }));
+}
+function headerPayload(){return{issue_date:$('issueDate').value||new Date().toISOString().slice(0,10),payment_due_date:$('paymentDueDate').value||null,approval_days:Number($('approvalDays').value)||7,issuer_name_snapshot:'株式会社イズミ装美',issuer_address_snapshot:'東京都中央区日本橋浜町2-16-5 東味ビルディング5F',issuer_invoice_reg_no_snapshot:'T7011601015057'}}
+async function createDraft(){
+  const vendorId=$('vendorSelect').value,lines=selectedSourceLines();if(!vendorId)return setStatus('globalStatus','業者を選択してください。',true);if(!lines.length)return setStatus('globalStatus','明細を1行以上選択してください。',true);
+  $('createButton').disabled=true;setStatus('globalStatus','下書きを作成中…');
+  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:vendorId,p_header:{...headerPayload(),issue_date:new Date().toISOString().slice(0,10)},p_lines:lines,p_supersedes_notice_id:null});
+  $('createButton').disabled=!isAdmin;
+  if(result.error)return setStatus('globalStatus',schemaMissing(result.error)?'安全操作RPCはDB適用待ちです。既存データは変更していません。':result.error.message,true);
+  await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(n=>n.id===created?.id);if(index>=0)await openNotice(index);
+}
+function renderNoticeList(){
+  $('noticeList').innerHTML=notices.length?notices.map((notice,index)=>`<button class="notice-item ${activeNotice?.id===notice.id?'active':''}" onclick="openNotice(${index})"><b>${esc(notice.payment_notice_groups?.notice_no||'通知番号未取得')} v${notice.version}</b> <span class="state ${notice.status}">${esc(notice.status)}</span><small>${esc(notice.vendor_name_snapshot)}　${esc(notice.issue_date)}　${yen(notice.total_snapshot)}</small></button>`).join(''):'<div class="empty">支払通知書はまだありません。</div>';
+}
+async function openNotice(index){
+  const summary=notices[index];if(!summary)return;setStatus('editorStatus','明細を読み込み中…');
+  const result=await db.from('payment_notice_lines').select('*').eq('notice_id',summary.id).is('deleted_at',null).order('line_no');
+  if(result.error)return setStatus('editorStatus',result.error.message,true);
+  activeNotice={...summary};activeLines=result.data||[];$('editorEmpty').classList.add('hidden');$('editor').classList.remove('hidden');
+  $('noticeNo').value=summary.payment_notice_groups?.notice_no||'';$('noticeStatus').value=summary.status;$('issueDate').value=summary.issue_date||'';$('paymentDueDate').value=summary.payment_due_date||'';$('approvalDays').value=summary.approval_days||7;$('vendorName').value=summary.vendor_name_snapshot||'';
+  const editable=summary.status==='draft'&&isAdmin;['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).disabled=!editable);$('voidButton').disabled=!editable;
+  renderDraftLines();renderTotals();renderNoticeList();setStatus('editorStatus',editable?'入力を変更すると約1.2秒後に自動保存します。':'送信後の内容は固定されています。');
+}
+function renderDraftLines(){
+  $('draftLines').innerHTML=`<table class="line-select"><thead><tr><th>管理番号</th><th>発注番号</th><th>工事内容</th><th>数量</th><th>単位</th><th>単価</th><th>金額</th></tr></thead><tbody>${activeLines.map(line=>`<tr><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.po_no_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.unit_price_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('')}</tbody></table>`;
+  renderPrint();
+}
+function renderTotals(){const subtotal=activeLines.reduce((sum,line)=>sum+Number(line.amount_snapshot||0),0),taxes={};activeLines.forEach(line=>{const rate=Number(line.tax_rate_snapshot||0);taxes[rate]=(taxes[rate]||0)+Number(line.amount_snapshot||0)});const tax=Object.entries(taxes).reduce((sum,[rate,amount])=>sum+Math.round(amount*Number(rate)),0);$('subtotal').textContent=yen(subtotal);$('tax').textContent=yen(tax);$('total').textContent=yen(subtotal+tax);renderPrint()}
+function renderPrint(){
+  if(!activeNotice)return;const subtotal=activeLines.reduce((sum,line)=>sum+Number(line.amount_snapshot||0),0);const tax=activeLines.reduce((sum,line)=>sum+Math.round(Number(line.amount_snapshot||0)*Number(line.tax_rate_snapshot||0)),0);
+  $('printNotice').innerHTML=`<h1>支 払 通 知 書</h1><div>${esc(activeNotice.vendor_name_snapshot)}　御中</div><div>通知番号：${esc(activeNotice.payment_notice_groups?.notice_no||'')}　発行日：${esc($('issueDate').value||activeNotice.issue_date)}</div><div class="issuer">株式会社イズミ装美<br>東京都中央区日本橋浜町2-16-5 東味ビルディング5F<br>登録番号 T7011601015057</div><table><thead><tr><th>管理番号</th><th>発注番号</th><th>工事内容</th><th>数量</th><th>単位</th><th>単価</th><th>金額</th></tr></thead><tbody>${activeLines.map(line=>`<tr><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.po_no_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.unit_price_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('')}<tr><th colspan="6">税抜</th><td class="num">${yen(subtotal)}</td></tr><tr><th colspan="6">消費税</th><td class="num">${yen(tax)}</td></tr><tr><th colspan="6">税込支払額</th><td class="num">${yen(subtotal+tax)}</td></tr></tbody></table><p>支払期日：${esc($('paymentDueDate').value||'未設定')}</p>`;
+}
+function scheduleSave(){if(!activeNotice||activeNotice.status!=='draft'||!isAdmin)return;clearTimeout(saveTimer);setStatus('editorStatus','自動保存待ち…');saveTimer=setTimeout(()=>saveDraft(true),1200)}
+async function saveDraft(automatic){
+  if(!activeNotice||activeNotice.status!=='draft')return;clearTimeout(saveTimer);setStatus('editorStatus','保存中…');
+  const result=await db.rpc('save_payment_notice_draft',{p_notice_id:activeNotice.id,p_expected_revision:activeNotice.revision,p_header:headerPayload(),p_lines:activeLines});
+  if(result.error){if(/別の端末/.test(result.error.message||''))return setStatus('editorStatus','別の端末で更新されています。再読込してください。',true);return setStatus('editorStatus',result.error.message,true)}
+  activeNotice.revision=Number(result.data);activeNotice.issue_date=$('issueDate').value;activeNotice.payment_due_date=$('paymentDueDate').value;activeNotice.approval_days=Number($('approvalDays').value);renderPrint();setStatus('editorStatus',automatic?'自動保存しました。':'保存しました。');
+}
+async function voidDraft(){if(!activeNotice||activeNotice.status!=='draft')return;const reason=prompt('取消理由を入力してください。');if(!reason?.trim())return;const result=await db.rpc('transition_payment_notice',{p_notice_id:activeNotice.id,p_expected_revision:activeNotice.revision,p_new_status:'void',p_reason:reason.trim(),p_document_storage_path:null,p_document_sha256:null});if(result.error)return setStatus('editorStatus',result.error.message,true);activeNotice=null;activeLines=[];$('editor').classList.add('hidden');$('editorEmpty').classList.remove('hidden');await loadBase()}
+['issueDate','paymentDueDate','approvalDays'].forEach(id=>$(id).addEventListener('input',()=>{renderPrint();scheduleSave()}));
+$('vendorSelect').addEventListener('change',loadVendorOrders);
+db.auth.getSession().then(({data})=>sessionReady(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)sessionReady(null)});
+</script>
+</body></html>

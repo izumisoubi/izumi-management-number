@@ -1,1 +1,58 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>工事内容・支払確認</title><link rel="stylesheet" href="業務基盤.css"></head><body><header><div class="head"><div><h1>工事内容・支払確認</h1><div>スマートフォン・タブレット・PC対応</div></div></div></header><main><section class="panel"><span class="badge">確認用プレビュー</span><h2>管理番号 25-0000</h2><p class="muted">物件名・工事名・発注内容・変更内容・支払予定額をここに表示します。</p><div class="mobile-card"><b>内装工事</b><p>数量 1式　単価 ¥0</p><p><strong>金額 ¥0</strong></p></div><p class="notice">実際の承認は、有効期限付きURL・二重実行防止・監査記録をサーバ側で確認してから確定します。</p><div class="toolbar"><button class="btn primary" disabled>内容を確認しました</button><button class="btn danger" disabled>相違内容を連絡</button></div></section></main></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="theme-color" content="#173e70">
+  <title>イズミ装美 工事内容・支払確認</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="業務基盤.css?v=20260724-UX34">
+  <style>
+    main{max-width:760px}.hero{background:linear-gradient(135deg,#173e70,#2868d8);color:#fff;border-radius:14px;padding:18px;margin-bottom:12px}.hero small{opacity:.8}.hero h2{margin:5px 0 0}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.summary div{padding:10px;border:1px solid #d7e0ee;border-radius:9px;text-align:right}.summary span{display:block;color:#64738a;font-size:10px}.summary strong{font-size:17px}.lines{width:100%;border-collapse:collapse;min-width:620px}.lines th,.lines td{padding:8px 6px;border-bottom:1px solid #d7e0ee;font-size:11px;text-align:left}.lines th{background:#eef3f9}.lines .num{text-align:right}.table-scroll{overflow:auto}.agreement{display:flex;align-items:flex-start;gap:9px;margin:14px 0}.agreement input{width:auto;margin-top:3px}.agreement label{font-size:12px;line-height:1.6}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.success-box{padding:22px;text-align:center;background:#e9f8f0;border:1px solid #b4e3ca;border-radius:12px;color:#126b42}.error-box{padding:16px;background:#fff0f1;border:1px solid #f2b9bf;border-radius:10px;color:#a72c38}.token-note{word-break:break-all}
+    @media(max-width:600px){header .head{padding:14px}main{padding:12px}.panel{padding:14px}.summary{grid-template-columns:1fr}.action-grid{grid-template-columns:1fr}.hero{padding:14px}.hero h2{font-size:18px}}
+  </style>
+</head>
+<body>
+<header><div class="head"><div><h1>株式会社イズミ装美</h1><div>工事内容・支払通知書の確認</div></div></div></header>
+<main>
+  <section id="loading" class="panel"><h2>確認内容を読み込んでいます</h2><p class="muted">画面を閉じずにお待ちください。</p></section>
+  <section id="errorCard" class="panel hidden"><div class="error-box"><b>確認できませんでした</b><p id="errorText"></p></div><p class="muted">URLの途中が切れていないか確認してください。期限切れの場合はイズミ装美の担当者へ新しいURLをご依頼ください。</p></section>
+  <section id="noticeCard" class="panel hidden">
+    <div class="hero"><small id="noticeNo"></small><h2 id="vendorName"></h2><div id="issueInfo"></div></div>
+    <h3>お支払対象</h3><div class="table-scroll"><table class="lines"><thead><tr><th>管理番号</th><th>物件</th><th>工事内容</th><th>数量</th><th>単位</th><th>金額</th></tr></thead><tbody id="lineBody"></tbody></table></div>
+    <div class="summary"><div><span>税抜</span><strong id="subtotal"></strong></div><div><span>消費税</span><strong id="tax"></strong></div><div><span>税込支払額</span><strong id="total"></strong></div></div>
+    <p class="notice">内容に相違がある場合は、確認期間内に「相違内容を連絡」からお知らせください。確認期間内に相違連絡がない場合は、事前に合意した取決めに基づき確認済みとして扱われる場合があります。</p>
+    <div id="actions">
+      <div class="agreement"><input id="agreeCheck" type="checkbox"><label for="agreeCheck">上記の工事内容・金額・支払期日を確認しました。</label></div>
+      <div class="action-grid"><button id="agreeButton" class="btn primary" onclick="agree()" disabled>内容を確認しました</button><button id="disputeButton" class="btn danger" onclick="showDispute()">相違内容を連絡</button></div>
+      <div id="disputeBox" class="hidden" style="margin-top:12px"><label for="disputeReason"><b>相違内容</b></label><textarea id="disputeReason" placeholder="管理番号、工事内容、金額など、相違している点を具体的に入力してください。"></textarea><div class="toolbar"><button class="btn danger" onclick="sendDispute()">相違内容を送信</button><button class="btn secondary" onclick="hideDispute()">戻る</button></div></div>
+      <div id="actionStatus" class="status" aria-live="polite"></div>
+    </div>
+    <div id="completed" class="success-box hidden"></div>
+  </section>
+</main>
+<script>
+const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
+let token='',payload=null,submitting=false;
+function readToken(){const hash=new URLSearchParams(location.hash.replace(/^#/,'')),query=new URLSearchParams(location.search);const value=hash.get('token')||query.get('token')||'';if(query.has('token'))history.replaceState(null,'',location.pathname+'#token='+encodeURIComponent(value));return value}
+function fail(message){$('loading').classList.add('hidden');$('noticeCard').classList.add('hidden');$('errorCard').classList.remove('hidden');$('errorText').textContent=message}
+async function loadNotice(){
+  token=readToken();if(!token)return fail('確認用トークンがありません。');
+  const result=await db.rpc('get_payment_notice_by_token',{p_token:token});if(result.error)return fail(result.error.message||'確認URLが無効です。');
+  payload=result.data;const notice=payload.notice||{},lines=payload.lines||[];
+  $('noticeNo').textContent=`通知番号 ${payload.notice_no||''}　版 ${notice.version||''}`;$('vendorName').textContent=(notice.vendor_name_snapshot||'')+' 御中';
+  $('issueInfo').textContent=`発行日 ${notice.issue_date||'-'}　支払期日 ${notice.payment_due_date||'-'}`;
+  $('lineBody').innerHTML=lines.map(line=>`<tr><td>${esc(line.management_number_snapshot)}</td><td>${esc(line.property_name_snapshot||'')}</td><td>${esc(line.description_snapshot)}</td><td class="num">${Number(line.quantity_snapshot)}</td><td>${esc(line.unit_snapshot)}</td><td class="num">${yen(line.amount_snapshot)}</td></tr>`).join('');
+  $('subtotal').textContent=yen(notice.subtotal_snapshot);$('tax').textContent=yen(notice.tax_snapshot);$('total').textContent=yen(notice.total_snapshot);
+  $('agreeButton').classList.toggle('hidden',!payload.can_agree);$('disputeButton').classList.toggle('hidden',!payload.can_dispute);
+  if(!payload.can_agree&&!payload.can_dispute){$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent=notice.status==='agreed'||notice.status==='confirmed'?'確認手続きは完了しています。':notice.status==='disputed'?'相違内容を受け付けました。イズミ装美からご連絡します。':'この通知書の受付は終了しています。'}
+  $('loading').classList.add('hidden');$('noticeCard').classList.remove('hidden');
+}
+$('agreeCheck').addEventListener('change',()=>{$('agreeButton').disabled=!$('agreeCheck').checked||submitting});
+async function agree(){if(!$('agreeCheck').checked||submitting)return;submitting=true;$('agreeButton').disabled=true;$('actionStatus').textContent='確認内容を記録中…';const result=await db.rpc('agree_payment_notice_with_token',{p_token:token,p_evidence:{source:'vendor_page',notice_no:payload.notice_no}});if(result.error){submitting=false;$('agreeButton').disabled=false;$('actionStatus').textContent=result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='ご確認ありがとうございました。確認日時を記録しました。'}
+function showDispute(){$('disputeBox').classList.remove('hidden');$('disputeReason').focus()}function hideDispute(){$('disputeBox').classList.add('hidden')}
+async function sendDispute(){const reason=$('disputeReason').value.trim();if(!reason)return $('actionStatus').textContent='相違内容を入力してください。';if(submitting)return;submitting=true;$('actionStatus').textContent='相違内容を記録中…';const result=await db.rpc('dispute_payment_notice_with_token',{p_token:token,p_reason:reason,p_evidence:{source:'vendor_page',notice_no:payload.notice_no}});if(result.error){submitting=false;$('actionStatus').textContent=result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='相違内容を受け付けました。イズミ装美の担当者からご連絡します。'}
+loadNotice();
+</script>
+</body>
+</html>
