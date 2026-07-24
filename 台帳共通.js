@@ -40,7 +40,8 @@ const fiscalYearMax=Math.max(2030,currentCalendarYear+3);
 const fiscalYearOptions=['',...Array.from({length:fiscalYearMax-2023+1},(_,index)=>`${fiscalYearMax-index}年度`)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
-let currentPage=1,pageSize=0,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+let currentPage=1,pageSize=200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+let loadedLedgerYear='';
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
 const saveTimers=new Map();
 const fieldGuides={
@@ -643,14 +644,34 @@ async function fetchAll(table,{filter=null,order=null,batchSize=1000,maxRows=100
   }
   return {data:collected,error:new Error(`${table} が ${maxRows.toLocaleString()}件を超えました。管理者へ連絡してください。`)};
 }
+async function fetchAllForProjectIds(table,projectIds,options={}){
+  if(!projectIds.length)return {data:[],error:null};
+  const chunks=[];
+  for(let index=0;index<projectIds.length;index+=500)chunks.push(projectIds.slice(index,index+500));
+  const results=await Promise.all(chunks.map(ids=>fetchAll(table,{
+    ...options,filter:query=>{
+      const scoped=query.in('project_id',ids);
+      return options.filter?options.filter(scoped):scoped;
+    }
+  })));
+  return {data:results.flatMap(result=>result.data||[]),error:results.find(result=>result.error)?.error||null};
+}
 async function loadData(){
   await flushDirtyRows();
   setStatus('読み込み中…');
   const needsLineItems=config.viewKey==='cost'||config.viewKey==='unordered';
-  const [projectResult,lineResult,overrideResult,employeeResult]=await Promise.all([
-    fetchAll('management_numbers',{filter:query=>query.is('deleted_at',null),order:{column:'management_number',ascending:false}}),
-    needsLineItems?fetchAll('project_line_items',{filter:query=>query.is('deleted_at',null),order:{column:'id',ascending:true},maxRows:200000}):Promise.resolve({data:[],error:null}),
-    fetchAll('project_manual_overrides',{filter:query=>query.eq('view_key',config.viewKey),order:{column:'id',ascending:true}}),
+  const selectedYear=$('yearFilter')?.value||currentFiscalCode();
+  loadedLedgerYear=selectedYear;
+  const projectResult=await fetchAll('management_numbers',{
+    filter:query=>{
+      const active=query.is('deleted_at',null);
+      return selectedYear?active.like('management_number',`${selectedYear}-%`):active;
+    },order:{column:'management_number',ascending:false}
+  });
+  const projectIds=(projectResult.data||[]).map(project=>project.id).filter(Boolean);
+  const [lineResult,overrideResult,employeeResult]=await Promise.all([
+    needsLineItems?fetchAllForProjectIds('project_line_items',projectIds,{filter:query=>query.is('deleted_at',null),order:{column:'id',ascending:true},maxRows:200000}):Promise.resolve({data:[],error:null}),
+    fetchAllForProjectIds('project_manual_overrides',projectIds,{filter:query=>query.eq('view_key',config.viewKey),order:{column:'id',ascending:true}}),
     db.from('employee_master').select('*').eq('active',true).order('display_order',{ascending:true})
   ]);
   const firstError=projectResult.error||lineResult.error||overrideResult.error||employeeResult.error;
@@ -680,8 +701,9 @@ function currentFiscalCode(){
 }
 function populateYearFilter(){
   const select=$('yearFilter');
-  const previous=select.value;
-  const years=[...new Set(projects.map(project=>String(project.management_number||'').match(/^([0-9]{2})-/)?.[1]).filter(year=>year&&Number(year)>=23))].sort((a,b)=>b.localeCompare(a,'ja',{numeric:true}));
+  const previous=loadedLedgerYear||select.value;
+  const current=Number(currentFiscalCode());
+  const years=Array.from({length:Math.max(1,current-22)},(_,index)=>String(current-index).padStart(2,'0'));
   select.innerHTML='<option value="">すべて</option>'+years.map(year=>`<option value="${esc(year)}">20${esc(year)}年度</option>`).join('');
   const preferred=previous||currentFiscalCode();
   if(years.includes(preferred))select.value=preferred;
@@ -1814,7 +1836,7 @@ $('search').addEventListener('input',()=>{
   clearTimeout(searchTimer);
   searchTimer=setTimeout(()=>applyView(true),140);
 });
-$('yearFilter').addEventListener('change',()=>applyView(true));
+$('yearFilter').addEventListener('change',()=>loadData());
 $('zoom').addEventListener('change',()=>document.documentElement.style.setProperty('--zoom',$('zoom').value));
 window.addEventListener('resize',()=>requestAnimationFrame(updateSheetHeight));
 window.addEventListener('storage',event=>{if(event.key==='izumi-ledger-refresh')scheduleLedgerReload();});

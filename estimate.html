@@ -5210,6 +5210,9 @@ let onlineAutosaveInFlight=false;
 let onlineAutosaveQueued=false;
 let onlineProjectRealtimeChannel=null;
 let onlineProjectRealtimeManagementNumber='';
+let onlineProjectId=null;
+let onlineProjectIdManagementNumber='';
+let onlinePurchaseOrderSignature='';
 
 const LEDGER_BLANK_BASIC_FIELDS=[
   ['uketsuke','b-uketsuke'],
@@ -5673,7 +5676,14 @@ async function saveProjectOnline(options={}){
     return true;
   }
   if(!silent)showToastMsg('☁ クラウドへ保存中…');
-  const {data:project,error:projectError}=await managementDb.from('management_numbers').select('id').eq('management_number',managementNumber).maybeSingle();
+  let project=onlineProjectId&&onlineProjectIdManagementNumber===managementNumber?{id:onlineProjectId}:null;
+  let projectError=null;
+  if(!project){
+    const result=await managementDb.from('management_numbers').select('id').eq('management_number',managementNumber).maybeSingle();
+    project=result.data;
+    projectError=result.error;
+    if(project?.id){onlineProjectId=project.id;onlineProjectIdManagementNumber=managementNumber;}
+  }
   if(projectError||!project){showToastMsg('管理番号台帳に該当案件がありません。先に管理番号を取得してください。');return false;}
   const orderLines=onlineOrderLines();
   const saveBundle=expectedRevision=>managementDb.rpc('save_project_bundle',{
@@ -5712,8 +5722,12 @@ async function saveProjectOnline(options={}){
   history.replaceState(null,'',`${location.pathname}?${params.toString()}`);
   await linkActiveScheduleManagementNumber(managementNumber);
   await subscribeOnlineProjectUpdates(managementNumber);
-  const poSync=await syncPurchaseOrdersOnline(project.id,data,managementNumber);
-  if(poSync?.error&&purchaseOrderCloudAvailable!==false)console.warn('業者別発注書の同期を保留しました',poSync.error);
+  const purchaseOrderSignature=JSON.stringify(orderLines);
+  if(purchaseOrderSignature!==onlinePurchaseOrderSignature){
+    const poSync=await syncPurchaseOrdersOnline(project.id,data,managementNumber);
+    if(poSync?.error&&purchaseOrderCloudAvailable!==false)console.warn('業者別発注書の同期を保留しました',poSync.error);
+    if(!poSync?.unmatched?.length&&!poSync?.conflicts?.length)onlinePurchaseOrderSignature=purchaseOrderSignature;
+  }
   try{localStorage.setItem('izumi-ledger-refresh',JSON.stringify({at:Date.now(),managementNumber}));}catch(error){}
   if(!automatic)showToastMsg('💾 保存完了：'+managementNumber);
   return true;
@@ -5769,6 +5783,9 @@ function loadOnlineProject(index){
   loadAllFromText(JSON.stringify(item.payload));
   activeScheduleId=item.payload.calendarEventId||'';
   onlineProjectRevision=item.revision??null;
+  onlineProjectId=null;
+  onlineProjectIdManagementNumber='';
+  onlinePurchaseOrderSignature=JSON.stringify(onlineOrderLines());
   onlineDraftId='';
   onlineDraftRevision=null;
   closeMasterModal();
@@ -5794,6 +5811,9 @@ async function loadOnlineProjectByNumber(managementNumber){
   loadAllFromText(JSON.stringify(data.payload));
   activeScheduleId=data.payload.calendarEventId||'';
   onlineProjectRevision=data.revision??null;
+  onlineProjectId=null;
+  onlineProjectIdManagementNumber='';
+  onlinePurchaseOrderSignature=JSON.stringify(onlineOrderLines());
   onlineDraftId='';
   onlineDraftRevision=null;
   await subscribeOnlineProjectUpdates(managementNumber);
@@ -5811,6 +5831,9 @@ async function loadOnlineDraftById(draftId){
   onlineDraftId=data.id;
   onlineDraftRevision=data.revision??null;
   onlineProjectRevision=null;
+  onlineProjectId=null;
+  onlineProjectIdManagementNumber='';
+  onlinePurchaseOrderSignature='';
   activeScheduleId=data.calendar_event_id||data.payload.calendarEventId||'';
   showToastMsg('☁ 下書きを読み込みました：'+(data.temporary_number||data.id));
 }
