@@ -23,7 +23,7 @@
   <header>
     <div class="header-inner">
       <div><h1>イズミ装美　工事・経営管理 <span class="version">正式版</span></h1><div class="sub">案件の受付から見積・発注・請求・入金まで、業務の順番に整理しています</div></div>
-      <div class="header-actions"><a class="header-link" href="配布用案内.html">使い方</a><a class="header-link" href="index.html">管理番号を取得</a><a class="header-link" href="calendar.html">カレンダー</a><a class="header-link" href="estimate.html" target="izumi-estimate-workspace" onclick="return openEstimateWorkspace(event)">見積を開く</a><a class="header-link" href="ユーザー設定.html">ユーザー設定</a></div>
+      <div class="header-actions"><a class="header-link" href="配布用案内.html">使い方</a><a class="header-link" href="index.html">管理番号を取得</a><a class="header-link" href="calendar.html">カレンダー</a><a class="header-link" href="estimate.html">見積を開く</a><a class="header-link" href="ユーザー設定.html">ユーザー設定</a></div>
     </div>
   </header>
   <main class="wrap">
@@ -35,7 +35,7 @@
       <a class="card" href="calendar.html"><span class="icon">1 予定</span><span><b>予定カレンダー</b><span>電話・メールで受けた予定、退去立会、現地調査、工事予定を社員別に登録します。各日は7行を基準に個別増減できます。</span><em>行動予定を開く →</em></span></a>
       <a class="card" href="業務フロー.html"><span class="icon">新 業務</span><span><b>受注から入金まで</b><span>受注→立会→見積→発注→完工→請求→入金を一つの案件として確認します。</span><em>新しい業務フローを開く →</em></span></a>
       <a class="card" href="管理番号台帳.html"><span class="icon">2 台帳</span><span><b>管理番号台帳</b><span>すべての案件の正本です。管理番号、担当、物件、売上、請求、入金、計上月を管理し、案件削除もここで行います。</span><em>案件全体を見る →</em></span></a>
-      <a class="card" href="estimate.html" target="izumi-estimate-workspace" onclick="return openEstimateWorkspace(event)"><span class="icon">3 見積</span><span><b>見積/発注/原価/管理請求システム</b><span>見積、業者発注、原価、請求、完了報告を入力します。保存すると各台帳の自動連携項目へ反映します。</span><em>入力中の見積画面へ戻る →</em></span></a>
+      <a class="card" href="estimate.html"><span class="icon">3 見積</span><span><b>見積/発注/原価/管理請求システム</b><span>見積、業者発注、原価、請求、完了報告を入力します。保存すると各台帳の自動連携項目へ反映します。</span><em>見積を開く →</em></span></a>
       <a class="card" href="工事リスト・未発注.html"><span class="icon">4 未発注</span><span><b>工事リスト・未発注</b><span>未割当、業者未設定、または注文確認書をまだ発行していない明細だけを表示します。</span><em>未発注を確認する →</em></span></a>
       <a class="card" href="工事リスト・原価.html"><span class="icon">5 原価</span><span><b>工事リスト・原価</b><span>発注済みの明細を業者・カテゴリ単位で表示し、外注請求額、差異、支払状況を確認します。</span><em>原価を管理する →</em></span></a>
       <a class="card" href="請求.html"><span class="icon">6 請求</span><span><b>請求管理</b><span>客先への請求・入金と、業者への外注費支払を案件単位で確認します。双方完了で緑表示になります。</span><em>請求状況を見る →</em></span></a>
@@ -57,16 +57,6 @@
     <div class="footer"><a href="index.html">← 管理番号取得へ戻る</a></div>
   </main>
   <script>
-    function openEstimateWorkspace(event){
-      event?.preventDefault();
-      const workspace=window.open('','izumi-estimate-workspace');
-      if(!workspace)return false;
-      try{
-        if(workspace.location.href==='about:blank')workspace.location.replace('estimate.html');
-        else workspace.focus();
-      }catch(_error){workspace.location.href='estimate.html';}
-      return false;
-    }
     function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
     normalizeStablePageUrls();
     const db=window.supabase.createClient(

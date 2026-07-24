@@ -1313,9 +1313,6 @@ function setupDateActions(){
   });
 }
 function init(){
-  // 一覧メニューから「見積を開く」を押した時、新しい空画面ではなく
-  // 入力中のこのタブへ戻れるよう、見積作業タブに固定名を付ける。
-  window.name='izumi-estimate-workspace';
   loadMaster();
   loadBasic(); // ← 基本情報を復元
   const today=new Date().toISOString().split('T')[0];
@@ -1370,8 +1367,7 @@ function openScheduleCalendar(){
 function openLedgerMenu(){
   const menuPath=location.protocol==='file:'?'管理番号取得システム/工事リスト.html':'工事リスト.html';
   const menuUrl=new URL(menuPath,location.href);
-  // 同一サイトの一覧から、この入力中タブへ戻れるよう関連を維持する。
-  window.open(menuUrl.href,'_blank');
+  location.assign(menuUrl.href);
 }
 
 function showStorageHelp(){
