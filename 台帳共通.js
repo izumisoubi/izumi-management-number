@@ -191,7 +191,7 @@ function updateSourceGuide(fieldKey,cell=null){
   const isEditable=guideTargetCell?.querySelector('[data-field]')&&!field.computed&&!field.locked;
   if(guide.mode==='auto'||guide.mode==='mixed'){
     const estimateUrl=guideTargetCell?guideEstimateUrl():'estimate.html';
-    actions.innerHTML=`<a class="guide-primary" href="${esc(estimateUrl)}" target="_blank" rel="noopener">見積システムの入力元を開く ↗</a>${isEditable?'<button type="button" onclick="editGuideCell()">このセルを直接入力</button>':''}`;
+    actions.innerHTML=`<a class="guide-primary" href="${esc(estimateUrl)}">見積システムの入力元を開く →</a>${isEditable?'<button type="button" onclick="editGuideCell()">このセルを直接入力</button>':''}`;
   }else if(guide.mode==='manual'&&isEditable){
     actions.innerHTML='<button type="button" class="guide-primary" onclick="editGuideCell()">このセルを入力する</button>';
   }else{
@@ -214,7 +214,7 @@ function injectMeetingLink(){
   nav.querySelectorAll('.meeting-link,.calendar-link,.audit-link,.account-link,.admin-link,.backup-link').forEach(link=>link.remove());
   let estimateLink=[...nav.querySelectorAll('a')].find(link=>new URL(link.href,location.href).pathname.endsWith('/estimate.html'));
   if(!estimateLink){
-    nav.insertAdjacentHTML('afterbegin',`<a href="estimate.html" target="_blank" rel="noopener">見積を開く</a>`);
+    nav.insertAdjacentHTML('afterbegin',`<a href="estimate.html">見積を開く</a>`);
     estimateLink=nav.querySelector('a[href$="estimate.html"]');
   }
   estimateLink.classList.add('estimate-header-link');
@@ -931,7 +931,7 @@ function estimateOpenLink(managementNumber){
 function openEstimateOnline(managementNumber){
   const url=new URL('estimate.html',location.href);
   url.searchParams.set('management_number',managementNumber);
-  window.open(url.href,'_blank','noopener');
+  location.assign(url.href);
 }
 function setEmptyState(input){
   const cell=input?.closest('td[data-col]');
