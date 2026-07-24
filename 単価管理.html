@@ -21,6 +21,11 @@
     <div class="cloud-note"><span class="status" id="status">接続状態を確認中…</span><button id="migrateButton" class="btn primary hidden" onclick="migrateLocalPrices()">端末単価を共有DBへ移行</button><span id="sessionUser" class="muted"></span></div>
     <p class="notice">共通単価は全社員・全業者へ適用されます。選択した業者の個別単価だけを優先し、個別値を空欄に戻すと、その時点の最新共通単価が自動復活します。入力後約1.2秒で共有保存します。</p>
     <table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（全業者）</th><th>業者別単価（手入力）</th><th>適用単価</th><th>保存</th><th></th></tr></thead><tbody id="rows"></tbody></table><div class="mobile-cards" id="cards"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:28px 0 18px">
+    <h2 style="margin:0 0 6px">取引先別単価（見積の売価）</h2>
+    <div class="toolbar"><div style="min-width:260px"><label for="clientName"><b>対象取引先</b></label><input id="clientName" list="clientNameOptions" placeholder="見積の「取引先」欄と同じ表記で入力"><datalist id="clientNameOptions"></datalist></div><span class="status" id="clientStatus"></span></div>
+    <p class="notice">共通単価（左表）は全取引先へ適用されます。ここで入力した取引先別単価は、見積画面(estimate.html)で同じ取引先名を選んだ時の売価候補に優先して反映されます。個別値を空欄に戻すと、その時点の取引先別単価は解除され、以後は共通単価（原価に対する通常の掛け率計算）へ自動的に戻ります。入力後約1.2秒で共有保存します。</p>
+    <table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（参考）</th><th>取引先別単価（手入力）</th><th>適用単価</th><th>保存</th></tr></thead><tbody id="clientRows"></tbody></table><div class="mobile-cards" id="clientCards"></div>
   </section>
 </main>
 <script src="業務基盤.js"></script>
@@ -29,8 +34,25 @@ const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co'
 const $=id=>document.getElementById(id),LS_VENDOR='izumi_vendors_v3',LS_LEGACY='izumi_vendor_price_drafts_v1',LS_COMMON='izumi_common_prices_v1',LS_OVERRIDES='izumi_vendor_price_overrides_v2';
 let fallbackVendors=[{name:'株式会社美装'},{name:'染谷住宅サービス'},{name:'有限会社林硝子工業所'},{name:'RE・BOX株式会社'},{name:'ネックス株式会社'},{name:'稲垣機材株式会社'}];
 let currentVendor='',currentVendorId='',commonItems=[],vendorOverrides={},cloudVendors=[],cloudOverrides=new Map(),pendingOverrides=new Map(),cloudReady=false,isAdmin=false,saveTimers=new Map();
-const schemaMissing=error=>/work_items|vendor_unit_prices|vendors|save_work_item|save_vendor_unit_price|schema cache|does not exist|could not find/i.test(error?.message||'');
-function baseItems(){return[{id:'wallpaper',name:'クロス貼替',unit:'㎡',common:1200,revision:0},{id:'cleaning',name:'ハウスクリーニング',unit:'式',common:25000,revision:0}]}
+let currentClientName='',cloudClientOverrides=new Map(),pendingClientOverrides=new Map(),clientNameLoadToken=0;
+const schemaMissing=error=>/work_items|vendor_unit_prices|vendors|save_work_item|save_vendor_unit_price|client_unit_prices|save_client_unit_price|schema cache|does not exist|could not find/i.test(error?.message||'');
+function baseItems(){return[
+  {id:'wallpaper',name:'クロス貼替',unit:'㎡',common:1200,revision:0},
+  {id:'wallpaper-strip',name:'既存クロス剥がし',unit:'㎡',common:250,revision:0},
+  {id:'floor-cf',name:'クッションフロア貼替',unit:'㎡',common:3200,revision:0},
+  {id:'floor-tile',name:'フロアタイル貼替',unit:'㎡',common:4800,revision:0},
+  {id:'carpet',name:'カーペット貼替',unit:'㎡',common:4500,revision:0},
+  {id:'tatami',name:'畳表替え',unit:'畳',common:6500,revision:0},
+  {id:'fusuma',name:'襖貼替',unit:'枚',common:4500,revision:0},
+  {id:'painting',name:'木部塗装',unit:'㎡',common:2800,revision:0},
+  {id:'cleaning',name:'ハウスクリーニング',unit:'式',common:25000,revision:0},
+  {id:'aircon-clean',name:'エアコン内部洗浄',unit:'台',common:9000,revision:0},
+  {id:'silicone',name:'シーリング打替え',unit:'m',common:1200,revision:0},
+  {id:'water-faucet',name:'水栓交換',unit:'台',common:18000,revision:0},
+  {id:'lighting',name:'照明器具交換',unit:'台',common:8500,revision:0},
+  {id:'disposal',name:'残置物処分',unit:'㎥',common:12000,revision:0},
+  {id:'misc',name:'諸経費',unit:'式',common:8000,revision:0}
+]}
 function vendorName(value){return typeof value==='string'?value:value?.name||''}
 function loadLocal(){
   try{const loaded=JSON.parse(localStorage.getItem(LS_VENDOR)||'null');if(Array.isArray(loaded)&&loaded.length)fallbackVendors=loaded}catch{}
@@ -83,6 +105,86 @@ async function saveOverride(item,index){
   if(value===null)cloudOverrides.delete(key);else cloudOverrides.set(key,{id:saved?.id,value,revision:Number(saved?.revision||1)});pendingOverrides.delete(key);
   saveLocal();refreshEffective(item,index);mark(item.id,value===null?'共通へ復帰':'共有済','saved');
 }
+
+// ===== 取引先別単価（見積の売価） =====
+// 取引先には業者のような専用マスタが無く、estimate.htmlの取引先欄も自由入力のため、
+// client_unit_pricesはclient_name(text)をキーにする。共通単価（common）は左表と同じ
+// commonItems配列をそのまま再利用し、取引先別の上書き値だけをこの節で管理する。
+function normalizeClientKey(value){return String(value||'').trim().toLocaleLowerCase('ja-JP');}
+function clientOverrideFor(item){
+  const key=`${normalizeClientKey(currentClientName)}|${item.id}`;
+  if(pendingClientOverrides.has(key))return pendingClientOverrides.get(key);
+  const cloudValue=cloudClientOverrides.get(key);
+  return cloudValue?cloudValue.value??null:null;
+}
+function markClient(itemId,text,kind=''){const element=document.querySelector(`[data-client-save="${CSS.escape(itemId)}"]`);if(element){element.textContent=text;element.className='save-mark '+kind}}
+function renderClient(){
+  const clientKnown=normalizeClientKey(currentClientName)!=='';
+  $('clientRows').innerHTML=!clientKnown?'':commonItems.map(item=>{
+    const override=clientOverrideFor(item),effective=effectiveValue(item.common,override);
+    return `<tr data-client-item="${item.id}"><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.unit)}</td><td>¥${Number(item.common||0).toLocaleString()}</td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-ci="${item.id}" aria-label="${escapeHtml(currentClientName)}の取引先別単価"></td><td data-client-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-client-save="${item.id}"></span></td></tr>`;
+  }).join('');
+  $('clientCards').innerHTML=!clientKnown?'':commonItems.map(item=>{
+    const override=clientOverrideFor(item);
+    return `<div class="mobile-card"><b>${escapeHtml(item.name)}</b><p>${escapeHtml(item.unit)} ／ 適用 ¥${effectiveValue(item.common,override).toLocaleString()}</p><span class="badge">${override==null?'共通単価':'取引先別単価'}</span></div>`;
+  }).join('');
+  $('clientStatus').textContent=clientKnown?`${currentClientName} の取引先別単価`:'取引先名を入力してください';
+}
+function refreshClientEffective(item){
+  const override=clientOverrideFor(item),target=document.querySelector(`[data-client-effective="${CSS.escape(item.id)}"]`);
+  if(target){target.textContent='¥'+effectiveValue(item.common,override).toLocaleString();target.className=override==null?'price-auto':'price-manual';}
+}
+function scheduleClientItemSave(item){
+  const key=`${item.id}|clientOverride`;clearTimeout(saveTimers.get(key));markClient(item.id,'保存待ち','saving');
+  saveTimers.set(key,setTimeout(()=>saveClientOverride(item),1200));
+}
+async function saveClientOverride(item){
+  const clientName=currentClientName.trim();if(!clientName)return;
+  const value=clientOverrideFor(item),cacheKey=`${normalizeClientKey(clientName)}|${item.id}`;
+  const existing=cloudClientOverrides.get(cacheKey);
+  if(value===null&&!existing)return markClient(item.id,'共通へ復帰','saved');
+  markClient(item.id,'保存中','saving');
+  const result=await db.rpc('save_client_unit_price',{p_client_name:clientName,p_work_item_id:item.id,p_expected_revision:existing?.revision||0,p_override_price:value});
+  if(result.error){markClient(item.id,/別の端末/.test(result.error.message||'')?'競合・再読込':(schemaMissing(result.error)?'未適用':'保存失敗'),'error');return;}
+  const saved=Array.isArray(result.data)?result.data[0]:result.data;
+  if(value===null)cloudClientOverrides.delete(cacheKey);else cloudClientOverrides.set(cacheKey,{id:saved?.id,value,revision:Number(saved?.revision||1)});
+  pendingClientOverrides.delete(cacheKey);
+  refreshClientEffective(item);markClient(item.id,value===null?'共通へ復帰':'共有済','saved');
+}
+async function loadClientOverrides(clientName){
+  const token=++clientNameLoadToken,key=normalizeClientKey(clientName);
+  if(!clientName.trim()||!cloudReady){renderClient();return;}
+  const result=await db.from('client_unit_prices').select('id,work_item_id,override_price,revision').eq('client_name',clientName.trim()).is('deleted_at',null);
+  if(token!==clientNameLoadToken)return; // 入力中に別の取引先へ切り替わっていたら結果を捨てる
+  if(result.error){$('clientStatus').textContent=schemaMissing(result.error)?'取引先別単価DBは適用前です（共通単価はそのまま利用できます）':'取引先別単価を読み込めません：'+result.error.message;return;}
+  for(const key2 of [...cloudClientOverrides.keys()])if(key2.startsWith(key+'|'))cloudClientOverrides.delete(key2);
+  (result.data||[]).forEach(row=>cloudClientOverrides.set(`${key}|${row.work_item_id}`,{id:row.id,value:Number(row.override_price),revision:Number(row.revision)}));
+  renderClient();
+}
+let clientNameInputTimer=0;
+function scheduleClientNameLoad(){
+  clearTimeout(clientNameInputTimer);
+  currentClientName=$('clientName').value;
+  clientNameInputTimer=setTimeout(()=>loadClientOverrides(currentClientName),350);
+}
+async function loadClientNameOptions(){
+  if(!cloudReady)return;
+  const result=await db.from('shared_master_records').select('name').eq('master_type','client').is('deleted_at',null).order('name');
+  if(result.error)return; // 候補一覧はあくまで補助。取得できなくても自由入力は可能。
+  $('clientNameOptions').innerHTML=(result.data||[]).map(row=>`<option value="${escapeHtml(row.name)}"></option>`).join('');
+}
+document.addEventListener('input',event=>{
+  if(event.target.id!=='clientName')return;
+  scheduleClientNameLoad();
+});
+document.addEventListener('input',event=>{
+  const itemId=event.target.dataset.ci;if(itemId===undefined)return;
+  const item=commonItems.find(entry=>entry.id===itemId);if(!item)return;
+  const normalized=normalizeNumber(event.target.value),value=normalized===''?null:Number(normalized);
+  const cacheKey=`${normalizeClientKey(currentClientName)}|${item.id}`;
+  pendingClientOverrides.set(cacheKey,value);
+  refreshClientEffective(item);scheduleClientItemSave(item);
+});
 document.addEventListener('input',event=>{
   const index=Number(event.target.dataset.i);if(!Number.isInteger(index))return;const item=commonItems[index],key=event.target.dataset.k;if(!item)return;
   if(key==='override'){const normalized=normalizeNumber(event.target.value),value=normalized===''?null:Number(normalized);vendorOverrides[currentVendor]??={};if(value===null)delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=value;if(cloudReady)pendingOverrides.set(`${currentVendorId}|${item.id}`,value);refreshEffective(item,index);scheduleItemSave(item,index,'override')}
@@ -105,14 +207,14 @@ async function loadCloud(){
     db.from('work_items').select('id,name,unit,common_price,revision').eq('active',true).is('deleted_at',null).order('code'),
     db.from('vendor_unit_prices').select('id,vendor_id,work_item_id,override_price,revision').is('deleted_at',null)
   ]);
-  const error=vendorResult.error||itemResult.error||priceResult.error;if(error){cloudReady=false;$('status').textContent=schemaMissing(error)?'共有DB適用前：この端末へ仮保存':'共有DBを読み込めません：'+error.message;populateVendors();return}
+  const error=vendorResult.error||itemResult.error||priceResult.error;if(error){cloudReady=false;$('status').textContent=schemaMissing(error)?'共有DB適用前：この端末へ仮保存':'共有DBを読み込めません：'+error.message;populateVendors();renderClient();return}
   cloudReady=true;cloudVendors=vendorResult.data||[];
   if(!(itemResult.data||[]).length&&localItems.length){
-    commonItems=localItems.map(item=>({...item,_new:true,revision:0}));vendorOverrides=localOverrideSnapshot;$('migrateButton').classList.toggle('hidden',!isAdmin);populateVendors();$('status').textContent=isAdmin?'共有DBは空です。内容確認後に初期移行してください。':'共有DBの初期移行を最高権限者へ依頼してください。';return;
+    commonItems=localItems.map(item=>({...item,_new:true,revision:0}));vendorOverrides=localOverrideSnapshot;$('migrateButton').classList.toggle('hidden',!isAdmin);populateVendors();renderClient();$('status').textContent=isAdmin?'共有DBは空です。内容確認後に初期移行してください。':'共有DBの初期移行を最高権限者へ依頼してください。';return;
   }
   $('migrateButton').classList.add('hidden');commonItems=(itemResult.data||[]).map(item=>({id:item.id,name:item.name,unit:item.unit,common:Number(item.common_price),revision:Number(item.revision)}));cloudOverrides=new Map((priceResult.data||[]).map(price=>[`${price.vendor_id}|${price.work_item_id}`,{id:price.id,value:Number(price.override_price),revision:Number(price.revision)}]));
   vendorOverrides={};cloudVendors.forEach(v=>vendorOverrides[v.name]={});for(const [key,value] of cloudOverrides){const [vendorId,itemId]=key.split('|'),name=cloudVendors.find(v=>v.id===vendorId)?.name;if(name)vendorOverrides[name][itemId]=value.value}
-  saveLocal();populateVendors();$('status').textContent='全社員共有DBへ接続済み';
+  saveLocal();populateVendors();renderClient();loadClientNameOptions();$('status').textContent='全社員共有DBへ接続済み';
 }
 async function migrateLocalPrices(){
   if(!isAdmin||!cloudReady||!commonItems.length)return;if(!confirm(`この端末の工事項目 ${commonItems.length}件を共有DBへ初期移行します。元データは消しません。続けますか？`))return;

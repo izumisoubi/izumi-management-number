@@ -389,6 +389,14 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ord-order-inp{background:transparent;border:none;width:100%;color:var(--tg);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
 .ord-order-inp:focus{background:rgba(46,207,160,.07);}
 .ctbl .ord-has-vendor{background:rgba(46,207,160,.03)!important;}
+/* 単価候補：入力欄の直下にだけ表示し、表のスクロールや印刷には混ざらない */
+.unit-price-suggest{position:fixed;z-index:12000;min-width:250px;max-width:min(430px,calc(100vw - 24px));max-height:280px;overflow:auto;background:var(--tc);border:1px solid var(--ta);border-radius:9px;box-shadow:0 12px 30px rgba(0,0,0,.22);padding:5px;}
+.unit-price-suggest[hidden]{display:none;}
+.unit-price-suggest button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;width:100%;padding:8px 10px;text-align:left;background:transparent;border:0;border-radius:6px;color:var(--tt);cursor:pointer;font-family:inherit;}
+.unit-price-suggest button:hover,.unit-price-suggest button:focus{background:var(--ti);outline:none;}
+.unit-price-suggest .ups-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.unit-price-suggest .ups-meta{font-size:10px;color:var(--tm);}
+.unit-price-suggest .ups-price{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--tg);font-size:13px;font-weight:800;white-space:nowrap;}
 /* 注文確認書プレビュー */
 .ord-preview-h1{font-size:22px;font-weight:700;text-align:center;letter-spacing:6px;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:10px;}
 .ord-preview-tbl{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;}
@@ -2259,7 +2267,7 @@ function renderCost(){
         tr.innerHTML=`
           <td class="cno" style="text-align:center;color:var(--tm);font-size:12px;padding:0 2px;cursor:grab" title="ドラッグで並び替え">⠿</td>
           <td><button type="button" class="row-number-toggle" onclick="toggleEstimateRowNumber(${r.id})" title="クリックで見積書の番号を表示／非表示"></button></td>
-          <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value)"></td>
+          <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'estimate',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)"></td>
           <td><select data-f="unit" onchange="sf(${r.id},'unit',this.value)">${uopts('')}</select></td>
@@ -5722,6 +5730,7 @@ async function saveProjectOnline(options={}){
   if(purchaseOrderSignature!==onlinePurchaseOrderSignature){
     const poSync=await syncPurchaseOrdersOnline(project.id,data,managementNumber);
     if(poSync?.error&&purchaseOrderCloudAvailable!==false)console.warn('業者別発注書の同期を保留しました',poSync.error);
+    // 業者名が未登録・他端末と競合した場合は、次の保存で再試行する。
     if(!poSync?.unmatched?.length&&!poSync?.conflicts?.length)onlinePurchaseOrderSignature=purchaseOrderSignature;
   }
   try{localStorage.setItem('izumi-ledger-refresh',JSON.stringify({at:Date.now(),managementNumber}));}catch(error){}
@@ -5779,8 +5788,8 @@ function loadOnlineProject(index){
   loadAllFromText(JSON.stringify(item.payload));
   activeScheduleId=item.payload.calendarEventId||'';
   onlineProjectRevision=item.revision??null;
-  onlineProjectId=null;
-  onlineProjectIdManagementNumber='';
+  onlineProjectId=item.id||null;
+  onlineProjectIdManagementNumber=item.management_number||'';
   onlinePurchaseOrderSignature=JSON.stringify(onlineOrderLines());
   onlineDraftId='';
   onlineDraftRevision=null;
@@ -6372,6 +6381,11 @@ function sfnCalc(id,f,v,inputEl){
   const raw=inputEl?String(inputEl.value).replace(/[,，¥\s]/g,''):String(v).replace(/[,，¥\s]/g,'');
   const isEmpty=(raw===''||raw==='-'||isNaN(parseFloat(raw)));
   r[f]=isEmpty?'':parseFloat(raw);
+  if(f==='cost'){
+    // 数字を直接打った瞬間から手入力を最優先にする。空欄に戻したときだけ単価候補へ戻す。
+    r._costManual=!isEmpty;
+    if(isEmpty)setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
+  }
   if(f==='landlordRate')syncBurdenFromRate(r,'landlordRate');
   else if(f==='tenantRate')syncBurdenFromRate(r,'tenantRate');
   else if(['qty','cost','sellOverride'].includes(f))syncBurdenForSellChange(r);
@@ -6890,7 +6904,7 @@ function renderOrdTable(){
       } else {
         tr.innerHTML=`
           <td class="cno" style="text-align:center;color:var(--tm);font-size:12px;padding:0 2px;cursor:grab" title="ドラッグで並び替え">⠿</td>
-          <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="ordSf(${r.id},'name',this.value)"></td>
+          <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="ordSf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'order',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
           <td><select data-f="unit" onchange="ordSf(${r.id},'unit',this.value)">${uOpts}</select></td>
           <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--tg);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
@@ -6954,6 +6968,141 @@ function ordSfNum(id,f,v,el){
   const qa=document.querySelector(`#ordtbody tr[data-rid="${id}"] .oamt`);
   if(qa){const q=parseFloat(r.qty)||0,u=parseFloat(r.orderCost)||0;qa.textContent=Math.round(q*u)?yen(Math.round(q*u)):'';}
   renderOrdLeft();
+}
+// ===== 単価候補（見積・発注共通） =====
+// 単価マスタを一度だけ読み、入力中は端末内の絞り込みだけにする。
+// そのため「ク」と打つたびに通信せず、候補の表示も軽い。
+// IME変換中のSpaceは候補選択・表のキーボード操作へ渡さない。
+// preventDefaultはしないため、日本語変換そのものはブラウザへ委ねられる。
+let unitPriceImeComposing=false;
+function isEstimateEditable(target){return !!(target?.matches?.('input,textarea,[contenteditable="true"]')||target?.isContentEditable);}
+document.addEventListener('compositionstart',event=>{if(isEstimateEditable(event.target))unitPriceImeComposing=true;},true);
+document.addEventListener('compositionend',()=>{unitPriceImeComposing=false;},true);
+document.addEventListener('keydown',event=>{
+  // capture段階で止める。後段の表ナビ・選択・ショートカットがSpace/Enterを奪わない。
+  if(isEstimateEditable(event.target)&&(event.isComposing||event.keyCode===229||unitPriceImeComposing))event.stopImmediatePropagation();
+},true);
+let unitPriceMasterCache=null,unitPriceMasterLoading=null;
+const vendorUnitPriceListCache=new Map();
+const clientUnitPriceListCache=new Map();
+let unitPriceSuggestTimer=0,unitPriceHideTimer=0;
+function normalizedUnitPriceText(value){return String(value||'').trim().toLocaleLowerCase('ja-JP');}
+async function loadUnitPriceMaster(){
+  if(unitPriceMasterCache)return unitPriceMasterCache;
+  if(unitPriceMasterLoading)return unitPriceMasterLoading;
+  if(!managementDb)return [];
+  unitPriceMasterLoading=managementDb.from('work_items').select('id,name,unit,common_price').eq('active',true).is('deleted_at',null).order('code')
+    .then(({data,error})=>{
+      if(error){console.warn('単価候補を取得できません',error);return [];}
+      unitPriceMasterCache=(data||[]).filter(item=>String(item.name||'').trim());
+      return unitPriceMasterCache;
+    }).catch(error=>{console.warn('単価候補を取得できません',error);return [];})
+    .finally(()=>{unitPriceMasterLoading=null;});
+  return unitPriceMasterLoading;
+}
+async function loadVendorUnitPriceList(vendorName){
+  const key=String(vendorName||'').trim();
+  if(!key)return [];
+  if(vendorUnitPriceListCache.has(key))return vendorUnitPriceListCache.get(key);
+  if(!managementDb)return [];
+  const request=managementDb.from('vendor_effective_unit_prices')
+    .select('work_item_id,name,unit,common_price,override_price,effective_price')
+    .eq('vendor_name',key)
+    .then(({data,error})=>{
+      if(error){console.warn('業者単価候補を取得できません',error);return [];}
+      return (data||[]).filter(item=>String(item.name||'').trim());
+    }).catch(error=>{console.warn('業者単価候補を取得できません',error);return [];});
+  vendorUnitPriceListCache.set(key,request);
+  return request;
+}
+async function loadClientUnitPriceList(clientName){
+  const key=String(clientName||'').trim();
+  if(!key||!managementDb)return [];
+  if(clientUnitPriceListCache.has(key))return clientUnitPriceListCache.get(key);
+  const request=managementDb.from('client_unit_prices').select('work_item_id,override_price')
+    .eq('client_name',key).is('deleted_at',null)
+    .then(async ({data,error})=>{
+      if(error){console.warn('取引先単価候補を取得できません',error);return [];}
+      const masters=await loadUnitPriceMaster();
+      const byId=new Map((data||[]).map(item=>[item.work_item_id,item.override_price]));
+      return masters.map(item=>byId.has(item.id)?({...item,effective_price:Number(byId.get(item.id)),source:'取引先別単価',_clientPrice:true}):({...item,effective_price:Number(item.common_price),source:'共通単価'}));
+    }).catch(error=>{console.warn('取引先単価候補を取得できません',error);return [];});
+  clientUnitPriceListCache.set(key,request);
+  return request;
+}
+function unitPriceSuggestBox(){
+  let box=document.getElementById('unitPriceSuggest');
+  if(!box){box=document.createElement('div');box.id='unitPriceSuggest';box.className='unit-price-suggest';box.hidden=true;box.setAttribute('role','listbox');document.body.appendChild(box);}
+  return box;
+}
+function hideUnitPriceSuggest(){clearTimeout(unitPriceHideTimer);const box=document.getElementById('unitPriceSuggest');if(box)box.hidden=true;}
+function hideUnitPriceSuggestSoon(){clearTimeout(unitPriceHideTimer);unitPriceHideTimer=setTimeout(hideUnitPriceSuggest,180);}
+function scheduleUnitPriceSuggest(event,kind,id){
+  const input=event?.currentTarget||event?.target;
+  clearTimeout(unitPriceSuggestTimer);
+  unitPriceSuggestTimer=setTimeout(()=>showUnitPriceSuggest(input,kind,id),80);
+}
+function unitPriceRowsFor(kind,id){return kind==='order'?ordRows:rows;}
+async function candidateUnitPrices(kind,row){
+  const all=await loadUnitPriceMaster();
+  if(kind==='estimate'){
+    const clientName=String(vv('b-client')||'').trim();
+    return clientName?loadClientUnitPriceList(clientName):all.map(item=>({...item,effective_price:Number(item.common_price),source:'共通単価'}));
+  }
+  if(!row.vendor)return all.map(item=>({...item,effective_price:Number(item.common_price),source:'共通単価'}));
+  const vendorItems=await loadVendorUnitPriceList(row.vendor);
+  return vendorItems.map(item=>({...item,effective_price:Number(item.effective_price),source:item.override_price===null||item.override_price===undefined?'共通単価':'業者別単価'}));
+}
+async function showUnitPriceSuggest(input,kind,id){
+  const row=unitPriceRowsFor(kind,id).find(item=>item.id===id);
+  const query=normalizedUnitPriceText(input?.value);
+  if(!row||!input||document.activeElement!==input||!query){hideUnitPriceSuggest();return;}
+  const candidates=(await candidateUnitPrices(kind,row)).filter(item=>normalizedUnitPriceText(item.name).includes(query)).slice(0,8);
+  if(document.activeElement!==input||String(input.value||'')!==String(row.name||'')||!candidates.length){hideUnitPriceSuggest();return;}
+  const box=unitPriceSuggestBox();
+  box.innerHTML=candidates.map((item,index)=>`<button type="button" role="option" data-unit-price-index="${index}"><span class="ups-name">${esc(item.name)}</span><span class="ups-meta">${esc(item.unit||'式')} ・ ${item.source}</span><span class="ups-price">${yen(Number(item.effective_price)||0)}</span></button>`).join('');
+  [...box.querySelectorAll('button')].forEach((button,index)=>button.onmousedown=event=>{event.preventDefault();chooseUnitPriceSuggestion(kind,id,candidates[index]);});
+  const rect=input.getBoundingClientRect();
+  box.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-270))+'px';
+  box.style.top=Math.min(rect.bottom+4,window.innerHeight-60)+'px';
+  box.style.width=Math.max(250,Math.min(390,rect.width+130))+'px';
+  box.hidden=false;
+}
+function chooseUnitPriceSuggestion(kind,id,item){
+  const row=unitPriceRowsFor(kind,id).find(entry=>entry.id===id);if(!row)return;
+  if(kind==='order')pushOrdUndo();else pushUndo();
+  row.name=item.name;row.unit=item.unit||'式';
+  if(kind==='order'){
+    // 候補選択は「自動単価」。後から単価欄を直接直した時だけ手入力として固定する。
+    row.orderCost=Number(item.effective_price)||0;row._orderCostManual=false;row._vendorUnitPriceAuto=true;
+    saveOrdRows();renderOrdTable();renderOrdLeft();
+  }else{
+    if(item._clientPrice){row.sellOverride=Number(item.effective_price)||0;row._clientUnitPriceAuto=true;}
+    else {row.cost=Number(item.effective_price)||0;row._costManual=false;row._unitPriceAuto=true;}
+    _recalcRow(id);renderCost();renderPrint();renderTotals();syncInv();
+  }
+  hideUnitPriceSuggest();
+  const field=kind==='order'?'orderCost':'cost';
+  setTimeout(()=>document.querySelector(`${kind==='order'?'#ordtbody':'#ctbody'} tr[data-rid="${id}"] [data-f="${field}"]`)?.focus(),0);
+}
+async function applyRestoredUnitPrice(kind,id){
+  const row=unitPriceRowsFor(kind,id).find(entry=>entry.id===id);if(!row||!String(row.name||'').trim())return;
+  const items=await candidateUnitPrices(kind,row);
+  const item=items.find(entry=>normalizedUnitPriceText(entry.name)===normalizedUnitPriceText(row.name)&&String(entry.unit||'')===String(row.unit||''));
+  if(!item)return;
+  if(kind==='order'){
+    if(row._orderCostManual)return;
+    row.orderCost=Number(item.effective_price)||0;row._vendorUnitPriceAuto=true;saveOrdRows();renderOrdTable();renderOrdLeft();
+  }else{
+    if(item._clientPrice){
+      if(row.sellOverride!==''&&row.sellOverride!==undefined)return;
+      row.sellOverride=Number(item.effective_price)||0;row._clientUnitPriceAuto=true;
+    }else{
+      if(row._costManual)return;
+      row.cost=Number(item.effective_price)||0;row._unitPriceAuto=true;
+    }
+    _recalcRow(id);renderCost();renderPrint();renderTotals();syncInv();
+  }
 }
 const vendorUnitPriceCache=new Map();
 async function applyVendorUnitPrice(row){
