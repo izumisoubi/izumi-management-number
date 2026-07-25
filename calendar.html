@@ -25,7 +25,7 @@
 </head>
 <body>
   <header><div class="header-inner"><div><h1>イズミ装美　行動予定</h1><div class="sub">元Excelと同じ「日付 × 社員横並び」で受付・立会・現調・工事を共有</div></div><div id="userBox" class="user hidden"><nav class="nav"><a href="index.html">番号取得</a><a class="current" href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">台帳</a><a href="工事リスト.html">一覧メニュー</a><a href="請求.html">請求</a><a href="ユーザー設定.html">ユーザー設定</a></nav><span id="userEmail"></span><button class="logout" id="logout">ログアウト</button></div></div></header>
-  <section id="loginCard" class="login"><h2>社員ログイン</h2><div style="font-size:12px;color:#64748b;line-height:1.7">イズミ装美の社内システム共通アカウントでログインします。登録済みの会社メールアドレスと設定済みパスワードを入力してください。</div><label>メールアドレス</label><input id="email" type="email" autocomplete="email"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary" style="width:100%;margin-top:13px">ログイン</button><div style="display:flex;justify-content:space-between;gap:12px;margin-top:13px;font-size:12px;font-weight:800"><a href="auth.html?mode=signup&amp;next=calendar.html">新しい社員の登録</a><a href="auth.html?mode=forgot&amp;next=calendar.html">パスワードを忘れた方</a></div><div id="loginStatus" class="status" style="padding:10px 0 0"></div></section>
+  <section id="loginCard" class="login hidden"><h2>社員ログイン</h2><div style="font-size:12px;color:#64748b;line-height:1.7">イズミ装美の社内システム共通アカウントでログインします。登録済みの会社メールアドレスと設定済みパスワードを入力してください。</div><label>メールアドレス</label><input id="email" type="email" autocomplete="email"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary" style="width:100%;margin-top:13px">ログイン</button><div style="display:flex;justify-content:space-between;gap:12px;margin-top:13px;font-size:12px;font-weight:800"><a href="auth.html?mode=signup&amp;next=calendar.html">新しい社員の登録</a><a href="auth.html?mode=forgot&amp;next=calendar.html">パスワードを忘れた方</a></div><div id="loginStatus" class="status" style="padding:10px 0 0"></div></section>
   <main id="app" class="hidden">
     <section class="panel"><div class="toolbar"><button id="prevMonth" class="secondary">‹ 前月</button><div id="monthTitle" class="month-title"></div><button id="nextMonth" class="secondary">次月 ›</button><button id="today" class="secondary">今月</button><div class="field"><label>社員表示</label><select id="staffFilter"><option value="">全社員</option></select></div><div class="field"><label>予定種別</label><select id="typeFilter"><option value="">すべて</option><option>退去立会</option><option>現地調査</option><option>見積訪問</option><option>工事</option><option>完工確認</option><option>休み</option><option>その他</option></select></div><label class="scale-control">縮尺<select id="calendarScale"><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option><option value="100">100%</option><option value="110">110%</option><option value="120">120%</option></select></label><div class="spacer"></div><a class="secondary" style="padding:8px 11px;border-radius:7px;text-decoration:none;font-size:12px;font-weight:800" href="操作履歴.html?action=予定削除">削除履歴</a><button id="newEvent" class="primary">＋ 予定を登録</button></div><div class="stats" id="stats"></div><div id="calendarStatus" class="status"></div></section>
     <section class="panel sheet-panel"><div class="sheet-toolbar"><div class="sheet-toolbar-main"><strong>行動予定表</strong></div><span>各日左下の − / ＋ で、その日だけ行数変更／空欄は時間・帰社・内容を直接入力</span></div><div class="sheet-wrap"><table id="scheduleTable" onclick="handleScheduleClick(event)" ondblclick="handleScheduleDoubleClick(event)"></table></div></section>
@@ -79,17 +79,30 @@
   function readDayRows(){try{return JSON.parse(localStorage.getItem('izumiCalendarDayRowsV2')||'{}')||{}}catch(_error){return{}}}
   function rowsForDate(dateKey){return Math.max(1,Math.min(20,Number(dayRows[dateKey])||5))}
   function status(text,error=false){$('calendarStatus').textContent=text;$('calendarStatus').className='status'+(error?' error':'')}
+  function revealLogin(){
+    const card=$('loginCard');
+    if(card)card.classList.remove('hidden');
+  }
   async function showApp(){
-    const {data:{user}}=await db.auth.getUser();
-    if(!user)return;
-    const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
+    // getSession() is local (no network round trip); the RPC calls below
+    // already verify the session server-side, so a separate getUser()
+    // network call isn't needed just to confirm the session exists.
+    const {data:{session}}=await db.auth.getSession();
+    const user=session?.user;
+    if(!user){revealLogin();return}
+    // Run the two independent checks in parallel instead of sequentially —
+    // this is what made the login card stay visible longer than necessary.
+    const [{data:enabled,error},{data:profiles}]=await Promise.all([
+      db.rpc('is_current_app_user_enabled'),
+      db.rpc('get_my_app_profile')
+    ]);
     if(error||enabled!==true){
       await db.auth.signOut();
       $('loginStatus').textContent=error?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。';
+      revealLogin();
       return;
     }
     currentUser=user;
-    const {data:profiles}=await db.rpc('get_my_app_profile');
     currentProfile=profiles?.[0]||{display_name:user.user_metadata?.display_name||user.email?.split('@')[0]||'',email:user.email||''};
     $('loginCard').classList.add('hidden');
     $('app').classList.remove('hidden');
@@ -360,7 +373,7 @@
   function changeDateRows(pointer,dateKey,delta){pointer.preventDefault();pointer.stopPropagation();const shownStaff=$('staffFilter').value?[$('staffFilter').value]:employees,maxEvents=Math.max(1,...shownStaff.map(name=>events.filter(event=>event.event_date===dateKey&&assignedTo(event,name)).length)),current=Math.max(rowsForDate(dateKey),maxEvents);dayRows[dateKey]=Math.max(maxEvents,Math.min(20,current+delta));localStorage.setItem('izumiCalendarDayRowsV2',JSON.stringify(dayRows));render()}
   setTimeSelect('startTime');setTimeSelect('endTime');
   $('login').onclick=async()=>{const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else await showApp()};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;
-  db.auth.onAuthStateChange((_event,session)=>{if(session)showApp()});db.auth.getSession().then(({data:{session}})=>{if(session)showApp()});
+  db.auth.onAuthStateChange((_event,session)=>{if(session)showApp();else revealLogin()});db.auth.getSession().then(({data:{session}})=>{if(session)showApp();else revealLogin()});
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
 </body>

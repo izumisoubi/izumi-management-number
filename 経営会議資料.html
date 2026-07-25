@@ -30,7 +30,7 @@
 </head>
 <body>
   <header class="top"><h1>イズミ装美　経営会議資料</h1><nav><a href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="工事リスト.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="請求.html">請求管理</a><a href="ユーザー設定.html">ユーザー設定</a></nav></header>
-  <section id="loginCard" class="login">
+  <section id="loginCard" class="login hidden">
     <h2>経営会議閲覧者ログイン</h2>
     <div>飯田・出町・大島・田中、および閲覧者設定で追加したアカウントが利用できます。</div>
     <label>メールアドレス</label><input id="email" type="email">
@@ -254,27 +254,35 @@
     }
     let projects=[],managementOverrides=new Map(),billingOverrides=new Map(),meetingProjects=new Set(),orderCostByProject=new Map(),financialInput={},appOpening=false;
     function setLoginStatus(text){$('loginStatus').textContent=text}
+    function revealLogin(){const card=$('loginCard');if(card)card.classList.remove('hidden')}
     async function signIn(){
       const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
       if(error)return setLoginStatus(error.message);
       await authorize(data.user);
     }
     async function authorize(user){
-      if(!user||appOpening)return;
+      if(appOpening)return;
+      if(!user){revealLogin();return}
       const email=String(user.email||'').toLowerCase();
-      const {data:enabled,error:enabledError}=await db.rpc('is_current_app_user_enabled');
+      const [{data:enabled,error:enabledError},{data:canView,error:accessError},{data:isAdmin}]=await Promise.all([
+        db.rpc('is_current_app_user_enabled'),
+        db.rpc('can_view_meeting'),
+        db.rpc('is_management_admin')
+      ]);
       if(enabledError||enabled!==true){
         await db.auth.signOut();
-        return setLoginStatus(enabledError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。');
+        setLoginStatus(enabledError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。');
+        revealLogin();
+        return;
       }
-      const {data:canView,error:accessError}=await db.rpc('can_view_meeting');
       const fallbackAllowed=ALLOWED.includes(email);
       const allowed=accessError?fallbackAllowed:canView===true;
       if(!allowed){
         await db.auth.signOut();
-        return setLoginStatus('この画面を利用できるアカウントではありません。');
+        setLoginStatus('この画面を利用できるアカウントではありません。');
+        revealLogin();
+        return;
       }
-      const {data:isAdmin}=await db.rpc('is_management_admin');
       $('viewerBox').classList.toggle('hidden',isAdmin!==true);
       appOpening=true;
       try{
@@ -582,7 +590,7 @@
     initFinancialExcel();
     $('fiscalYear').addEventListener('change',loadFinancialInput);
     $('targetMonth').addEventListener('change',loadFinancialInput);
-    db.auth.getSession().then(({data:{session}})=>{if(session)authorize(session.user)});
+    db.auth.getSession().then(({data:{session}})=>{if(session)authorize(session.user);else revealLogin()});
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
 </body>

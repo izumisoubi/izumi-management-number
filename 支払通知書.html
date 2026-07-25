@@ -48,8 +48,8 @@ const schemaMissing=error=>/payment_notice|purchase_orders|vendors|schema cache|
 function setStatus(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'')}
 async function sessionReady(session){
   if(!session){$('loginCard').classList.remove('hidden');$('app').classList.add('hidden');return}
-  const enabled=await db.rpc('is_current_app_user_enabled');if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
-  const admin=await db.rpc('is_management_admin');isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';
+  const [enabled,admin]=await Promise.all([db.rpc('is_current_app_user_enabled'),db.rpc('is_management_admin')]);if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
+  isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';
   $('loginCard').classList.add('hidden');$('app').classList.remove('hidden');$('createButton').disabled=!isAdmin;
   if(!isAdmin)setStatus('globalStatus','閲覧専用です。支払通知書の作成・訂正・送信は最高権限の社員だけが行えます。');
   await loadBase();

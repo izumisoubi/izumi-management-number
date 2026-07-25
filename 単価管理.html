@@ -239,8 +239,8 @@ async function migrateLocalPrices(){
 }
 async function sessionReady(session){
   if(!session){$('loginCard').classList.remove('hidden');$('priceApp').classList.add('hidden');$('logoutButton').classList.add('hidden');return}
-  const enabled=await db.rpc('is_current_app_user_enabled');if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
-  const admin=await db.rpc('is_management_admin');isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';$('loginCard').classList.add('hidden');$('priceApp').classList.remove('hidden');$('logoutButton').classList.remove('hidden');await loadCloud();
+  const [enabled,admin]=await Promise.all([db.rpc('is_current_app_user_enabled'),db.rpc('is_management_admin')]);if(enabled.error||enabled.data!==true){await db.auth.signOut();return sessionReady(null)}
+  isAdmin=admin.data===true;$('sessionUser').textContent=session.user.email||'';$('loginCard').classList.add('hidden');$('priceApp').classList.remove('hidden');$('logoutButton').classList.remove('hidden');await loadCloud();
 }
 async function signIn(){$('loginStatus').textContent='確認中…';const result=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(result.error){$('loginStatus').textContent=result.error.message;return}await sessionReady(result.data.session)}
 async function signOut(){await db.auth.signOut();location.reload()}

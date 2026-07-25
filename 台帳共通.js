@@ -577,27 +577,44 @@ async function signOut(){
   await db.auth.signOut();
   location.reload();
 }
+function revealLogin(){
+  const card=$('loginCard');
+  if(card)card.classList.remove('hidden');
+}
 async function showApp(){
   if(appOpening)return;
   appOpening=true;
   try{
-  const {data:{user}}=await db.auth.getUser();
-  if(!user)return;
-  const {data:enabled,error:accessError}=await db.rpc('is_current_app_user_enabled');
+  // getSession() reads the cached session locally (no network round trip).
+  // Server-side validity is still checked via the RPC calls below, so a
+  // separate getUser() network call just to confirm the session exists is
+  // unnecessary — that was one extra round trip on every page load.
+  const {data:{session}}=await db.auth.getSession();
+  const user=session?.user;
+  if(!user){revealLogin();return}
+  // These three checks don't depend on each other, so run them in parallel
+  // instead of one after another — this is the main reason the login card
+  // used to stay visible noticeably longer than necessary.
+  const [{data:enabled,error:accessError},{data:meetingOk,error:meetingError},{data:adminData}]=await Promise.all([
+    db.rpc('is_current_app_user_enabled'),
+    db.rpc('can_view_meeting'),
+    db.rpc('is_management_admin')
+  ]);
   if(accessError||enabled!==true){
     $('loginStatus').textContent=accessError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。管理者へ連絡してください。';
     await db.auth.signOut();
+    revealLogin();
     return;
   }
   currentUser=user;
-  await refreshMeetingAccess(user);
+  meetingAccessAllowed=meetingError?MEETING_USERS_FALLBACK.has(String(user.email||'').toLowerCase()):meetingOk===true;
   if(config.viewKey==='meeting'&&!canViewMeeting(user.email)){
     $('loginStatus').textContent='この画面は経営会議メンバーのみ利用できます。';
     await db.auth.signOut();
+    revealLogin();
     return;
   }
-  const {data}=await db.rpc('is_management_admin');
-  isAdmin=data===true;
+  isAdmin=adminData===true;
   $('loginCard').classList.add('hidden');
   $('app').classList.remove('hidden');
   $('userBox').classList.remove('hidden');
@@ -1847,5 +1864,5 @@ document.addEventListener('visibilitychange',()=>{
   loadData();
 });
 initLoginHelp();
-db.auth.onAuthStateChange((_event,session)=>{if(session)showApp()});
-db.auth.getSession().then(({data:{session}})=>{if(session)showApp()});
+db.auth.onAuthStateChange((_event,session)=>{if(session)showApp();else revealLogin()});
+db.auth.getSession().then(({data:{session}})=>{if(session)showApp();else revealLogin()});
