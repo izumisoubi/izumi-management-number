@@ -6303,7 +6303,15 @@ function sfn(id,f,v){const r=rows.find(r=>r.id===id);if(!r)return;pushUndo();con
 function sfSellOverrideCtbl(id,v){
   const r=rows.find(r=>r.id===id);if(!r)return;
   const raw=String(v).replace(/[,，¥\s]/g,'');
-  r.sellOverride=raw===''?'':(isNaN(parseFloat(raw))?'':parseFloat(raw));
+  const isEmpty=raw===''||isNaN(parseFloat(raw));
+  r.sellOverride=isEmpty?'':parseFloat(raw);
+  // 数字を直接入力した売価は自動単価より優先する。空欄へ戻した時だけ
+  // その時点の取引先別単価（無ければ原価からの自動売価）へ復帰させる。
+  r._sellOverrideManual=!isEmpty;
+  r._clientUnitPriceAuto=false;
+  if(isEmpty){
+    setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
+  }
   syncBurdenForSellChange(r);
   // 入力状態で色を即時変更
   const ctr=document.querySelector(`#ctbody tr[data-rid="${id}"]`);
@@ -6332,7 +6340,11 @@ function getSellUnit(r,rate){
 function sfSellOverride(id,el){
   const r=rows.find(r=>r.id===id);if(!r)return;
   const raw=el.textContent.replace(/[,¥\s]/g,'');
-  r.sellOverride=raw===''?'':(isNaN(parseFloat(raw))?'':parseFloat(raw));
+  const isEmpty=raw===''||isNaN(parseFloat(raw));
+  r.sellOverride=isEmpty?'':parseFloat(raw);
+  r._sellOverrideManual=!isEmpty;
+  r._clientUnitPriceAuto=false;
+  if(isEmpty)setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
   syncBurdenForSellChange(r);
   _recalcRow(id);
   renderTotals();syncInv();
@@ -6996,6 +7008,7 @@ const vendorUnitPriceListCache=new Map();
 const clientUnitPriceListCache=new Map();
 let unitPriceSuggestTimer=0,unitPriceHideTimer=0;
 function normalizedUnitPriceText(value){return String(value||'').trim().toLocaleLowerCase('ja-JP');}
+function escapePostgrestLike(value){return String(value||'').replace(/[\\%_]/g,'\\$&');}
 async function loadUnitPriceMaster(){
   if(unitPriceMasterCache)return unitPriceMasterCache;
   if(unitPriceMasterLoading)return unitPriceMasterLoading;
@@ -7027,16 +7040,17 @@ async function loadVendorUnitPriceList(vendorName){
 async function loadClientUnitPriceList(clientName){
   const key=String(clientName||'').trim();
   if(!key||!managementDb)return [];
-  if(clientUnitPriceListCache.has(key))return clientUnitPriceListCache.get(key);
+  const cacheKey=normalizedUnitPriceText(key);
+  if(clientUnitPriceListCache.has(cacheKey))return clientUnitPriceListCache.get(cacheKey);
   const request=managementDb.from('client_unit_prices').select('work_item_id,override_price')
-    .eq('client_name',key).is('deleted_at',null)
+    .ilike('client_name',escapePostgrestLike(key)).is('deleted_at',null)
     .then(async ({data,error})=>{
       if(error){console.warn('取引先単価候補を取得できません',error);return [];}
       const masters=await loadUnitPriceMaster();
       const byId=new Map((data||[]).map(item=>[item.work_item_id,item.override_price]));
       return masters.map(item=>byId.has(item.id)?({...item,effective_price:Number(byId.get(item.id)),source:'取引先別単価',_clientPrice:true}):({...item,effective_price:Number(item.common_price),source:'共通単価'}));
     }).catch(error=>{console.warn('取引先単価候補を取得できません',error);return [];});
-  clientUnitPriceListCache.set(key,request);
+  clientUnitPriceListCache.set(cacheKey,request);
   return request;
 }
 function unitPriceSuggestBox(){
@@ -7087,7 +7101,15 @@ function chooseUnitPriceSuggestion(kind,id,item){
     row.orderCost=Number(item.effective_price)||0;row._orderCostManual=false;row._vendorUnitPriceAuto=true;
     saveOrdRows();renderOrdTable();renderOrdLeft();
   }else{
-    if(item._clientPrice){row.sellOverride=Number(item.effective_price)||0;row._clientUnitPriceAuto=true;}
+    if(item._clientPrice){
+      // 取引先別単価は売価。原価を手入力していない場合は同じ工事項目の
+      // 共通単価も同時に補完し、原価・粗利が空欄になるのを防ぐ。
+      if(!row._costManual){
+        row.cost=Number(item.common_price)||0;row._unitPriceAuto=true;
+      }
+      row.sellOverride=Number(item.effective_price)||0;
+      row._sellOverrideManual=false;row._clientUnitPriceAuto=true;
+    }
     else {row.cost=Number(item.effective_price)||0;row._costManual=false;row._unitPriceAuto=true;}
     _recalcRow(id);renderCost();renderPrint();renderTotals();syncInv();
   }
@@ -7104,13 +7126,19 @@ async function applyRestoredUnitPrice(kind,id){
     if(row._orderCostManual)return;
     row.orderCost=Number(item.effective_price)||0;row._vendorUnitPriceAuto=true;saveOrdRows();renderOrdTable();renderOrdLeft();
   }else{
-    if(item._clientPrice){
-      if(row.sellOverride!==''&&row.sellOverride!==undefined)return;
-      row.sellOverride=Number(item.effective_price)||0;row._clientUnitPriceAuto=true;
-    }else{
-      if(row._costManual)return;
-      row.cost=Number(item.effective_price)||0;row._unitPriceAuto=true;
+    let changed=false;
+    // 原価の復元は取引先別売価の有無と独立して行う。
+    if(!row._costManual){
+      const restoredCost=Number(item.common_price??item.effective_price)||0;
+      if(row.cost!==restoredCost){
+        row.cost=restoredCost;row._unitPriceAuto=true;changed=true;
+      }
     }
+    if(item._clientPrice&&!row._sellOverrideManual&&(row.sellOverride===''||row.sellOverride===undefined)){
+      row.sellOverride=Number(item.effective_price)||0;
+      row._sellOverrideManual=false;row._clientUnitPriceAuto=true;changed=true;
+    }
+    if(!changed)return;
     _recalcRow(id);renderCost();renderPrint();renderTotals();syncInv();
   }
 }

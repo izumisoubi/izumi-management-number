@@ -154,7 +154,8 @@ async function saveClientOverride(item){
 async function loadClientOverrides(clientName){
   const token=++clientNameLoadToken,key=normalizeClientKey(clientName);
   if(!clientName.trim()||!cloudReady){renderClient();return;}
-  const result=await db.from('client_unit_prices').select('id,work_item_id,override_price,revision').eq('client_name',clientName.trim()).is('deleted_at',null);
+  const escapedClientName=clientName.trim().replace(/[\\%_]/g,'\\$&');
+  const result=await db.from('client_unit_prices').select('id,work_item_id,override_price,revision').ilike('client_name',escapedClientName).is('deleted_at',null);
   if(token!==clientNameLoadToken)return; // 入力中に別の取引先へ切り替わっていたら結果を捨てる
   if(result.error){$('clientStatus').textContent=schemaMissing(result.error)?'取引先別単価DBは適用前です（共通単価はそのまま利用できます）':'取引先別単価を読み込めません：'+result.error.message;return;}
   for(const key2 of [...cloudClientOverrides.keys()])if(key2.startsWith(key+'|'))cloudClientOverrides.delete(key2);
