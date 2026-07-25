@@ -327,6 +327,13 @@ button:active {
   color: #664e00;
 }
 
+.meeting-summary {
+  min-width: 120px;
+  background: #eaf2ff;
+  border-color: #a9c6f2;
+  color: #17345f;
+}
+
 .status-row {
   display: flex;
   align-items: center;

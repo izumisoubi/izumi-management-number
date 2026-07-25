@@ -1003,7 +1003,12 @@ function renderSummary(){
   $('summary').innerHTML=definitions.map(item=>{
     const value=item.type==='count'?viewRows.length:viewRows.reduce((sum,row)=>sum+numberValue(mergedRow(row).values[item.key]),0);
     return `<div class="sum-card"><span>${item.label}</span><b>${item.type==='count'?`${value}件`:money(value)}</b></div>`;
-  }).join('')+`<div class="sum-card selection-summary"><span>選択範囲</span><b id="selectionSum">0セル　合計 ¥0</b></div>`;
+  }).join('')
+    +`<div class="sum-card selection-summary"><span>選択範囲</span><b id="selectionSum">0セル　合計 ¥0</b></div>`
+    +`<div class="sum-card meeting-summary"><span>会議チェック</span><b id="meetingCheckedSum">${meetingCheckedCount()}件</b></div>`;
+}
+function meetingCheckedCount(){
+  return viewRows.filter(row=>Boolean(mergedRow(row).values.meeting_checked)).length;
 }
 function bindSheetEvents(){
   document.querySelectorAll('#ledgerBody input,#ledgerBody select').forEach(input=>{
@@ -1210,10 +1215,18 @@ document.addEventListener('mouseup',()=>{
 function setCheckboxCell(cell,value){
   const checkbox=cell.querySelector('input[type="checkbox"]');
   if(!checkbox||checkbox.disabled)return;
+  const wasChecked=checkbox.checked;
   checkbox.checked=value;
   checkbox.closest('tr').classList.add('dirty');
   setEmptyState(checkbox);
   queueRowSave(checkbox.closest('tr').dataset.key,120);
+  if(wasChecked!==value){
+    const counter=$('meetingCheckedSum');
+    if(counter){
+      const current=parseInt(counter.textContent,10)||0;
+      counter.textContent=`${Math.max(0,current+(value?1:-1))}件`;
+    }
+  }
 }
 function focusCell(row,col){
   const maxRow=Math.max(0,pageRows().length-1);
