@@ -1110,10 +1110,18 @@ function bindSheetEvents(){
           updateSelectionSummary();
           return;
         }
-        activeCell=point;
-        selectionFocus=point;
+        // A plain click on a checkbox is just "toggle this row's flag" —
+        // it deliberately does NOT touch activeCell/selectionFocus or the
+        // 選択範囲 (cell-range sum) widget. Those track Excel-style numeric
+        // cell selection; a checkbox has no numeric value to sum, so
+        // routing it through selectRectangle() only produced a confusing
+        // "1セル　数値0件　合計¥0" that then silently reset to 0 a moment
+        // later once the row's own save round-tripped through realtime
+        // and re-rendered the table. Shift-click/⌘-click below still use
+        // the normal range-selection path, since those are deliberate
+        // range-selection gestures that happen to start/land on a
+        // checkbox cell.
         dragStart=point;
-        selectRectangle(point,point);
         checkboxBrush=!event.target.checked;
         event.target.dataset.pointerToggle=String(checkboxBrush);
         setCheckboxCell(cell,checkboxBrush);
