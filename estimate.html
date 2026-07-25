@@ -2271,10 +2271,10 @@ function renderCost(){
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)"></td>
           <td><select data-f="unit" onchange="sf(${r.id},'unit',this.value)">${uopts('')}</select></td>
-          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)"></td>
+          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
-          <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':(r.sellOverride!==undefined&&r.sellOverride!==''?'var(--ta)':'var(--tt)')};font-weight:${r.sellOverride!==undefined&&r.sellOverride!==''?'700':'400'};" oninput="sfSellOverrideFmt(${r.id},this)"></td>
+          <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':(r.sellOverride!==undefined&&r.sellOverride!==''?'var(--ta)':'var(--tt)')};font-weight:${r.sellOverride!==undefined&&r.sellOverride!==''?'700':'400'};" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
           <td class="ca csa" style="white-space:nowrap"></td>
           <td><input type="text" inputmode="decimal" data-f="landlordRate" placeholder="貸主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordRate',this)"></td>
           <td><input type="text" inputmode="decimal" data-f="tenantRate" placeholder="借主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantRate',this)"></td>
@@ -6435,6 +6435,26 @@ function sfnCalcFmt(id,f,el){
 function sfSellOverrideFmt(id,el){
   _fmtInput(el);
   sfSellOverrideCtbl(id,el.value);
+}
+// 原価単価・売価単価は、入力中に取引先別単価などが非同期で自動復元されると
+// （restore処理はフォーカスが外れるまでDOM表示を更新しないため）表示が
+// 実データと食い違ったまま残ることがある。フォーカスが外れた瞬間に
+// 必ず現在のrowデータへ表示を合わせ直すための補助関数。
+function syncEstimateFieldDisplay(id,f){
+  const r=rows.find(r=>r.id===id);if(!r)return;
+  const tr=document.querySelector(`#ctbody tr[data-rid="${id}"]`);if(!tr)return;
+  const inp=tr.querySelector(`[data-f="${f}"]`);if(!inp)return;
+  const v=r[f];
+  const hasVal=v!==undefined&&v!=='';
+  inp.value=hasVal?fmtNum(v):'';
+  if(f==='sellOverride'){
+    inp.style.color=r.type==='discount'?'var(--tr)':(hasVal?'var(--ta)':'var(--tt)');
+    inp.style.fontWeight=hasVal?'700':'400';
+    const c=parseFloat(r.cost);
+    const rate=getRate();
+    const autoSu=r.type==='discount'?'':(!isNaN(c)&&c>0?fmtNum(c2s(c,rate)):'');
+    inp.placeholder=autoSu||'売価単価';
+  }
 }
 
 // 全行の計算セルを一括更新
