@@ -5194,6 +5194,25 @@ function filterMasterList(){
 
 async function pickManagementMasterItem(index){
   const item=managementMasterItems[index];if(!item)return;
+  // Switching the master selection to a different case must not leave the
+  // previously open case's estimate/order line items behind — this
+  // function historically only ever updated the basic-info fields below,
+  // so rows/ordRows silently kept showing whatever the previous case had.
+  // Reset to blank first, then load this case's own saved line items if
+  // it already has an estimate on file.
+  rows=[];rowId=0;
+  for(let i=0;i<12;i++) rows.push(createEstimateRow('item'));
+  ordRows=[];ordRowId=0;ensureOrdMinRows();
+  if(managementDb&&item.management_number){
+    try{
+      const {data}=await managementDb.from('estimate_projects').select('payload').eq('management_number',item.management_number).is('deleted_at',null).maybeSingle();
+      const d=data?.payload;
+      if(d?.rows){rows=normalizeEstimateRows(d.rows,{trimLegacyBlankRows:!d.v||d.v<19});rowId=d.rowId||rows.reduce((m,r)=>Math.max(m,r.id||0),0);}
+      if(d?.ordRows){ordRows=d.ordRows;ordRowId=d.ordRowId||ordRows.reduce((m,r)=>Math.max(m,r.id||0),0);}
+    }catch(_error){/* lookup failed — rows/ordRows simply stay blank for this case */}
+  }
+  renderAll();
+  renderOrdTable();renderOrdLeft();saveOrdRows();
   const set=(id,value)=>{const el=document.getElementById(id);if(el&&value!==undefined&&value!==null&&value!=='')el.value=value;};
   set('b-kanri',item.management_number);set('b-uketsuke',item.reception_date);set('b-category',item.category);set('b-keijo',item.accounting_month);set('b-kanko-date',item.scheduled_completion_date);set('b-completed-on',item.completed_on);set('b-client',item.customer_name||item.client_name||item.billing_client_name);set('b-client-contact',item.customer_contact_name||item.invoice_contact_name);set('b-property',item.property_name);set('b-room',item.room_number);set('b-postal',item.postal_code||item.property_postal_code);set('b-place',item.property_address||item.work_address);set('b-summary',item.work_name);
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
