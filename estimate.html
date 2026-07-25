@@ -6977,7 +6977,16 @@ function ordSfNum(id,f,v,el){
 let unitPriceImeComposing=false;
 function isEstimateEditable(target){return !!(target?.matches?.('input,textarea,[contenteditable="true"]')||target?.isContentEditable);}
 document.addEventListener('compositionstart',event=>{if(isEstimateEditable(event.target))unitPriceImeComposing=true;},true);
-document.addEventListener('compositionend',()=>{unitPriceImeComposing=false;},true);
+document.addEventListener('compositionend',event=>{
+  unitPriceImeComposing=false;
+  // 変換確定後にだけ候補検索を開始する。変換途中の文字列は候補対象にしない。
+  const input=event.target;
+  const row=input?.closest?.('#ctbody tr[data-rid],#ordtbody tr[data-rid]');
+  if(input?.dataset?.f==='name'&&row){
+    const kind=input.closest('#ordtbody')?'order':'estimate';
+    scheduleUnitPriceSuggest({currentTarget:input,target:input,isComposing:false},kind,Number(row.dataset.rid));
+  }
+},true);
 document.addEventListener('keydown',event=>{
   // capture段階で止める。後段の表ナビ・選択・ショートカットがSpace/Enterを奪わない。
   if(isEstimateEditable(event.target)&&(event.isComposing||event.keyCode===229||unitPriceImeComposing))event.stopImmediatePropagation();
@@ -7039,6 +7048,7 @@ function hideUnitPriceSuggest(){clearTimeout(unitPriceHideTimer);const box=docum
 function hideUnitPriceSuggestSoon(){clearTimeout(unitPriceHideTimer);unitPriceHideTimer=setTimeout(hideUnitPriceSuggest,180);}
 function scheduleUnitPriceSuggest(event,kind,id){
   const input=event?.currentTarget||event?.target;
+  if(event?.isComposing||unitPriceImeComposing){hideUnitPriceSuggest();return;}
   clearTimeout(unitPriceSuggestTimer);
   unitPriceSuggestTimer=setTimeout(()=>showUnitPriceSuggest(input,kind,id),80);
 }
