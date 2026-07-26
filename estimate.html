@@ -8729,9 +8729,28 @@ function printOrdPreview(){
   }
 
   // ── 明細テーブルHTML生成 ──
-  function itemTableHtml(pageRows, startNo, isLastPage, pageSub){
+  function itemTableHtml(pageRows, startNo, isLastPage, pageSub, isFinalOnlyPage){
     const totalPages=window._opTotalPages||1;
     const currentPage=window._opCurrentPage||1;
+    // 明細が1ページ目に全て収まり、合計・受領確認欄だけを次ページへ送る場合。
+    // 空の明細10行を表示せず、総合計だけを簡潔に表示する。
+    if(isFinalOnlyPage){
+      return `
+      <table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px">
+        <tr style="background:#f5f5f5">
+          <td style="width:76%;border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700">小　計</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 8px;font-weight:700">${fmt(totalExTax)}</td>
+        </tr>
+        <tr style="background:#f8f8f8">
+          <td style="border:1px solid #999;padding:3px 8px;text-align:right">消費税（10%）</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 8px">${fmt(tax)}</td>
+        </tr>
+        <tr style="background:#efefef;border-top:2px solid #000">
+          <td style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;font-size:12px">合　計（税込）</td>
+          <td style="text-align:right;border:1px solid #999;padding:4px 8px;font-weight:700;font-size:12px">${fmt(totalIncTax)}</td>
+        </tr>
+      </table>`;
+    }
     let rows='';
     // 行数が少ない（10行以下）場合だけ見栄えのため10行まで空行で埋める。
     // 実データがそれ以上ある＝A4に収まるギリギリの行数の場合は無駄な空白を作らない。
@@ -8837,12 +8856,15 @@ function printOrdPreview(){
   // ページ種別ごとにDOM実測した安全行数上限（2026/7/27実測、A4=297mmに対して余裕を持たせた値）。
   // 受領確認欄・特記事項は「最終ページ」にしか出ないため、そのページが1ページ目を兼ねるか
   // どうかでヘッダー・フッターの重さが変わり、収まる行数が大きく変わる。
-  //   ・単独1ページで完結（大ヘッダー＋受領確認欄＋特記事項）      → 実測16行が上限
-  //   ・1ページ目だが最終ページではない（大ヘッダー＋簡易フッター）→ 実測26行が上限（24を採用）
-  //   ・中間ページ（小タイトルのみ＋簡易フッター）                → 実測50行が上限（32を採用）
-  //   ・最終ページだが1ページ目ではない（小タイトル＋受領確認欄）  → 実測39行が上限（36を採用）
+  //   ・単独1ページで完結（大ヘッダー＋受領確認欄＋特記事項あり）  → 実測16行が上限
+  //   ・単独1ページで完結（特記事項なし）                          → 実画面で18行まで収容可
+  //   ・1ページ目だが最終ページではない（大ヘッダー＋簡易フッター）→ 実測26行が上限
+  //   ・中間ページ（小タイトルのみ＋簡易フッター）                → 実測50行が上限
+  //   ・最終ページだが1ページ目ではない（小タイトル＋受領確認欄）  → 実測39行が上限
   // 「1ページ目になるべく多く詰め、以降のページは残りを収める」方針（均等配分はしない）。
-  const CAP_SINGLE=16, CAP_FIRST=24, CAP_MID=32, CAP_LASTN=36;
+  // 明細が1ページ目に全て入っても受領確認欄まで含めると収まらない場合は、
+  // 明細を無理に1行だけ最終ページへ残さず、最終ページを「合計・受領確認・特記事項」専用にする。
+  const CAP_SINGLE=opNote?16:18, CAP_FIRST=26, CAP_MID=50, CAP_LASTN=39;
   const allRows=opRows; // name, qty, unit(発注単価), unitLabel(呼称) 全て含む
   const totalRowsCount=allRows.length;
   let chunks=[];
@@ -8850,15 +8872,17 @@ function printOrdPreview(){
     chunks=[[...allRows]];
   } else {
     let rem=[...allRows];
-    // 1ページ目：非最終ページ前提の上限まで詰めるが、必ず2ページ目以降に1行以上残す
-    // （全部乗り切れてしまうと「1ページ目だけの最終ページ」扱いになり、実は容量オーバーになるため）
-    chunks.push(rem.splice(0, Math.min(CAP_FIRST, rem.length-1)));
+    // 1ページ目：非最終ページとして実測上限まで詰める。
+    // ここで全明細が収まった場合も、合計・受領確認欄用の最終ページを別に追加する。
+    chunks.push(rem.splice(0, Math.min(CAP_FIRST, rem.length)));
+    if(rem.length===0)chunks.push([]);
     while(rem.length>0){
       if(rem.length<=CAP_LASTN){
         chunks.push(rem.splice(0, rem.length)); // 最終ページとして収まる分を全部乗せる
         break;
       }
-      chunks.push(rem.splice(0, Math.min(CAP_MID, rem.length-1))); // 中間ページも同様に1行以上残す
+      chunks.push(rem.splice(0, Math.min(CAP_MID, rem.length)));
+      if(rem.length===0)chunks.push([]); // 最終ページの合計・受領確認欄を保持
     }
   }
   if(chunks.length===0)chunks.push([]);
@@ -8872,17 +8896,18 @@ function printOrdPreview(){
     const startNo=chunks.slice(0,pi).reduce((s,c)=>s+c.length,0)+1;
     const pageSub=chunk.reduce((s,r)=>s+Math.round(r.qty*r.unit),0);
     const pn=pi+1, tp=chunks.length;
+    const isFinalOnlyPage=isLast&&tp>1&&chunk.length===0;
     const pgLabel=tp>1?`<div style="text-align:right;font-size:9px;color:#888;margin-top:3px">${pn} / ${tp}</div>`:'';
     let inner='';
     if(isFirst){
-      inner=headerHtml(true)+itemTableHtml(chunk,startNo,isLast,pageSub);
+      inner=headerHtml(true)+itemTableHtml(chunk,startNo,isLast,pageSub,isFinalOnlyPage);
       if(isLast) inner+=receiverConfirmationHtml();
       if(isLast&&opNote){
         inner+=`<div style="margin-top:6px"><div style="font-size:10px;font-weight:700;margin-bottom:2px">特記事項</div><div style="border:1px solid #999;padding:5px;font-size:10px;white-space:pre-wrap;min-height:28px">${esc(opNote)}</div></div>`;
       }
     } else {
       inner=`<div style="text-align:center;font-size:13px;font-weight:700;letter-spacing:5px;border-bottom:1.5px solid #000;padding-bottom:5px;margin-bottom:10px">注文確認書（${pn}/${tp}ページ）</div>`;
-      inner+=itemTableHtml(chunk,startNo,isLast,pageSub);
+      inner+=itemTableHtml(chunk,startNo,isLast,pageSub,isFinalOnlyPage);
       if(isLast) inner+=receiverConfirmationHtml();
       if(isLast&&opNote){
         inner+=`<div style="margin-top:6px"><div style="font-size:10px;font-weight:700;margin-bottom:2px">特記事項</div><div style="border:1px solid #999;padding:5px;font-size:10px;white-space:pre-wrap;min-height:28px">${esc(opNote)}</div></div>`;
