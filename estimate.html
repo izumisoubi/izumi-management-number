@@ -1430,8 +1430,11 @@ function makeDivider(divId, leftId, rightId){
   if(!div)return;
   if(div.dataset.dividerBound==='1')return;
   div.dataset.dividerBound='1';
-  const isEst=(divId==='estDiv');
-  const storageKey=isEst?'izumi_est_right_width':'izumi_inv_right_width';
+  // 見積・請求・発注の3種類を区別する（以前は見積以外を一律「請求」扱いしており、
+  // 発注タブの仕切りを操作すると請求タブの保存幅が誤って上書きされるバグがあった）
+  const kind=divId==='estDiv'?'est':(divId==='invDiv'?'inv':'ord');
+  const storageKey=kind==='est'?'izumi_est_right_width':(kind==='inv'?'izumi_inv_right_width':'izumi_ord_right_width');
+  const getRW=()=>kind==='est'?estRW:(kind==='inv'?invRW:ordRW);
   div.title='左右にドラッグしてプレビューと入力欄の幅を変更（ダブルクリックで初期幅）';
   div.setAttribute('role','separator');
   div.setAttribute('aria-orientation','vertical');
@@ -1441,13 +1444,14 @@ function makeDivider(divId, leftId, rightId){
     const total=Math.max(640,window.innerWidth);
     const max=Math.max(420,total-250-6);
     const value=Math.max(420,Math.min(max,width));
-    if(isEst){estRW=value;applyEstLayout();}
-    else{invRW=value;applyInvLayout();}
+    if(kind==='est'){estRW=value;applyEstLayout();}
+    else if(kind==='inv'){invRW=value;applyInvLayout();}
+    else{ordRW=value;}
     return value;
   };
   div.addEventListener('pointerdown',e=>{
     drag=true;sx=e.clientX;
-    sw=right?right.offsetWidth:(isEst?estRW:invRW);
+    sw=right?right.offsetWidth:getRW();
     pointerId=e.pointerId;
     try{div.setPointerCapture(pointerId);}catch(error){}
     div.classList.add('dragging');
@@ -1464,20 +1468,20 @@ function makeDivider(divId, leftId, rightId){
     drag=false;div.classList.remove('dragging');
     document.body.style.cursor='';document.body.style.userSelect='';
     try{div.releasePointerCapture(pointerId);}catch(error){}
-    try{localStorage.setItem(storageKey,String(Math.round(isEst?estRW:invRW)));}catch(error){}
+    try{localStorage.setItem(storageKey,String(Math.round(getRW())));}catch(error){}
   };
   div.addEventListener('pointerup',finish);
   div.addEventListener('pointercancel',finish);
   div.addEventListener('dblclick',()=>{
     setWidth(Math.min(1080,Math.max(620,window.innerWidth*.55)));
-    try{localStorage.setItem(storageKey,String(Math.round(isEst?estRW:invRW)));}catch(error){}
+    try{localStorage.setItem(storageKey,String(Math.round(getRW())));}catch(error){}
   });
   div.addEventListener('keydown',e=>{
     if(!['ArrowLeft','ArrowRight','Home'].includes(e.key))return;
     e.preventDefault();
     if(e.key==='Home')setWidth(Math.min(1080,Math.max(620,window.innerWidth*.55)));
-    else setWidth((isEst?estRW:invRW)+(e.key==='ArrowLeft'?30:-30));
-    try{localStorage.setItem(storageKey,String(Math.round(isEst?estRW:invRW)));}catch(error){}
+    else setWidth(getRW()+(e.key==='ArrowLeft'?30:-30));
+    try{localStorage.setItem(storageKey,String(Math.round(getRW())));}catch(error){}
   });
 }
 function initDivider(){makeDivider('estDiv','estLeft','estRight');}
@@ -1487,7 +1491,7 @@ function initOrdDivider(){makeDivider('ordDiv','ordLeft','ordRight');}
 function storedPanelWidth(key,fallback){
   try{const value=parseFloat(localStorage.getItem(key));return Number.isFinite(value)?value:fallback;}catch(error){return fallback;}
 }
-let estRW=storedPanelWidth('izumi_est_right_width',1000),invRW=storedPanelWidth('izumi_inv_right_width',1000);
+let estRW=storedPanelWidth('izumi_est_right_width',1000),invRW=storedPanelWidth('izumi_inv_right_width',1000),ordRW=storedPanelWidth('izumi_ord_right_width',1000);
 
 function applyEstLayout(){
   const outer=document.getElementById('estOuter');
@@ -1498,7 +1502,12 @@ function applyEstLayout(){
 
   const totalW=Math.max(640,window.innerWidth);
   const maxRW=Math.max(420,totalW-250-6);
-  const rw=Math.max(420,Math.min(maxRW,estRW));
+  let rw=Math.max(420,Math.min(maxRW,estRW));
+  // 保存済みの幅が異常（このウィンドウ幅では余白が確保できない）場合は初期値へ自動復帰する
+  if(totalW-rw-6<120){
+    rw=Math.max(420,Math.min(maxRW,Math.min(1080,Math.max(620,totalW*.55))));
+    try{localStorage.setItem('izumi_est_right_width',String(Math.round(rw)));}catch(error){}
+  }
   estRW=rw;
   right.style.width=rw+'px';
 
@@ -1540,7 +1549,13 @@ function applyInvLayout(){
 
   const totalW=Math.max(640,window.innerWidth);
   const maxRW=Math.max(420,totalW-250-6);
-  const rw=Math.max(420,Math.min(maxRW,invRW));
+  let rw=Math.max(420,Math.min(maxRW,invRW));
+  // 保存済みの幅が異常（このウィンドウ幅では余白が確保できない）場合は初期値へ自動復帰する
+  // （旧バグ：発注タブの仕切りドラッグでこの値が誤って上書きされていたケースを含む）
+  if(totalW-rw-6<120){
+    rw=Math.max(420,Math.min(maxRW,Math.min(1080,Math.max(620,totalW*.55))));
+    try{localStorage.setItem('izumi_inv_right_width',String(Math.round(rw)));}catch(error){}
+  }
   invRW=rw;
   right.style.width=rw+'px';
 
