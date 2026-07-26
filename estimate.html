@@ -876,45 +876,49 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
 
       <div class="paste-hint">💡 「業者」列で各行に業者を割り当て。<strong>発注単価</strong>は見積原価から自動更新（緑）。発注側で個別変更した単価（青）は、見積から再取込しても保持します。</div>
-      <div class="paste-hint">💡 Excelからコピペで一括入力。列順：<strong>名称　数量　単位　発注単価</strong>（既存行を上書き・不足分は自動追加）。ドラッグで範囲選択→Ctrl+Cでコピー。</div>
+      <div class="paste-hint" id="ordPasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　発注単価　備考</strong>（既存行を上書き・不足分は自動追加）。ドラッグで範囲選択→Ctrl+Cでコピー。</div>
       <div style="overflow-x:auto">
         <table class="sync-tbl ctbl" id="ordtbl" style="table-layout:fixed;width:100%">
           <colgroup>
             <col style="width:20px"><!-- no/drag -->
             <col><!-- 名称（可変） -->
+            <col style="width:130px"><!-- 仕様 -->
             <col style="width:52px"><!-- 数量 -->
             <col style="width:50px"><!-- 単位 -->
             <col style="width:88px"><!-- 発注単価 -->
             <col style="width:88px"><!-- 発注金額 -->
+            <col style="width:120px"><!-- 備考 -->
             <col style="width:150px"><!-- 業者 -->
             <col style="width:20px"><!-- del -->
           </colgroup>
           <thead><tr>
             <th></th>
             <th>名　称</th>
+            <th>仕　様</th>
             <th>数量</th>
             <th>単位</th>
             <th style="color:var(--tg)">発注単価</th>
             <th style="color:var(--tg)">発注金額</th>
+            <th>備考</th>
             <th style="color:#f7a84f">業者割当</th>
             <th></th>
           </tr></thead>
           <tbody id="ordtbody"></tbody>
           <tfoot>
             <tr style="background:var(--tb)">
-              <td colspan="5" style="text-align:right;padding:5px 10px;font-size:11px;color:var(--tm);font-weight:700;border-top:1px solid var(--tbr)">発注合計（税抜）</td>
+              <td colspan="6" style="text-align:right;padding:5px 10px;font-size:11px;color:var(--tm);font-weight:700;border-top:1px solid var(--tbr)">発注合計（税抜）</td>
               <td style="text-align:right;padding:5px 6px;font-size:12px;font-weight:800;color:var(--tg);border-top:1px solid var(--tbr)" id="ordFootTotal"></td>
-              <td colspan="2" style="border-top:1px solid var(--tbr)"></td>
+              <td colspan="3" style="border-top:1px solid var(--tbr)"></td>
             </tr>
             <tr style="background:var(--tb)">
-              <td colspan="5" style="text-align:right;padding:3px 10px;font-size:11px;color:var(--tm)">消費税（10%）</td>
+              <td colspan="6" style="text-align:right;padding:3px 10px;font-size:11px;color:var(--tm)">消費税（10%）</td>
               <td style="text-align:right;padding:3px 6px;font-size:11px;color:var(--tm)" id="ordFootTax"></td>
-              <td colspan="2"></td>
+              <td colspan="3"></td>
             </tr>
             <tr style="background:var(--tb)">
-              <td colspan="5" style="text-align:right;padding:5px 10px;font-size:12px;color:var(--tt);font-weight:800;border-top:2px solid var(--tbr)">合計（税込）</td>
+              <td colspan="6" style="text-align:right;padding:5px 10px;font-size:12px;color:var(--tt);font-weight:800;border-top:2px solid var(--tbr)">合計（税込）</td>
               <td style="text-align:right;padding:5px 6px;font-size:14px;font-weight:800;color:var(--ta);border-top:2px solid var(--tbr)" id="ordFootGrand"></td>
-              <td colspan="2" style="border-top:2px solid var(--tbr)"></td>
+              <td colspan="3" style="border-top:2px solid var(--tbr)"></td>
             </tr>
           </tfoot>
         </table>
@@ -3643,7 +3647,7 @@ function invExcelNav(e){
   }
 }
 
-const ORD_COLS=['name','qty','unit','orderCost','vendor'];
+const ORD_COLS=['name','spec','qty','unit','orderCost','note','vendor'];
 function getOrdTbodyTrs(){return[...document.querySelectorAll('#ordtbody tr[data-rid]')];}
 
 function ordExcelNav(e){
@@ -6855,15 +6859,15 @@ let _ordDragInit = false;
 
 // デフォルト10行
 function ensureOrdMinRows(){
-  while(ordRows.length < 10) ordRows.push({id:++ordRowId,type:'item',name:'',qty:'',unit:'',orderCost:'',vendor:'',_orderCostManual:false});
+  while(ordRows.length < 10) ordRows.push({id:++ordRowId,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false});
 }
 
 function addOrdRow(type){
   pushOrdUndo();
   const id=++ordRowId;
   if(type==='section') ordRows.push({id,type:'section',name:''});
-  else if(type==='discount') ordRows.push({id,type:'discount',name:'値引き',qty:1,unit:'式',orderCost:'',vendor:'',_orderCostManual:false});
-  else ordRows.push({id,type:'item',name:'',qty:'',unit:'',orderCost:'',vendor:'',_orderCostManual:false});
+  else if(type==='discount') ordRows.push({id,type:'discount',name:'値引き',spec:'',qty:1,unit:'式',orderCost:'',note:'',vendor:'',_orderCostManual:false});
+  else ordRows.push({id,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false});
   renderOrdTable(); renderOrdLeft();
   setTimeout(()=>{const el=document.querySelector(`#ordtbody tr[data-rid="${id}"] input[data-f="name"]`);if(el)el.focus();},30);
   scheduleOnlineAutosave(250);
@@ -6894,12 +6898,12 @@ function syncOrdFromEst(){
     const manualOrderCost=ex?ex._orderCostManual===true:false;
     const oc=manualOrderCost?ex.orderCost:estimateCost;
     next.push({id:ex?ex.id:++ordRowId,_eid:r.id,type:r.type,
-      name:r.name||'',qty:r.qty||'',unit:r.unit||'',
-      orderCost:oc, vendor:ex?ex.vendor:(r.vendor||''),
+      name:r.name||'',spec:r.spec||'',qty:r.qty||'',unit:r.unit||'',
+      orderCost:oc, note:r.note||'', vendor:ex?ex.vendor:(r.vendor||''),
       _orderCostManual:manualOrderCost,_estimateCost:estimateCost});
   });
   // 不足分10行補完
-  while(next.length<10) next.push({id:++ordRowId,type:'item',name:'',qty:'',unit:'',orderCost:'',vendor:'',_orderCostManual:false});
+  while(next.length<10) next.push({id:++ordRowId,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false});
   ordRows=next;
   // renderの後、全inputを確実に再セット（activeElement以外のみ）
   renderOrdTable();
@@ -6909,7 +6913,7 @@ function syncOrdFromEst(){
     ordRows.forEach(function(r){
       if(r.type==='section') return;
       const tr=tbody.querySelector('tr[data-rid="'+r.id+'"]'); if(!tr)return;
-      ['name','qty','orderCost'].forEach(function(f){
+      ['name','spec','qty','orderCost','note'].forEach(function(f){
         const inp=tr.querySelector('[data-f='+f+']');
         if(inp&&document.activeElement!==inp){
           if(f==='qty'||f==='orderCost'){
@@ -6952,21 +6956,23 @@ function renderOrdTable(){
       tr=document.createElement('tr'); tr.dataset.rid=r.id;
       if(r.type==='section'){
         tr.className='sec-r';
-        tr.innerHTML=`<td></td><td colspan="6"><input data-f="name" placeholder="見出し" oninput="ordSf(${r.id},'name',this.value)"></td><td class="cdel" onclick="delOrdRow(${r.id})">✕</td>`;
+        tr.innerHTML=`<td></td><td colspan="8"><input data-f="name" placeholder="見出し" oninput="ordSf(${r.id},'name',this.value)"></td><td class="cdel" onclick="delOrdRow(${r.id})">✕</td>`;
       } else {
         tr.innerHTML=`
           <td class="cno" style="text-align:center;color:var(--tm);font-size:12px;padding:0 2px;cursor:grab" title="ドラッグで並び替え">⠿</td>
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="ordSf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'order',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
+          <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
           <td><select data-f="unit" onchange="ordSf(${r.id},'unit',this.value)">${uOpts}</select></td>
           <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--tg);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--tg);font-weight:700"></td>
+          <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
           <td><select class="ord-vendor-sel" data-f="vendor"
   onchange="setVendor(${r.id},this.value)"
   onkeydown="if(event.key==='Backspace'||event.key==='Delete'){event.preventDefault();this.value='';setVendor(${r.id},'');}"
   >${vOpts}</select></td>
           <td class="cdel" onclick="delOrdRow(${r.id})">✕</td>`;
-        ['name','qty','orderCost'].forEach(f=>{
+        ['name','spec','qty','orderCost','note'].forEach(f=>{
           tr.querySelector(`[data-f=${f}]`)?.addEventListener('paste', handleOrdPaste);
         });
       }
@@ -6979,7 +6985,7 @@ function renderOrdTable(){
       if(i&&document.activeElement!==i) i.value=r.name||'';
     } else {
       tr.querySelector('.cno').dataset.no=++no;
-      [['name',r.name||''],['qty',r.qty??''],['orderCost',r.orderCost??'']].forEach(([f,v])=>{
+      [['name',r.name||''],['spec',r.spec||''],['qty',r.qty??''],['orderCost',r.orderCost??''],['note',r.note||'']].forEach(([f,v])=>{
         const inp=tr.querySelector(`[data-f=${f}]`);
         if(inp&&document.activeElement!==inp) inp.value=(f==='qty'||f==='orderCost')?fmtNum(v):v;
       });
@@ -7254,7 +7260,7 @@ function handleOrdPaste(e){
       r=ordRows[targetIdx];
       if(r.type==='section')return;
     } else {
-      r={id:++ordRowId,type:'item',name:'',qty:'',unit:'',orderCost:'',vendor:'',_orderCostManual:false};
+      r={id:++ordRowId,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false};
       ordRows.push(r);
     }
     if(isColOnly){
@@ -7267,15 +7273,18 @@ function handleOrdPaste(e){
         r[pasteCol]=line.trim();
       }
     } else {
+      // 列順：名称 仕様 数量 単位 発注単価 備考 業者（見積タブと同じ並び）
       const c=line.split('\t');
       r.name=c[0]?.trim()||'';
-      const qty=parseFloat((c[1]||'').replace(/,/g,''));
+      r.spec=c[1]?.trim()||'';
+      const qty=parseFloat((c[2]||'').replace(/,/g,''));
       r.qty=isNaN(qty)?'':qty;
-      r.unit=(isNaN(qty)||c[1]?.trim()==='')?'':(c[2]?.trim()||'');
-      const oc=parseFloat((c[3]||'').replace(/[,¥]/g,''));
+      r.unit=(isNaN(qty)||c[2]?.trim()==='')?'':(c[3]?.trim()||'');
+      const oc=parseFloat((c[4]||'').replace(/[,¥]/g,''));
       r.orderCost=isNaN(oc)?'':oc;
       setOrderCostManualFlag(r,r.orderCost);
-      if(c[4]!==undefined) r.vendor=c[4]?.trim()||'';
+      if(c[5]!==undefined) r.note=c[5]?.trim()||'';
+      if(c[6]!==undefined) r.vendor=c[6]?.trim()||'';
     }
   });
   renderOrdTable(); renderOrdLeft();
@@ -9319,7 +9328,7 @@ document.addEventListener('DOMContentLoaded',function(){
       cols:ORD_COLS,
       rows:()=>ordRows,
       undo:()=>pushOrdUndo(),
-      add:()=>{const r={id:++ordRowId,type:'item',name:'',qty:'',unit:'',orderCost:'',vendor:'',_orderCostManual:false};ordRows.push(r);return r;},
+      add:()=>{const r={id:++ordRowId,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false};ordRows.push(r);return r;},
       render:()=>{renderOrdTable();renderOrdLeft();},
       numeric:['qty','orderCost']
     },
