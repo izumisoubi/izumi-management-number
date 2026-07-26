@@ -1502,12 +1502,12 @@ function applyEstLayout(){
 
   const totalW=Math.max(640,window.innerWidth);
   const maxRW=Math.max(420,totalW-250-6);
-  let rw=Math.max(420,Math.min(maxRW,estRW));
-  // 保存済みの幅が異常（このウィンドウ幅では余白が確保できない）場合は初期値へ自動復帰する
-  if(totalW-rw-6<120){
-    rw=Math.max(420,Math.min(maxRW,Math.min(1080,Math.max(620,totalW*.55))));
-    try{localStorage.setItem('izumi_est_right_width',String(Math.round(rw)));}catch(error){}
+  // 保存済みの幅がありえない範囲（他タブとの共有バグ等による破損）の場合は初期値へ自動復帰する
+  if(!(estRW>=300&&estRW<=3000)){
+    estRW=Math.min(1080,Math.max(620,totalW*.55));
+    try{localStorage.setItem('izumi_est_right_width',String(Math.round(estRW)));}catch(error){}
   }
+  let rw=Math.max(420,Math.min(maxRW,estRW));
   estRW=rw;
   right.style.width=rw+'px';
 
@@ -1549,13 +1549,13 @@ function applyInvLayout(){
 
   const totalW=Math.max(640,window.innerWidth);
   const maxRW=Math.max(420,totalW-250-6);
-  let rw=Math.max(420,Math.min(maxRW,invRW));
-  // 保存済みの幅が異常（このウィンドウ幅では余白が確保できない）場合は初期値へ自動復帰する
-  // （旧バグ：発注タブの仕切りドラッグでこの値が誤って上書きされていたケースを含む）
-  if(totalW-rw-6<120){
-    rw=Math.max(420,Math.min(maxRW,Math.min(1080,Math.max(620,totalW*.55))));
-    try{localStorage.setItem('izumi_inv_right_width',String(Math.round(rw)));}catch(error){}
+  // 保存済みの幅がありえない範囲（旧バグ：発注タブの仕切りドラッグで誤って
+  // 上書きされていたケースを含む）の場合は初期値へ自動復帰する
+  if(!(invRW>=300&&invRW<=3000)){
+    invRW=Math.min(1080,Math.max(620,totalW*.55));
+    try{localStorage.setItem('izumi_inv_right_width',String(Math.round(invRW)));}catch(error){}
   }
+  let rw=Math.max(420,Math.min(maxRW,invRW));
   invRW=rw;
   right.style.width=rw+'px';
 
