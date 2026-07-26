@@ -7720,7 +7720,7 @@ function openOrdPreview(vendor){
       <td style="padding:2px 5px;border:1px solid #999" colspan="3"><textarea id="opShikobun" style="border:none;background:transparent;font-size:11px;width:100%;min-height:28px;font-family:inherit;resize:vertical;vertical-align:middle">${esc(ordInfo.shikobun||'')}</textarea></td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">鍵貸出・<br>返却方法</td>
+      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵貸出返却</td>
       <td style="padding:5px 8px;border:1px solid #999" colspan="3">
         <input id="opKey" style="border:none;background:transparent;font-size:11px;width:100%;font-family:inherit" placeholder="例：オートロック※1831呼、部屋らくらくロック、作業後元の位置" value="${ordInfo.keyMethod}">
       </td>
@@ -8718,7 +8718,7 @@ function printOrdPreview(){
         <td style="padding:4px 7px;border:1px solid #999" colspan="3">${esc(opShikobun)}</td>
       </tr>
       <tr>
-        <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵貸出・<br>返却方法</td>
+        <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵貸出返却</td>
         <td style="padding:4px 7px;border:1px solid #999" colspan="3">${esc(opKey)}</td>
       </tr>
       <tr>
@@ -8733,7 +8733,9 @@ function printOrdPreview(){
     const totalPages=window._opTotalPages||1;
     const currentPage=window._opCurrentPage||1;
     let rows='';
-    const MIN_ROWS=isLastPage?10:16;
+    // 行数が少ない（10行以下）場合だけ見栄えのため10行まで空行で埋める。
+    // 実データがそれ以上ある＝A4に収まるギリギリの行数の場合は無駄な空白を作らない。
+    const MIN_ROWS=pageRows.length<=10?10:pageRows.length;
     const count=Math.max(pageRows.length, MIN_ROWS);
     for(let i=0;i<count;i++){
       const r=pageRows[i];
@@ -8832,14 +8834,27 @@ function printOrdPreview(){
   }
 
   // ── ページ分割 ──
-  // 1ページ目：ヘッダー大＋15行程度、2ページ目以降：ヘッダー小＋22行程度
-  const ROWS_P1=15, ROWS_PN=22;
+  // 1ページ目（大ヘッダー＋受領確認欄＋特記事項を含む最終ページになりうる最悪ケース）と
+  // 2ページ目以降（小タイトルバーのみ）で実際にDOM計測した安全行数上限（2026/7/27実測）。
+  // 1ページに収まるならページを分けず、分ける必要がある場合も残りページに端数を押し付けず
+  // なるべく均等に配分することで、最終ページだけが不自然にスカスカになるのを防ぐ。
+  const ROWS_P1_MAX=16, ROWS_PN_MAX=32;
   const allRows=opRows; // name, qty, unit(発注単価), unitLabel(呼称) 全て含む
-  const chunks=[];
-  let rem=[...allRows];
-  while(rem.length>0){
-    const limit=chunks.length===0?ROWS_P1:ROWS_PN;
-    chunks.push(rem.splice(0,limit));
+  const totalRowsCount=allRows.length;
+  let chunks=[];
+  if(totalRowsCount<=ROWS_P1_MAX){
+    chunks=[[...allRows]];
+  } else {
+    let pageCount=1, capacity=ROWS_P1_MAX;
+    while(capacity<totalRowsCount){ pageCount++; capacity+=ROWS_PN_MAX; }
+    const caps=Array.from({length:pageCount},(_,i)=>i===0?ROWS_P1_MAX:ROWS_PN_MAX);
+    const evenShare=Math.ceil(totalRowsCount/pageCount);
+    let rem=[...allRows];
+    chunks=caps.map((cap,i)=>{
+      const isLastP=i===caps.length-1;
+      const take=isLastP?rem.length:Math.min(cap,evenShare,rem.length);
+      return rem.splice(0,take);
+    });
   }
   if(chunks.length===0)chunks.push([]);
   window._opTotalPages=chunks.length;
