@@ -832,9 +832,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:10px;color:var(--tm)">業者マスタ：</span>
           <select class="cosel" id="vendorMasterSel" style="min-width:100px" onchange="addVendorFromSel()">
-            <option value="">＋業者追加</option>
+            <option value="">業者一覧</option>
           </select>
-          <button class="ubtn" onclick="openVendorMgr()">業者管理</button>
+          <button class="ubtn" onclick="openVendorMgr()">業者追加</button>
         </div>
       </div>
 
@@ -9020,7 +9020,7 @@ window.addEventListener('load',fitOrdItemTables);
 // ===== 業者マスタ管理 =====
 function rebuildVendorSel(){
   const sel=document.getElementById('vendorMasterSel'); if(!sel) return;
-  sel.innerHTML='<option value="">＋業者追加</option>'+vendors.map(v=>`<option>${v}</option>`).join('');
+  sel.innerHTML='<option value="">業者一覧</option>'+vendors.map(v=>`<option>${v}</option>`).join('');
 }
 
 // ===== 発注データのsave/load =====
