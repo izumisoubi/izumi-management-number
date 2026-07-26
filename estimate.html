@@ -8742,13 +8742,13 @@ function printOrdPreview(){
         const amt=Math.round(q*u);
         rows+=`<tr>
           <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${startNo+i}</td>
-          <td style="border:1px solid #999;padding:2px 5px;font-size:10px">${esc(r.name||'')}</td>
-          <td style="border:1px solid #999;padding:2px 3px;font-size:10px">${esc(r.spec||'')}</td>
+          <td class="oit-nw" style="border:1px solid #999;padding:2px 5px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.name||'')}</td>
+          <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.spec||'')}</td>
           <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${q||''}</td>
           <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${esc(r.unitLabel||'')}</td>
           <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${u?fmt(u):''}</td>
           <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600">${amt?fmt(amt):''}</td>
-          <td style="border:1px solid #999;padding:2px 3px;font-size:10px">${esc(r.note||'')}</td>
+          <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.note||'')}</td>
         </tr>`;
       } else {
         rows+=`<tr style="height:18px">
@@ -8792,17 +8792,27 @@ function printOrdPreview(){
         <tr><td colspan="8" style="border:none;padding:2px 5px;text-align:right;font-size:9.5px;color:#888">次ページへ続く →</td></tr>`;
     }
     return `
-    <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px">
+    <table class="ord-item-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;margin-bottom:6px">
+      <colgroup>
+        <col style="width:4%">
+        <col style="width:16%">
+        <col style="width:22%">
+        <col style="width:6%">
+        <col style="width:6%">
+        <col style="width:11%">
+        <col style="width:11%">
+        <col style="width:24%">
+      </colgroup>
       <thead>
         <tr style="background:#f0f0f0">
-          <th style="border:1px solid #999;padding:3px;width:28px;text-align:center;font-size:9.5px">No.</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">No.</th>
           <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">名称</th>
-          <th style="border:1px solid #999;padding:3px;width:60px;text-align:center;font-size:9.5px">仕　様</th>
-          <th style="border:1px solid #999;padding:3px;width:40px;text-align:center;font-size:9.5px">数量</th>
-          <th style="border:1px solid #999;padding:3px;width:34px;text-align:center;font-size:9.5px">呼称</th>
-          <th style="border:1px solid #999;padding:3px;width:72px;text-align:center;font-size:9.5px">単価</th>
-          <th style="border:1px solid #999;padding:3px;width:72px;text-align:center;font-size:9.5px">金額</th>
-          <th style="border:1px solid #999;padding:3px;width:60px;text-align:center;font-size:9.5px">備考</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">仕　様</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">数量</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">呼称</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">単価</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">金額</th>
+          <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">備考</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -8893,6 +8903,41 @@ body{background:#e8e8e8;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Minch
   <button class="btn-close" onclick="window.close()">✕ 閉じる</button>
 </div>
 <div class="pages">${pageHtmls.join('')}</div>
+<script>
+// 名称・仕様・備考は折り返し禁止（white-space:nowrap）にしてあるため、
+// 内容が列幅を超える場合は表ごとにフォントサイズを段階的に縮小して収める。
+function fitOrdItemTables(){
+  document.querySelectorAll('table.ord-item-table').forEach(function(table){
+    var baseSize=10; // 明細テーブルの初期font-size(px)。itemTableHtml側と合わせる
+    var minSize=6.5;
+    var cells=table.querySelectorAll('td.oit-nw');
+    if(!cells.length)return;
+    var setSize=function(s){for(var i=0;i<cells.length;i++)cells[i].style.fontSize=s+'px';};
+    var size=baseSize;
+    setSize(size);
+    var guard=40;
+    while(guard-->0){
+      var overflowed=false;
+      for(var i=0;i<cells.length;i++){
+        if(cells[i].scrollWidth>cells[i].clientWidth+1){overflowed=true;break;}
+      }
+      if(!overflowed)break;
+      if(size<=minSize)break;
+      size=Math.max(minSize,size-0.4);
+      setSize(size);
+    }
+  });
+}
+window.addEventListener('load',fitOrdItemTables);
+// contenteditableで直接文字を編集した場合も再計算（連続入力中は間引く）
+(function(){
+  var t=null;
+  document.querySelector('.pages').addEventListener('input',function(){
+    clearTimeout(t);
+    t=setTimeout(fitOrdItemTables,250);
+  });
+})();
+<\/script>
 </body></html>`);
   w.document.close();
   w.focus();
