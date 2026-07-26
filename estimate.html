@@ -950,8 +950,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 
 <!-- 注文確認書プレビューモーダル -->
 <div id="ordPreviewBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto" onclick="if(event.target===this)closeOrdPreview()">
-  <div style="background:#fff;color:#111;width:100%;max-width:700px;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.4);font-family:'Hiragino Mincho ProN','Yu Mincho',serif">
-    <div id="ordPreviewContent" style="padding:32px"></div>
+  <div style="background:#fff;color:#111;width:210mm;max-width:96vw;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.4);font-family:'Hiragino Mincho ProN','Yu Mincho',serif">
+    <div id="ordPreviewContent" style="padding:12mm 14mm 10mm 14mm"></div>
     <div style="padding:14px 20px;border-top:1px solid #ddd;display:flex;gap:8px;justify-content:flex-end;background:#fafafa;border-radius:0 0 6px 6px">
       <button onclick="closeOrdPreview()" style="padding:7px 18px;border-radius:4px;border:1px solid #aaa;font-size:12px;font-weight:700;cursor:pointer;background:#fff">閉じる</button>
       <button onclick="printOrdPreview()" style="padding:7px 18px;border-radius:4px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#1A3E6E;color:#fff">🖨 印刷 / PDF</button>
@@ -8834,27 +8834,32 @@ function printOrdPreview(){
   }
 
   // ── ページ分割 ──
-  // 1ページ目（大ヘッダー＋受領確認欄＋特記事項を含む最終ページになりうる最悪ケース）と
-  // 2ページ目以降（小タイトルバーのみ）で実際にDOM計測した安全行数上限（2026/7/27実測）。
-  // 1ページに収まるならページを分けず、分ける必要がある場合も残りページに端数を押し付けず
-  // なるべく均等に配分することで、最終ページだけが不自然にスカスカになるのを防ぐ。
-  const ROWS_P1_MAX=16, ROWS_PN_MAX=32;
+  // ページ種別ごとにDOM実測した安全行数上限（2026/7/27実測、A4=297mmに対して余裕を持たせた値）。
+  // 受領確認欄・特記事項は「最終ページ」にしか出ないため、そのページが1ページ目を兼ねるか
+  // どうかでヘッダー・フッターの重さが変わり、収まる行数が大きく変わる。
+  //   ・単独1ページで完結（大ヘッダー＋受領確認欄＋特記事項）      → 実測16行が上限
+  //   ・1ページ目だが最終ページではない（大ヘッダー＋簡易フッター）→ 実測26行が上限（24を採用）
+  //   ・中間ページ（小タイトルのみ＋簡易フッター）                → 実測50行が上限（32を採用）
+  //   ・最終ページだが1ページ目ではない（小タイトル＋受領確認欄）  → 実測39行が上限（36を採用）
+  // 「1ページ目になるべく多く詰め、以降のページは残りを収める」方針（均等配分はしない）。
+  const CAP_SINGLE=16, CAP_FIRST=24, CAP_MID=32, CAP_LASTN=36;
   const allRows=opRows; // name, qty, unit(発注単価), unitLabel(呼称) 全て含む
   const totalRowsCount=allRows.length;
   let chunks=[];
-  if(totalRowsCount<=ROWS_P1_MAX){
+  if(totalRowsCount<=CAP_SINGLE){
     chunks=[[...allRows]];
   } else {
-    let pageCount=1, capacity=ROWS_P1_MAX;
-    while(capacity<totalRowsCount){ pageCount++; capacity+=ROWS_PN_MAX; }
-    const caps=Array.from({length:pageCount},(_,i)=>i===0?ROWS_P1_MAX:ROWS_PN_MAX);
-    const evenShare=Math.ceil(totalRowsCount/pageCount);
     let rem=[...allRows];
-    chunks=caps.map((cap,i)=>{
-      const isLastP=i===caps.length-1;
-      const take=isLastP?rem.length:Math.min(cap,evenShare,rem.length);
-      return rem.splice(0,take);
-    });
+    // 1ページ目：非最終ページ前提の上限まで詰めるが、必ず2ページ目以降に1行以上残す
+    // （全部乗り切れてしまうと「1ページ目だけの最終ページ」扱いになり、実は容量オーバーになるため）
+    chunks.push(rem.splice(0, Math.min(CAP_FIRST, rem.length-1)));
+    while(rem.length>0){
+      if(rem.length<=CAP_LASTN){
+        chunks.push(rem.splice(0, rem.length)); // 最終ページとして収まる分を全部乗せる
+        break;
+      }
+      chunks.push(rem.splice(0, Math.min(CAP_MID, rem.length-1))); // 中間ページも同様に1行以上残す
+    }
   }
   if(chunks.length===0)chunks.push([]);
   window._opTotalPages=chunks.length;
