@@ -1165,7 +1165,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 
 <!-- COMPLETION REPORT -->
 <div class="screen" id="sc-report">
-<div class="inv-outer">
+<div class="inv-outer" id="reportOuter">
   <div class="inv-left" id="reportLeft">
     <div class="inv-left-inner" id="reportLeftInner">
       <div class="a4 font-mincho report-a4" id="a4report">
@@ -1185,8 +1185,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
     </div>
   </div>
-  <div class="inv-divider"></div>
-  <div class="inv-right">
+  <div class="inv-divider" id="reportDiv"></div>
+  <div class="inv-right" id="reportRight">
     <div class="cost-panel">
       <div class="cost-head"><span class="cost-title">完了報告書設定</span></div>
       <div style="padding:12px 15px;display:grid;gap:9px;">
@@ -1344,7 +1344,7 @@ function init(){
   syncCompletedDate(vv('b-completed-on')?'basic':'report');
   if(savedReportCo&&companies[savedReportCo])document.getElementById('coSel3').value=savedReportCo;
   applyEstCo();syncEst();applyReportCo();setupDateActions();
-  initDivider();initInvDivider();initOrdDivider();initEnterNav();initRowDrag();initCtblMouse();
+  initDivider();initInvDivider();initOrdDivider();initReportDivider();initEnterNav();initRowDrag();initCtblMouse();
   for(let i=0;i<12;i++) rows.push(createEstimateRow('item'));
   renderAll();
   // 発注書データをlocalStorageから復元
@@ -1410,7 +1410,7 @@ function showTab(id,el){
   document.getElementById('sc-'+id).classList.add('active');
   try{localStorage.setItem('izumi_last_tab',id);}catch(e){}
   if(id==='invoice'){syncInv();syncInvShokai();setTimeout(applyInvLayout,50);}
-  if(id==='report'){syncReport();setTimeout(applyInvLayout,50);}
+  if(id==='report'){syncReport();setTimeout(applyReportLayout,50);}
   if(id==='estimate')setTimeout(applyEstLayout,50);
   if(id==='order'){setTimeout(function(){if(typeof renderOrder==='function'){renderOrder();loadOrdInfo();}},50);}
   if(id==='vendormaster'){loadVendors();renderVendorMaster();}
@@ -1430,11 +1430,13 @@ function makeDivider(divId, leftId, rightId){
   if(!div)return;
   if(div.dataset.dividerBound==='1')return;
   div.dataset.dividerBound='1';
-  // 見積・請求・発注の3種類を区別する（以前は見積以外を一律「請求」扱いしており、
+  // 見積・請求・発注・完了報告書の4種類を区別する（以前は見積以外を一律「請求」扱いしており、
   // 発注タブの仕切りを操作すると請求タブの保存幅が誤って上書きされるバグがあった）
-  const kind=divId==='estDiv'?'est':(divId==='invDiv'?'inv':'ord');
-  const storageKey=kind==='est'?'izumi_est_right_width':(kind==='inv'?'izumi_inv_right_width':'izumi_ord_right_width');
-  const getRW=()=>kind==='est'?estRW:(kind==='inv'?invRW:ordRW);
+  const kindMap={estDiv:'est',invDiv:'inv',ordDiv:'ord',reportDiv:'report'};
+  const kind=kindMap[divId]||'ord';
+  const storageKeyMap={est:'izumi_est_right_width',inv:'izumi_inv_right_width',ord:'izumi_ord_right_width',report:'izumi_report_right_width'};
+  const storageKey=storageKeyMap[kind];
+  const getRW=()=>kind==='est'?estRW:(kind==='inv'?invRW:(kind==='report'?reportRW:ordRW));
   div.title='左右にドラッグしてプレビューと入力欄の幅を変更（ダブルクリックで初期幅）';
   div.setAttribute('role','separator');
   div.setAttribute('aria-orientation','vertical');
@@ -1446,6 +1448,7 @@ function makeDivider(divId, leftId, rightId){
     const value=Math.max(420,Math.min(max,width));
     if(kind==='est'){estRW=value;applyEstLayout();}
     else if(kind==='inv'){invRW=value;applyInvLayout();}
+    else if(kind==='report'){reportRW=value;applyReportLayout();}
     else{ordRW=value;}
     return value;
   };
@@ -1487,11 +1490,12 @@ function makeDivider(divId, leftId, rightId){
 function initDivider(){makeDivider('estDiv','estLeft','estRight');}
 function initInvDivider(){makeDivider('invDiv','invLeft','invRight');}
 function initOrdDivider(){makeDivider('ordDiv','ordLeft','ordRight');}
+function initReportDivider(){makeDivider('reportDiv','reportLeft','reportRight');}
 
 function storedPanelWidth(key,fallback){
   try{const value=parseFloat(localStorage.getItem(key));return Number.isFinite(value)?value:fallback;}catch(error){return fallback;}
 }
-let estRW=storedPanelWidth('izumi_est_right_width',1000),invRW=storedPanelWidth('izumi_inv_right_width',1000),ordRW=storedPanelWidth('izumi_ord_right_width',1000);
+let estRW=storedPanelWidth('izumi_est_right_width',1000),invRW=storedPanelWidth('izumi_inv_right_width',1000),ordRW=storedPanelWidth('izumi_ord_right_width',1000),reportRW=storedPanelWidth('izumi_report_right_width',1000);
 
 function applyEstLayout(){
   const outer=document.getElementById('estOuter');
@@ -1576,6 +1580,44 @@ function applyInvLayout(){
   const totalUsed=scaledW+6+rw;
   const marginL=Math.max(0,Math.floor((totalW-totalUsed)/2));
   outer.style.paddingLeft=marginL+'px';
+}
+
+function applyReportLayout(){
+  // 完了報告書タブはinv-outer等のクラスを流用しているが、id違いのため
+  // 以前はapplyInvLayout()が誤爆し、実際には左寄せのまま何も計算されていなかった。
+  const outer=document.getElementById('reportOuter');
+  const left=document.getElementById('reportLeft');
+  const right=document.getElementById('reportRight');
+  const inner=document.getElementById('reportLeftInner');
+  if(!left||!right||!inner||!outer)return;
+
+  const totalW=Math.max(640,window.innerWidth);
+  const maxRW=Math.max(420,totalW-250-6);
+  if(!(reportRW>=300&&reportRW<=3000)){
+    reportRW=Math.min(1080,Math.max(620,totalW*.55));
+    try{localStorage.setItem('izumi_report_right_width',String(Math.round(reportRW)));}catch(error){}
+  }
+  let rw=Math.max(420,Math.min(maxRW,reportRW));
+  reportRW=rw;
+  right.style.width=rw+'px';
+
+  const a4px2=794;
+  const pad2=32;
+  const avail2=totalW-rw-6;
+
+  if(avail2<120){inner.style.visibility='hidden';left.style.width='0';return;}
+
+  const scale2=Math.min(1,(avail2-pad2)/a4px2);
+  const scaledW2=a4px2*scale2+pad2;
+  left.style.width=Math.floor(scaledW2)+'px';
+  inner.style.visibility='visible';
+  inner.style.transform=`scale(${scale2})`;
+  inner.style.transformOrigin='top left';
+  left.style.minHeight=((inner.scrollHeight||900)*scale2+32)+'px';
+
+  const totalUsed2=scaledW2+6+rw;
+  const marginL2=Math.max(0,Math.floor((totalW-totalUsed2)/2));
+  outer.style.paddingLeft=marginL2+'px';
 }
 
 
@@ -6785,7 +6827,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();printActiveTab();return;
   }
 });
-let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{syncHeights();applyEstLayout();applyInvLayout();},80);});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{syncHeights();applyEstLayout();applyInvLayout();applyReportLayout();},80);});
 // ===================================================
 // 発注書システム
 // ===================================================
