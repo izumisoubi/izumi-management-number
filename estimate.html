@@ -951,7 +951,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <!-- 注文確認書プレビューモーダル -->
 <div id="ordPreviewBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto" onclick="if(event.target===this)closeOrdPreview()">
   <div style="background:#fff;color:#111;width:210mm;max-width:96vw;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.4);font-family:'Hiragino Mincho ProN','Yu Mincho',serif">
-    <div id="ordPreviewContent" style="padding:12mm 14mm 10mm 14mm"></div>
+    <div id="ordPreviewContent" style="box-sizing:border-box;min-height:290mm;padding:12mm 14mm 10mm 14mm"></div>
     <div style="padding:14px 20px;border-top:1px solid #ddd;display:flex;gap:8px;justify-content:flex-end;background:#fafafa;border-radius:0 0 6px 6px">
       <button onclick="closeOrdPreview()" style="padding:7px 18px;border-radius:4px;border:1px solid #aaa;font-size:12px;font-weight:700;cursor:pointer;background:#fff">閉じる</button>
       <button onclick="printOrdPreview()" style="padding:7px 18px;border-radius:4px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#1A3E6E;color:#fff">🖨 印刷 / PDF</button>
@@ -7610,13 +7610,13 @@ function openOrdPreview(vendor){
   const kanri=document.getElementById('b-kanri')?vv('b-kanri'):'';
   const today=new Date();
   const weekNames=['日','月','火','水','木','金','土'];
-  const dateStr=`${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日　${weekNames[today.getDay()]}曜日`;
+  const dateStr=`${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日（${weekNames[today.getDay()]}）`;
   const ordInfo=getOrdInfo();
   const issuer=getOrderIssuerCompany();
   const fmtDate=s=>{if(!s)return'';const d=new Date(s);return`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;};
 
-  // 明細行：A4 1枚に収まる行数（14行）。実データがそれ以上なら実データ数に合わせる
-  const MIN_ROWS=14;
+  // 印刷版と同じく、10行以下の場合だけ10行まで空行で補う。
+  const MIN_ROWS=rows2.length<=10?10:rows2.length;
   let itemRowsHtml='';
   for(let i=0;i<Math.max(rows2.length,MIN_ROWS);i++){
     const r=rows2[i];
@@ -7625,21 +7625,21 @@ function openOrdPreview(vendor){
       const ordU=getOrderUnit(r);
       const ordA=Math.round(q*ordU);
       itemRowsHtml+=`<tr>
-        <td style="text-align:center;border:1px solid #999;padding:2px 4px;font-size:11px">${i+1}</td>
-        <td style="border:1px solid #999;padding:2px 6px;font-size:11px">${esc(r.name)}</td>
-        <td style="border:1px solid #999;padding:2px 4px;font-size:11px">${esc(r.spec||'')}</td>
-        <td style="text-align:right;border:1px solid #999;padding:2px 4px;font-size:11px">${r.qty||''}</td>
-        <td style="text-align:center;border:1px solid #999;padding:3px 4px;font-size:11px">${r.unit||''}</td>
-        <td style="text-align:right;border:1px solid #999;padding:3px 4px;font-size:11px">
-          <input style="width:72px;text-align:right;border:none;background:transparent;font-size:11px;font-family:inherit" value="${ordU||''}" oninput="updOrdPreviewRow(${r.id},+this.value)" id="oprow${r.id}">
+        <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${i+1}</td>
+        <td class="oit-nw" style="border:1px solid #999;padding:2px 5px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.name)}</td>
+        <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.spec||'')}</td>
+        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${r.qty||''}</td>
+        <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${r.unit||''}</td>
+        <td style="text-align:right;border:1px solid #999;padding:0 3px;font-size:10px">
+          <input style="box-sizing:border-box;width:100%;height:auto;line-height:1.2;padding:0;margin:0;text-align:right;border:none;background:transparent;font-size:10px;font-family:inherit" value="${ordU||''}" oninput="updOrdPreviewRow(${r.id},+this.value)" id="oprow${r.id}">
         </td>
-        <td style="text-align:right;border:1px solid #999;padding:2px 4px;font-size:11px" id="opamt${r.id}">${ordA?fmt(ordA):''}</td>
-        <td style="border:1px solid #999;padding:2px 4px;font-size:11px">${esc(r.note||'')}</td>
+        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600" id="opamt${r.id}">${ordA?fmt(ordA):''}</td>
+        <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.note||'')}</td>
       </tr>`;
     } else {
       itemRowsHtml+=`<tr>
-        <td style="text-align:center;border:1px solid #999;padding:2px 4px;font-size:10px;height:18px">${i+1}</td>
-        <td style="border:1px solid #999;padding:2px 4px"></td>
+        <td style="text-align:center;border:1px solid #999;padding:1px 3px;font-size:9px;height:18px;color:#ccc">${i+1}</td>
+        <td style="border:1px solid #999"></td>
         <td style="border:1px solid #999"></td>
         <td style="border:1px solid #999"></td>
         <td style="border:1px solid #999"></td>
@@ -7651,133 +7651,160 @@ function openOrdPreview(vendor){
   }
 
   document.getElementById('ordPreviewContent').innerHTML=`
-<div style="font-family:'Hiragino Mincho ProN','Yu Mincho',serif;font-size:12px;line-height:1.6;padding:4px">
+<div style="font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:10.5px;color:#000">
 
-  <!-- ヘッダー：右上に管理番号・発行日 -->
-  <div style="text-align:right;font-size:11px;margin-bottom:6px;line-height:2">
-    管理番号　${kanri?`<strong style="font-size:13px">${esc(kanri)}</strong>`:'　　　　　　'}<br>
-    発行日　　${dateStr}
+  <!-- 印刷版と同一のヘッダー -->
+  <div style="text-align:right;font-size:9.5px;margin-bottom:4px;line-height:1.8">
+    管理番号　<strong style="font-size:11px">${esc(kanri)||'　　　　　'}</strong>　　
+    発行日　　${esc(dateStr)}
   </div>
 
-  <!-- タイトル -->
-  <div style="text-align:center;font-size:24px;font-weight:700;letter-spacing:8px;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:16px">注文確認書</div>
+  <div style="text-align:center;font-size:20px;font-weight:700;letter-spacing:8px;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px">注 文 確 認 書</div>
 
-  <!-- 宛先 + 発行者（横並び） -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
     <div>
-      <div style="font-size:16px;font-weight:700;border-bottom:1px solid #333;padding-bottom:3px;margin-bottom:8px;min-width:280px">${esc(vendor)}　御中</div>
-      <div style="font-size:12px">下記の通り注文いたします。</div>
-      <div style="font-size:11px;line-height:1.55">お引き受けの際は確認の押印後返送（Email）ください。<br>※担当者との合意で工事内容に変更があった際には、<br>　必ず、その内容・金額に変更して用紙下欄にその旨記入し、<br>　再度送り直しをお願いします。</div>
+      <div style="font-size:14px;font-weight:700;border-bottom:1px solid #333;padding-bottom:2px;margin-bottom:6px;min-width:240px">${esc(vendor)}　御中</div>
+      <div style="font-size:11px">下記の通り注文いたします。</div>
+      <div style="font-size:10px;color:#555;line-height:1.45">お引き受けの際は確認の押印後返送（Email）ください。<br>※担当者との合意で工事内容に変更があった際には、<br>　必ず、その内容・金額に変更して用紙下欄にその旨記入し、<br>　再度送り直しをお願いします。</div>
     </div>
-    <div style="text-align:right;font-size:11px;line-height:2;position:relative;min-width:230px;padding-right:5px">
+    <div style="text-align:right;font-size:10px;line-height:1.9;position:relative;min-width:215px;padding-right:4px">
       <div style="font-weight:700;position:relative">${esc(issuer.name||'株式会社イズミ装美')}</div>
-      <div style="position:absolute;top:-10px;right:-7px;z-index:2;opacity:.9;pointer-events:none" id="ordStampBox">${buildOrderStampHtml(54)}</div>
+      <div style="position:absolute;top:-9px;right:-6px;z-index:2;opacity:.9;pointer-events:none" id="ordStampBox">${buildOrderStampHtml(48)}</div>
       ${esc(issuer.addr||'東京都中央区日本橋浜町2-16-5')}<br>
       ${esc(issuer.addr2||'東味ビルディング5Ｆ')}<br>
       ${esc(issuer.tel||'TEL：03-5623-5477　FAX：03-5623-5478')}<br>
-      <!-- 承認印（左：上司、右：担当者） -->
-      <div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:5px;margin-top:4px">
-        ${buildEmployeeStampPairHtml(42)}
+      <div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:5px;margin-top:3px">
+        ${buildEmployeeStampPairHtml(38)}
       </div>
     </div>
   </div>
 
-  <!-- 記 -->
-  <div style="text-align:center;font-size:14px;font-weight:700;margin:8px 0">記</div>
+  <div style="text-align:center;font-size:12px;font-weight:700;margin:6px 0 6px">記</div>
 
-  <!-- 基本情報テーブル -->
-  <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:12px">
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;font-size:10.5px">
     <tr>
-      <td style="width:90px;padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">件　　名</td>
-      <td style="padding:5px 8px;border:1px solid #999" colspan="3">${esc(property)}</td>
+      <td style="width:80px;padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">件　　名</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3">${esc(property)}</td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">施工場所</td>
-      <td style="padding:5px 8px;border:1px solid #999" colspan="3">${esc(place)}</td>
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">施工場所</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3">${esc(place)}</td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">金　　額</td>
-      <td style="padding:5px 8px;border:1px solid #999;font-weight:700"><strong id="opTotal">${fmt(total)}</strong>　円（消費税別）</td>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5;width:80px">支払条件</td>
-      <td style="padding:5px 8px;border:1px solid #999">規定の通り</td>
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">金　　額</td>
+      <td style="padding:4px 7px;border:1px solid #999;font-weight:700"><strong id="opTotal">${fmt(total)}</strong>　円（消費税別）</td>
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap;width:70px">支払条件</td>
+      <td style="padding:4px 7px;border:1px solid #999">規定の通り</td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">工　　期</td>
-      <td style="padding:5px 8px;border:1px solid #999;white-space:nowrap" colspan="3">
-        <input id="opDateFrom" style="border:none;background:transparent;font-size:11px;width:128px;font-family:inherit" value="${fmtDate(ordInfo.dateFrom)}">
-        ～
-        <input id="opDateTo" style="border:none;background:transparent;font-size:11px;width:128px;font-family:inherit" value="${fmtDate(ordInfo.dateTo)}">
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">工　　期</td>
+      <td style="padding:4px 7px;border:1px solid #999;white-space:nowrap" colspan="3">
+        <input id="opDateFrom" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:118px;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" value="${fmtDate(ordInfo.dateFrom)}">
+       　～　
+        <input id="opDateTo" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:118px;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" value="${fmtDate(ordInfo.dateTo)}">
       </td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">鍵返却期日</td>
-      <td style="padding:5px 8px;border:1px solid #999" colspan="3">
-        <input id="opKeyReturn" style="border:none;background:transparent;font-size:11px;width:120px;font-family:inherit" value="${fmtDate(ordInfo.keyReturn)}">
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵返却期日</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3">
+        <input id="opKeyReturn" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:118px;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" value="${fmtDate(ordInfo.keyReturn)}">
       </td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">施工条件</td>
-      <td style="padding:2px 5px;border:1px solid #999" colspan="3"><textarea id="opShikobun" style="border:none;background:transparent;font-size:11px;width:100%;min-height:28px;font-family:inherit;resize:vertical;vertical-align:middle">${esc(ordInfo.shikobun||'')}</textarea></td>
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">施工条件</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3"><input id="opShikobun" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:100%;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" value="${esc(ordInfo.shikobun||'')}"></td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵貸出返却</td>
-      <td style="padding:5px 8px;border:1px solid #999" colspan="3">
-        <input id="opKey" style="border:none;background:transparent;font-size:11px;width:100%;font-family:inherit" placeholder="例：オートロック※1831呼、部屋らくらくロック、作業後元の位置" value="${ordInfo.keyMethod}">
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">鍵貸出返却</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3">
+        <input id="opKey" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:100%;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" placeholder="例：オートロック※1831呼、部屋らくらくロック、作業後元の位置" value="${esc(ordInfo.keyMethod||'')}">
       </td>
     </tr>
     <tr>
-      <td style="padding:5px 8px;font-weight:700;border:1px solid #999;background:#f5f5f5">写真撮り</td>
-      <td style="padding:2px 5px;border:1px solid #999" colspan="3"><textarea id="opPhoto" style="border:none;background:transparent;font-size:9.5px;width:100%;min-height:54px;font-family:inherit;resize:vertical;vertical-align:middle">${esc(ordInfo.photo||'')}</textarea></td>
+      <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">写真撮り</td>
+      <td style="padding:4px 7px;border:1px solid #999" colspan="3"><input id="opPhoto" style="box-sizing:border-box;border:none;background:transparent;font-size:10.5px;width:100%;height:auto;line-height:1.2;padding:0;margin:0;font-family:inherit" value="${esc(ordInfo.photo||'')}"></td>
     </tr>
   </table>
 
-  <!-- 明細テーブル -->
-  <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px">
+  <table class="ord-item-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;margin-bottom:6px">
+    <colgroup>
+      <col style="width:4%">
+      <col style="width:16%">
+      <col style="width:22%">
+      <col style="width:6%">
+      <col style="width:6%">
+      <col style="width:11%">
+      <col style="width:11%">
+      <col style="width:24%">
+    </colgroup>
     <thead>
       <tr style="background:#f0f0f0">
-        <th style="border:1px solid #999;padding:4px;width:30px;text-align:center">No.</th>
-        <th style="border:1px solid #999;padding:4px;text-align:center">名称</th>
-        <th style="border:1px solid #999;padding:4px;width:70px;text-align:center">仕　様</th>
-        <th style="border:1px solid #999;padding:4px;width:45px;text-align:center">数量</th>
-        <th style="border:1px solid #999;padding:4px;width:38px;text-align:center">呼称</th>
-        <th style="border:1px solid #999;padding:4px;width:80px;text-align:center">単価</th>
-        <th style="border:1px solid #999;padding:4px;width:80px;text-align:center">金額</th>
-        <th style="border:1px solid #999;padding:4px;width:70px;text-align:center">備考</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">No.</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">名称</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">仕　様</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">数量</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">呼称</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">単価</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">金額</th>
+        <th style="border:1px solid #999;padding:3px;text-align:center;font-size:9.5px">備考</th>
       </tr>
     </thead>
     <tbody id="opItemTbl">${itemRowsHtml}</tbody>
     <tfoot>
-      <tr>
-        <td colspan="4" style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;background:#f5f5f5">合　計</td>
+      <tr style="background:#f5f5f5">
+        <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700;font-size:10.5px">小　計</td>
         <td style="border:1px solid #999"></td>
+        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px" id="opSubtotal">${fmt(total)}</td>
         <td style="border:1px solid #999"></td>
-        <td style="text-align:right;border:1px solid #999;padding:4px 6px;font-weight:700" id="opSubtotal">${fmt(total)}</td>
+      </tr>
+      <tr style="background:#f8f8f8">
+        <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-size:10.5px">消費税（10%）</td>
+        <td style="border:1px solid #999"></td>
+        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-size:10.5px" id="opTax">${fmt(tax)}</td>
+        <td style="border:1px solid #999"></td>
+      </tr>
+      <tr style="background:#efefef;border-top:2px solid #000">
+        <td colspan="5" style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;font-size:12px">合　計（税込）</td>
+        <td style="border:1px solid #999"></td>
+        <td style="text-align:right;border:1px solid #999;padding:4px 5px;font-weight:700;font-size:12px" id="opTotalInc">${fmt(total+tax)}</td>
         <td style="border:1px solid #999"></td>
       </tr>
     </tfoot>
   </table>
 
-  <div style="margin-top:8px;border:1px solid #999;padding:7px 9px;font-size:11px">
-    <div style="font-weight:700;margin-bottom:5px">受領確認欄（受領側で入力）</div>
-    <div style="display:grid;grid-template-columns:72px 1fr 72px 1fr;gap:5px 8px;align-items:center">
-      <div style="font-weight:700">会社名</div><input id="opReceiverCompany" style="border:none;border-bottom:1px solid #777;font-size:11px;font-family:inherit;padding:2px" value="${esc(vendor)}" readonly>
-      <div style="font-weight:700">担当者名</div><input id="opReceiverPerson" style="border:none;border-bottom:1px solid #777;font-size:11px;font-family:inherit;padding:2px" placeholder="担当者名を入力">
+  <div style="margin-top:7px;border:1px solid #999;padding:6px 8px;font-size:10px">
+    <div style="font-weight:700;margin-bottom:4px">受領確認欄</div>
+    <div style="display:grid;grid-template-columns:55px 1fr 55px 1fr;gap:4px 7px;align-items:center">
+      <div style="font-weight:700">会社名</div><input id="opReceiverCompany" style="box-sizing:border-box;border:none;border-bottom:1px solid #777;background:transparent;font-size:10px;font-family:inherit;height:16px;line-height:1.2;padding:0;margin:0" value="${esc(vendor)}" readonly>
+      <div style="font-weight:700">担当者名</div><input id="opReceiverPerson" style="box-sizing:border-box;border:none;border-bottom:1px solid #777;background:transparent;font-size:10px;font-family:inherit;height:16px;line-height:1.2;padding:0;margin:0" aria-label="担当者名">
     </div>
-    <label style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;cursor:pointer"><input type="checkbox" id="opReceiverConfirm"> 内容を確認しました</label>
-    <div style="font-size:9px;color:#666;margin-top:4px">入力後に「印刷 / PDF」を押すと、入力内容を反映した PDF を保存できます。</div>
+    <label style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;cursor:pointer">確認　<input type="checkbox" id="opReceiverConfirm" style="width:auto;height:auto;margin:0"> 内容を確認しました</label>
   </div>
 
-  <!-- 特記事項 -->
-  <div style="margin-top:8px">
-    <div style="font-size:11px;font-weight:700;margin-bottom:3px">特記事項</div>
-    <textarea id="opNote" style="width:100%;border:1px solid #999;padding:5px;font-size:11px;font-family:inherit;resize:vertical;min-height:36px">${ordInfo.note||""}</textarea>
-  </div>
+  ${ordInfo.note?`<div style="margin-top:6px"><div style="font-size:10px;font-weight:700;margin-bottom:2px">特記事項</div><div style="border:1px solid #999;padding:5px;font-size:10px;white-space:pre-wrap;min-height:28px">${esc(ordInfo.note)}</div></div>`:''}
 
 </div>`;
 
   window._opVendor=vendor;
   window._opRows=rows2.map(r=>({id:r.id,qty:parseFloat(r.qty)||0,unit:getOrderUnit(r),name:r.name||'',unitLabel:r.unit||'',spec:r.spec||'',note:r.note||''}));
   document.getElementById('ordPreviewBg').style.display='flex';
+  fitOrdPreviewItemTables(document.getElementById('ordPreviewContent'));
+}
+
+function fitOrdPreviewItemTables(root){
+  if(!root)return;
+  root.querySelectorAll('table.ord-item-table').forEach(table=>{
+    const cells=table.querySelectorAll('td.oit-nw');
+    if(!cells.length)return;
+    let size=10;
+    const setSize=value=>cells.forEach(cell=>{cell.style.fontSize=value+'px';});
+    setSize(size);
+    let guard=40;
+    while(guard-->0&&[...cells].some(cell=>cell.scrollWidth>cell.clientWidth+1)&&size>6.5){
+      size=Math.max(6.5,size-0.4);
+      setSize(size);
+    }
+  });
 }
 
 function updOrdPreviewRow(id,newU){
@@ -7789,6 +7816,8 @@ function updOrdPreviewRow(id,newU){
   const tax=Math.round(total*0.1);
   const t=document.getElementById('opTotal'); if(t) t.textContent=fmt(total);
   const st=document.getElementById('opSubtotal'); if(st) st.textContent=fmt(total);
+  const tx=document.getElementById('opTax'); if(tx) tx.textContent=fmt(tax);
+  const ti=document.getElementById('opTotalInc'); if(ti) ti.textContent=fmt(total+tax);
 }
 
 
