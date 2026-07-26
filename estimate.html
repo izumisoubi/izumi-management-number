@@ -2175,11 +2175,12 @@ function redoRows(){
   renderAll();showToastMsg('↪ やり直しました');
 }
 
-const ESTIMATE_LAYOUT_STORAGE_KEY='izumi_estimate_layout_v1';
 function normalizeEstimateLayout(value){return value==='portrait'?'portrait':'landscape';}
 function getEstimateLayout(){
   const select=document.getElementById('estimateLayoutSelect');
-  return normalizeEstimateLayout(select?.value||localStorage.getItem(ESTIMATE_LAYOUT_STORAGE_KEY)||'landscape');
+  // レイアウトは見積ごとに保存されるプロジェクトデータの一部であり、
+  // ブラウザ全体で記憶するものではない（横見積を常定にするため）。
+  return normalizeEstimateLayout(select?.value||'landscape');
 }
 function applyEstimateLayoutMode(value,{render=false,persist=true}={}){
   const layout=normalizeEstimateLayout(value);
@@ -2200,7 +2201,7 @@ function applyEstimateLayoutMode(value,{render=false,persist=true}={}){
     ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　売価単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）'
     :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　売価単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
   document.querySelectorAll('#ctbody tr.sec-r td[colspan]').forEach(td=>td.colSpan=detailed?15:9);
-  if(persist)localStorage.setItem(ESTIMATE_LAYOUT_STORAGE_KEY,layout);
+  // ブラウザへの保存はしない（横見積を常に既定にするため。案件ごとの保存はJSONペイロード側で行う）
   if(render){
     renderCost();renderPrint();renderTotals();syncInv();
     requestAnimationFrame(()=>{syncHeights();applyEstLayout();});
@@ -9753,7 +9754,7 @@ document.addEventListener('DOMContentLoaded',function(){
   },true);
 })();
 
-applyEstimateLayoutMode(localStorage.getItem(ESTIMATE_LAYOUT_STORAGE_KEY)||'landscape',{render:false,persist:false});
+applyEstimateLayoutMode('landscape',{render:false,persist:false});
 init();
 
 </script>
