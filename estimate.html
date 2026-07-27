@@ -5300,6 +5300,25 @@ function filterMasterList(){
 
 async function pickManagementMasterItem(index){
   const item=managementMasterItems[index];if(!item)return;
+  // すでに保存済みの案件は、台帳の抜粋で画面を上書きしない。
+  // payload全体を正本として読み直すことで、前案件の入力残りや台帳との不整合を防ぐ。
+  if(managementDb&&item.management_number){
+    try{
+      const {data,error}=await managementDb.from('estimate_projects').select('id').eq('management_number',item.management_number).is('deleted_at',null).maybeSingle();
+      if(error)throw error;
+      if(data?.id){
+        closeMasterModal();
+        await loadOnlineProjectByNumber(item.management_number);
+        // 読込後のpayloadを安全な保存RPCへ一度通し、基本情報と台帳の派生列を整合させる。
+        // 先に完全読込しているため、前案件の値を混ぜて保存することはない。
+        scheduleOnlineAutosave(250);
+        showToastMsg('☁ 保存済み案件を正本から読み込み、台帳と自動同期します：'+item.management_number);
+        return;
+      }
+    }catch(error){
+      showToastMsg('保存済み案件の確認に失敗しました。台帳の基本情報を読み込みます。');
+    }
+  }
   // Switching the master selection to a different case must not leave the
   // previously open case's estimate/order line items behind — this
   // function historically only ever updated the basic-info fields below,
@@ -5309,23 +5328,22 @@ async function pickManagementMasterItem(index){
   rows=[];rowId=0;
   for(let i=0;i<12;i++) rows.push(createEstimateRow('item'));
   ordRows=[];ordRowId=0;ensureOrdMinRows();
-  if(managementDb&&item.management_number){
-    try{
-      const {data}=await managementDb.from('estimate_projects').select('payload').eq('management_number',item.management_number).is('deleted_at',null).maybeSingle();
-      const d=data?.payload;
-      if(d?.rows){rows=normalizeEstimateRows(d.rows,{trimLegacyBlankRows:!d.v||d.v<19});rowId=d.rowId||rows.reduce((m,r)=>Math.max(m,r.id||0),0);}
-      if(d?.ordRows){ordRows=d.ordRows;ordRowId=d.ordRowId||ordRows.reduce((m,r)=>Math.max(m,r.id||0),0);}
-    }catch(_error){/* lookup failed — rows/ordRows simply stay blank for this case */}
-  }
   renderAll();
   renderOrdTable();renderOrdLeft();saveOrdRows();
+  // 新規案件では、前に開いていた案件の基本情報を絶対に引き継がない。
+  BASIC_FIELDS.forEach(id=>{const input=document.getElementById(id);if(input)input.value='';});
+  const paymentSelect=document.getElementById('b-payment-sel');if(paymentSelect)paymentSelect.value='完工金100%';
+  const paymentInput=document.getElementById('b-payment');if(paymentInput)paymentInput.value='完工金100%';
   const set=(id,value)=>{const el=document.getElementById(id);if(el&&value!==undefined&&value!==null&&value!=='')el.value=value;};
   set('b-kanri',item.management_number);set('b-uketsuke',item.reception_date);set('b-category',item.category);set('b-keijo',item.accounting_month);set('b-kanko-date',item.scheduled_completion_date);set('b-completed-on',item.completed_on);set('b-client',item.customer_name||item.client_name||item.billing_client_name);set('b-client-contact',item.customer_contact_name||item.invoice_contact_name);set('b-property',item.property_name);set('b-room',item.room_number);set('b-postal',item.postal_code||item.property_postal_code);set('b-place',item.property_address||item.work_address);set('b-summary',item.work_name);
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
   const staff=document.getElementById('b-staff');if(staff&&item.staff_name){let option=[...staff.options].find(o=>o.value===item.staff_name||o.textContent===item.staff_name);if(!option){option=new Option(item.staff_name,item.staff_name);staff.add(option);}staff.value=item.staff_name;}
-  if(item.status){const mapped=item.status==='受付'?'見積中':item.status;const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mapped);if(!option){option=new Option(mapped,mapped);status.add(option);}status.value=mapped;}}
+  const mappedStatus=item.status==='受付'?'見積中':item.status||'見積中';const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mappedStatus);if(!option){option=new Option(mappedStatus,mappedStatus);status.add(option);}status.value=mappedStatus;}
   syncKeijoSelect();syncCompletedDate('basic');
-  syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);showToastMsg('Supabase台帳から取り込みました：'+item.management_number);
+  syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);
+  // 固定操作は不要。新規案件も、選択直後に正本へ保存して台帳へ自動反映する。
+  scheduleOnlineAutosave(250);
+  showToastMsg('Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
 }
 
 // ===== Supabase 案件本体のオンライン保存・読込 =====
