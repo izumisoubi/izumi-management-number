@@ -43,6 +43,7 @@ let sortField='management_number',sortDirection='desc',dragStart=null,dragging=f
 let currentPage=1,pageSize=200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
 let loadedLedgerYear='';
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
+let quickHintTimer=null;
 const saveTimers=new Map();
 const fieldGuides={
   meeting_checked:{mode:'manual',source:'この台帳で直接チェック',note:'経営会議で確認したい行の印です。ドラッグまたはコピーで下方向へ一括入力できます。'},
@@ -117,6 +118,7 @@ function initSourceGuide(){
         <div id="guideActions" class="guide-actions"></div>
       </div>
     </aside>`);
+  document.body.insertAdjacentHTML('beforeend','<div id="quickHint" class="quick-hint" role="status" aria-live="polite"></div>');
   const guide=$('sourceGuide'),handle=$('guideHandle');
   let savedGuide={};
   try{savedGuide=JSON.parse(localStorage.getItem('ledgerSourceGuide')||'{}')}catch(_error){savedGuide={}}
@@ -146,6 +148,25 @@ function initSourceGuide(){
     const rect=guide.getBoundingClientRect();
     localStorage.setItem('ledgerSourceGuide',JSON.stringify({left:rect.left,top:rect.top,collapsed:guide.classList.contains('collapsed')}));
   });
+}
+function updateQuickHint(fieldKey,cell){
+  const hint=$('quickHint');
+  if(!hint)return;
+  const messages={
+    reminder_required:'<b>要確認</b>は、社内メモ兼・色分けです。確認が済んだらチェックを外します。',
+    invoice_amount_ex_tax:'<b>請求金額</b>は、外注請求書を見て入力する金額です（得意先への請求額ではありません）。'
+  };
+  const message=messages[fieldKey];
+  clearTimeout(quickHintTimer);
+  if(!message||!cell){hint.classList.remove('show');return;}
+  hint.innerHTML=`<span>💡</span><div>${message}</div>`;
+  const rect=cell.getBoundingClientRect();
+  const left=Math.max(10,Math.min(window.innerWidth-350,rect.right-330));
+  const top=Math.max(10,Math.min(window.innerHeight-96,rect.bottom+8));
+  hint.style.left=`${left}px`;
+  hint.style.top=`${top}px`;
+  hint.classList.add('show');
+  quickHintTimer=setTimeout(()=>hint.classList.remove('show'),6500);
 }
 function toggleSourceGuide(){
   const guide=$('sourceGuide');
@@ -184,6 +205,7 @@ function updateSourceGuide(fieldKey,cell=null){
   const field=config.fields.find(item=>item.key===fieldKey);
   if(!field)return;
   if(cell)guideTargetCell=cell;
+  updateQuickHint(fieldKey,cell);
   const linkedByDefault=!field.computed&&!['checkbox','date','month'].includes(field.type)&&!field.key.includes('notes')&&!field.key.includes('memo');
   const guide=fieldGuides[fieldKey]||{
     mode:field.computed?'calc':field.locked||linkedByDefault?'auto':'manual',
@@ -1067,6 +1089,7 @@ function bindSheetEvents(){
       markUserTouched(input);
       setEmptyState(input);
       row.classList.add('dirty');
+      if(input.dataset.field==='reminder_required')row.classList.toggle('row-reminder',input.checked);
       updateComputed(row);
       queueRowSave(row.dataset.key);
     };
@@ -1269,9 +1292,11 @@ function setCheckboxCell(cell,value){
   const wasChecked=checkbox.checked;
   checkbox.checked=value;
   markUserTouched(checkbox);
-  checkbox.closest('tr').classList.add('dirty');
+  const row=checkbox.closest('tr');
+  row.classList.add('dirty');
+  if(checkbox.dataset.field==='reminder_required')row.classList.toggle('row-reminder',Boolean(value));
   setEmptyState(checkbox);
-  queueRowSave(checkbox.closest('tr').dataset.key,120);
+  queueRowSave(row.dataset.key,120);
   // Reflect the change in the 会議チェック counter immediately — the
   // underlying row data isn't updated until the debounced save above
   // completes, so meetingCheckedCount() (which reads from viewRows)
