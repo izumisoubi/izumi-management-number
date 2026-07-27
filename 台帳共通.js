@@ -59,7 +59,7 @@ const fieldGuides={
   invoice_amount_ex_tax:{mode:'mixed',source:'見積システム ＞ 発注タブ ＞ 外注請求金額、または台帳入力',note:'見積システムから自動同期します。台帳で上書きもでき、上書きを消すと自動同期値へ戻ります。'},
   variance_ex_tax:{mode:'calc',source:'請求金額（税抜）－見積金額（税抜）'},
   scheduled_completion_date:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 完工予定日'},
-  completed_on:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 完工日',note:'見積の完工日を反映します。未入力のまま入金済みになった場合は、入金済み検知日を自動反映します。'},
+  completed_on:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 完工日',note:'見積の完工日だけを反映します。入金日から完工日を推測して上書きしません。'},
   invoice_to_customer_date:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 発行日',note:'経営会議の月次売上はこの請求書提出日の月で集計します。'},
   invoice_date:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 発行日',note:'経営会議の月次売上はこの日付の月で集計します。'},
   invoice_from_vendor_date:{mode:'manual',source:'外注先請求書の受領日をこの台帳で入力'},
@@ -67,7 +67,7 @@ const fieldGuides={
   payment_month:{mode:'manual',source:'外注先への支払月をこの台帳で選択'},
   reminder_required:{mode:'manual',source:'この台帳で「要確認」をチェック',note:'後で確認が必要な原価行です。チェックすると行全体を薄い赤で表示します。'},
   notes:{mode:'mixed',source:'見積システムの備考を自動同期。必要に応じて台帳で上書き',note:'手入力を消すと自動同期値へ戻ります。'},
-  payment_received_on:{mode:'manual',source:'客先からの入金日をこの台帳で入力'},
+  payment_received_on:{mode:'mixed',source:'銀行CSVの実取引日、またはこの台帳で入力',note:'銀行照合時は明細の取引日を自動反映します。手入力を消すと銀行の最新取引日へ戻ります。'},
   accounting_month:{mode:'mixed',source:'見積システム ＞ 基本情報 ＞ 計上月。台帳でも変更可能'},
   customer_name:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 客先名／取引先マスタ'},
   customer_contact_name:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 得意先担当者'},
@@ -85,7 +85,7 @@ const fieldGuides={
   gross_profit_ex_tax:{mode:'calc',source:'売上（請求・税抜）－原価－紹介料・手数料',note:'会議用の粗利です。見積システムから連携される売上・原価・紹介料を基に自動計算します。'},
   gross_profit_rate:{mode:'calc',source:'粗利 ÷ 売上（請求・税抜）',note:'会議用の粗利率です。売上が未入力の場合は 0.0% と表示します。'},
   received_checked:{mode:'manual',source:'入金確認後、この台帳でチェック'},
-  received_amount:{mode:'manual',source:'実際の入金額をこの台帳で入力'},
+  received_amount:{mode:'mixed',source:'銀行CSV照合額、またはこの台帳で入力',note:'手入力を優先します。手入力を空欄へ戻すと銀行照合額が自動復活します。'},
   outstanding_amount:{mode:'calc',source:'客先請求額－入金額'},
   external_cost:{mode:'auto',source:'見積システム ＞ 売上原価管理表 ＞ 原価合計（税抜）'},
   external_paid_checked:{mode:'manual',source:'外注費の支払確認後、この台帳でチェック'}
@@ -287,9 +287,20 @@ function initAdvancedControls(){
   controls.insertAdjacentHTML('beforeend',`
     <div class="status-row">
       <div id="statusMount"></div>
+      <nav id="pager" class="pager" aria-label="台帳ページ">
+        <button id="firstPage" type="button" aria-label="最初のページ">≪</button>
+        <button id="prevPage" type="button" aria-label="前のページ">‹</button>
+        <span id="pageLabel" class="page-label">1 / 1</span>
+        <button id="nextPage" type="button" aria-label="次のページ">›</button>
+        <button id="lastPage" type="button" aria-label="最後のページ">≫</button>
+      </nav>
     </div>
   `);
   $('statusMount').append(status);
+  $('firstPage').addEventListener('click',()=>setPage(1));
+  $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
+  $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
+  $('lastPage').addEventListener('click',()=>setPage(totalPages()));
   $('staffFilter').addEventListener('change',()=>applyView(true));
   $('quickFilter').addEventListener('change',()=>applyView(true));
 }
@@ -520,7 +531,9 @@ function buildUnassignedProjectRows(existingGroups){
 function buildBillingRows(){
   return projects.map(project=>{
     const invoice=numberValue(project.invoice_subtotal_ex_tax||project.sales_invoice_ex_tax||project.sales_estimate_ex_tax);
-    const paid=project.received_amount_ex_tax??'';
+    const hasManualPaid=project.received_amount_ex_tax!==null&&project.received_amount_ex_tax!==undefined&&project.received_amount_ex_tax!=='';
+    const paid=hasManualPaid?project.received_amount_ex_tax:
+      (numberValue(project.bank_received_amount_ex_tax)>0?numberValue(project.bank_received_amount_ex_tax):'');
     return {
       key:project.id,projectId:project.id,
       auto:{
@@ -677,6 +690,8 @@ async function loadData(){
   await flushDirtyRows();
   setStatus('読み込み中…');
   const needsLineItems=config.viewKey==='cost'||config.viewKey==='unordered';
+  // 通常利用は当年度だけを取得する。更新のたびに過去5年分を全件読み直すと、
+  // 案件数が増えた環境で入力中の画面まで重くなるためである。
   const selectedYear=$('yearFilter')?.value||currentFiscalCode();
   loadedLedgerYear=selectedYear;
   const projectResult=await fetchAll('management_numbers',{
@@ -945,9 +960,29 @@ function estimateOpenLink(managementNumber){
   if(!managementNumber)return '';
   return `<button type="button" class="open-estimate-link" onclick="openEstimateOnline('${esc(managementNumber)}')" title="この管理番号のオンライン見積システムを開く">見積を開く</button>`;
 }
+function sourceJumpButton(field,row){
+  const guide=fieldGuides[field.key];
+  if(!guide||!['auto','mixed'].includes(guide.mode)||field.locked||field.computed)return '';
+  const managementNumber=row?.auto?.management_number||'';
+  if(!managementNumber)return '';
+  const lineIds=(row?.lineItemIds||[]).filter(Boolean).join(',');
+  const label=`入力元を開く：${guide.source}`;
+  return `<button type="button" class="source-jump" onclick="openEstimateSource(event,'${esc(managementNumber)}','${esc(field.key)}','${esc(lineIds)}')" aria-label="${esc(label)}" title="${esc(label)}">↗</button>`;
+}
 function openEstimateOnline(managementNumber){
   const url=new URL('estimate.html',location.href);
   url.searchParams.set('management_number',managementNumber);
+  location.assign(url.href);
+}
+function openEstimateSource(event,managementNumber,fieldKey,lineIds=''){
+  event?.preventDefault();
+  event?.stopPropagation();
+  const url=new URL('estimate.html',location.href);
+  url.searchParams.set('management_number',managementNumber);
+  url.searchParams.set('jump',fieldKey);
+  if(lineIds)url.searchParams.set('line_ids',lineIds);
+  const vendor=event?.currentTarget?.closest('tr')?.querySelector('[data-field="vendor_name"]')?.value||'';
+  if(vendor)url.searchParams.set('jump_vendor',vendor);
   location.assign(url.href);
 }
 function setEmptyState(input){
@@ -958,6 +993,9 @@ function setEmptyState(input){
   const value=input.type==='checkbox'?input.checked:input.value;
   cell.classList.toggle('empty-cell',isEmptyField(field,value));
   cell.classList.toggle('warning-cell',Boolean(field.manualRequired)&&isEmptyField({...field,optional:false},value));
+}
+function markUserTouched(input){
+  if(input?.dataset)input.dataset.userTouched='true';
 }
 function updateSheetHeight(visibleRowCount=viewRows.length){
   const sheet=document.querySelector('.sheet-area');
@@ -988,7 +1026,8 @@ function renderTable(){
       const warning=field.key==='outstanding_amount'&&numberValue(merged.values[field.key])>0?' warning-cell':'';
       const badge=field.key==='management_number'?estimateUpdateBadge(merged):'';
       const onlineLink=field.key==='management_number'?estimateOpenLink(merged.values[field.key]):'';
-      return `<td data-row="${rowIndex}" data-col="${colIndex}" class="${field.width||''}${sticky}${empty}${guideClass}${manualRequired}${warning}">${inputHtml(field,merged.values[field.key])}${badge}${onlineLink}</td>`;
+      const jumpButton=sourceJumpButton(field,row);
+      return `<td data-row="${rowIndex}" data-col="${colIndex}" class="${field.width||''}${sticky}${empty}${guideClass}${manualRequired}${warning}">${inputHtml(field,merged.values[field.key])}${badge}${onlineLink}${jumpButton}</td>`;
     }).join('');
     const visualClass=rowVisualClass(merged);
     return `<tr data-key="${esc(row.key)}" data-row="${rowIndex}" class="${visualClass}">${cells}${deleteCell(row)}</tr>`;
@@ -997,6 +1036,9 @@ function renderTable(){
 }
 function deleteCell(){
   return config.allowDelete?'<td class="delete-cell"><button class="delete" onclick="deleteLedgerRow(this)">削除</button></td>':'';
+}
+function meetingCheckedCount(){
+  return viewRows.filter(row=>Boolean(mergedRow(row).values.meeting_checked)).length;
 }
 function renderSummary(){
   const definitions=config.summaries||[];
@@ -1007,14 +1049,12 @@ function renderSummary(){
     +`<div class="sum-card selection-summary"><span>選択範囲</span><b id="selectionSum">0セル　合計 ¥0</b></div>`
     +`<div class="sum-card meeting-summary"><span>会議チェック</span><b id="meetingCheckedSum">${meetingCheckedCount()}件</b></div>`;
 }
-function meetingCheckedCount(){
-  return viewRows.filter(row=>Boolean(mergedRow(row).values.meeting_checked)).length;
-}
 function bindSheetEvents(){
   document.querySelectorAll('#ledgerBody input,#ledgerBody select').forEach(input=>{
     if(input.disabled||input.readOnly)return;
     const changed=()=>{
       const row=input.closest('tr');
+      markUserTouched(input);
       setEmptyState(input);
       row.classList.add('dirty');
       updateComputed(row);
@@ -1025,6 +1065,7 @@ function bindSheetEvents(){
       editor?.addEventListener('pointerenter',()=>clearTimeout(datePickerCloseTimer));
       editor?.addEventListener('pointerleave',()=>scheduleLedgerDatePickerClose());
       input.addEventListener('input',()=>{
+        markUserTouched(input);
         setEmptyState(input);
         input.closest('tr').classList.add('dirty');
       });
@@ -1217,9 +1258,14 @@ function setCheckboxCell(cell,value){
   if(!checkbox||checkbox.disabled)return;
   const wasChecked=checkbox.checked;
   checkbox.checked=value;
+  markUserTouched(checkbox);
   checkbox.closest('tr').classList.add('dirty');
   setEmptyState(checkbox);
   queueRowSave(checkbox.closest('tr').dataset.key,120);
+  // Reflect the change in the 会議チェック counter immediately — the
+  // underlying row data isn't updated until the debounced save above
+  // completes, so meetingCheckedCount() (which reads from viewRows)
+  // would still show the stale figure for the ~120ms-1s in between.
   if(wasChecked!==value){
     const counter=$('meetingCheckedSum');
     if(counter){
@@ -1336,6 +1382,7 @@ function pasteSelection(text){
       input.classList.toggle('invalid-date',Boolean(normalizedValue.trim()&&!normalized));
       if(input.classList.contains('invalid-date'))return;
     }else input.value=normalizedValue;
+    markUserTouched(input);
     const row=input.closest('tr');
     row.classList.add('dirty');
     updateComputed(row);
@@ -1376,6 +1423,7 @@ function fillSelectionDown(){
         input.classList.toggle('invalid-date',Boolean(sourceValue&&!normalized));
         if(input.classList.contains('invalid-date'))return;
       }else input.value=sourceValue;
+      markUserTouched(input);
       const rowElement=input.closest('tr');
       rowElement.classList.add('dirty');
       updateComputed(rowElement);
@@ -1407,6 +1455,7 @@ function fillSelectionRight(){
         input.classList.toggle('invalid-date',Boolean(sourceValue&&!normalized));
         if(input.classList.contains('invalid-date'))return;
       }else input.value=sourceValue;
+      markUserTouched(input);
       const rowElement=input.closest('tr');
       rowElement.classList.add('dirty');
       updateComputed(rowElement);
@@ -1433,6 +1482,7 @@ function fillSelectionWithActive(){
       input.classList.toggle('invalid-date',Boolean(sourceValue&&!normalized));
       if(input.classList.contains('invalid-date'))return;
     }else input.value=sourceValue;
+    markUserTouched(input);
     const row=input.closest('tr');
     row.classList.add('dirty');
     updateComputed(row);
@@ -1449,6 +1499,7 @@ function clearSelectedValues(){
     if(!input||input.disabled||input.readOnly)return;
     if(input.type==='checkbox')input.checked=false;
     else input.value='';
+    markUserTouched(input);
     const row=input.closest('tr');
     row.classList.add('dirty');
     updateComputed(row);
@@ -1465,6 +1516,7 @@ function typeIntoActiveCell(key){
   if(!input||input.disabled||input.readOnly||input.tagName==='SELECT'||input.type==='checkbox'||input.dataset.type==='date')return false;
   input.focus();
   input.value=key;
+  markUserTouched(input);
   const row=input.closest('tr');
   row.classList.add('dirty');
   updateComputed(row);
@@ -1628,19 +1680,25 @@ async function syncCanonicalRow(source,row){
   };
   if(config.viewKey==='billing'){
     const invoiceAmount=numberValue(valueOf('customer_invoice_amount'));
-    const receivedAmount=numberValue(valueOf('received_amount'));
+    const receivedValue=valueOf('received_amount');
+    const receivedAmount=receivedValue===''?null:numberValue(receivedValue);
     const receivedChecked=Boolean(valueOf('received_checked'));
     const externalCost=numberValue(valueOf('external_cost'));
     const externalPaid=Boolean(valueOf('external_paid_checked'));
     const invoiceDate=valueOf('invoice_date')||null;
     const paymentReceivedOn=valueOf('payment_received_on')||null;
     const accountingMonth=valueOf('accounting_month')||null;
+    const receivedAmountTouched=row.querySelector('[data-field="received_amount"]')?.dataset.userTouched==='true';
+    const paymentStateTouched=['received_checked','payment_received_on'].some(fieldKey=>
+      row.querySelector(`[data-field="${fieldKey}"]`)?.dataset.userTouched==='true');
     const existing=projectFor(source.projectId);
     const {data,error}=await db.rpc('save_billing_ledger_row',{
       p_project_id:source.projectId,
       p_expected_revision:numberValue(existing.revision),
       p_patch:{
         invoice_amount:invoiceAmount,received_amount:receivedAmount,received_checked:receivedChecked,
+        received_amount_touched:receivedAmountTouched,
+        payment_state_touched:paymentStateTouched,
         external_cost:externalCost,external_paid:externalPaid,invoice_date:invoiceDate,
         payment_received_on:paymentReceivedOn,accounting_month:accountingMonth
       }
@@ -1648,16 +1706,20 @@ async function syncCanonicalRow(source,row){
     if(error)return error;
     const patch=data||{};
     Object.assign(existing,patch);
+    const bankAutomatic=numberValue(existing.bank_received_amount_ex_tax)>0?numberValue(existing.bank_received_amount_ex_tax):'';
+    const effectiveReceived=receivedAmountTouched
+      ?(patch.received_amount_ex_tax===null||patch.received_amount_ex_tax===undefined?bankAutomatic:numberValue(patch.received_amount_ex_tax))
+      :source.auto.received_amount;
     Object.assign(source.auto,{
       accounting_month:normalizeMonth(patch.accounting_month),
       invoice_date:patch.invoice_date||'',
-      received_amount:numberValue(patch.received_amount_ex_tax),
+      received_amount:effectiveReceived,
       received_checked:patch.customer_payment_status==='入金済',
       payment_received_on:patch.payment_received_on||'',
       completed_on:patch.completed_on||'',
       external_cost:numberValue(patch.external_cost_ex_tax),
       external_paid_checked:patch.vendor_payment_status==='支払済',
-      outstanding_amount:invoiceAmount-receivedAmount
+      outstanding_amount:invoiceAmount-numberValue(effectiveReceived)
     });
     return null;
   }
@@ -1822,6 +1884,7 @@ async function saveRow(key){
     setEmptyState(input);
   });
   row.classList.remove('dirty');
+  row.querySelectorAll('[data-user-touched]').forEach(input=>delete input.dataset.userTouched);
   renderSummary();
   setStatus(blankFill.applied.length
     ?`${source.auto.management_number||''} を保存し、見積の空欄へ ${blankFill.applied.length}項目を反映しました。`

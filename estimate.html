@@ -30,6 +30,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ubtn:hover{border-color:var(--ta);color:var(--ta);}
 .ubtn.px{background:var(--ta);border-color:var(--ta);color:#fff;}
 .ubtn.px:hover{opacity:.85;}
+.ledger-jump-highlight{animation:ledgerJumpHighlight 2.2s ease-out;}
+@keyframes ledgerJumpHighlight{0%,55%{box-shadow:inset 0 0 0 2px #f7b955;background:rgba(247,185,85,.22)}100%{box-shadow:inset 0 0 0 0 transparent;background:transparent}}
 .bar-sep{width:1px;height:20px;background:var(--tbr);}
 @media(max-width:1550px){
   .tabbar{padding:0 10px}
@@ -1362,12 +1364,54 @@ function init(){
   const requestedDraftId=requestParams.get('draft_id');
   activeScheduleId=requestedScheduleId||'';
   if(requestedManagementNumber){
-    setTimeout(()=>loadOnlineProjectByNumber(requestedManagementNumber),500);
+    setTimeout(async()=>{
+      await loadOnlineProjectByNumber(requestedManagementNumber);
+      openLedgerJump(requestParams.get('jump'),requestParams.get('line_ids'),requestParams.get('jump_vendor'));
+    },500);
   }else if(requestedDraftId){
     setTimeout(()=>loadOnlineDraftById(requestedDraftId),500);
   }else if(requestedScheduleId){
     setTimeout(()=>loadCalendarEventById(requestedScheduleId),500);
   }
+}
+
+// 台帳の ↗ から開いたときだけ、値の入力元へ案内する。
+// 管理番号の「見積を開く」は案件全体を開く従来どおりの動作に保つ。
+function openLedgerJump(fieldKey,lineIds='',vendor=''){
+  if(!fieldKey)return;
+  const targets={
+    reception_date:{tab:'basic',selector:'#b-uketsuke'}, input_date:{tab:'basic',selector:'#b-uketsuke'},
+    staff_name:{tab:'basic',selector:'#b-staff'}, property_name:{tab:'basic',selector:'#b-property'},
+    property_room:{tab:'basic',selector:'#b-room'}, work_name:{tab:'basic',selector:'#b-kojiname'},
+    scheduled_completion_date:{tab:'basic',selector:'#b-kanko-date'}, completed_on:{tab:'basic',selector:'#b-completed-on'},
+    accounting_month:{tab:'basic',selector:'#b-keijo-sel'}, customer_name:{tab:'basic',selector:'#b-client'},
+    customer_contact_name:{tab:'basic',selector:'#b-client-contact'},
+    category:{tab:'order',selector:'#ordtbody'}, vendor_name:{tab:'order',selector:'#ordtbody'},
+    estimate_amount_ex_tax:{tab:'order',selector:'#ordtbody'}, invoice_amount_ex_tax:{tab:'order',selector:'#ordtbody'},
+    sales_estimate_ex_tax:{tab:'estimate',selector:'#ctbody'}, landlord_burden_ex_tax:{tab:'estimate',selector:'#ctbody'},
+    tenant_burden_ex_tax:{tab:'estimate',selector:'#ctbody'}, invoice_to_customer_date:{tab:'invoice',selector:'#i-date-in'},
+    invoice_date:{tab:'invoice',selector:'#i-date-in'}, client_name:{tab:'invoice',selector:'#invbody'},
+    customer_invoice_amount:{tab:'invoice',selector:'#invbody'}, sales_invoice_ex_tax:{tab:'invoice',selector:'#invbody'},
+    sales_invoice_tax_in:{tab:'invoice',selector:'#invbody'}, fee_amount:{tab:'invoice',selector:'#inv_shokai_yen'},
+    external_cost:{tab:'costtable',selector:'#ctbody'}
+  };
+  const target=targets[fieldKey];
+  if(!target)return;
+  const tab=document.querySelector(`.tab[onclick*="showTab('${target.tab}'"]`);
+  if(tab)showTab(target.tab,tab);
+  setTimeout(()=>{
+    const element=document.querySelector(target.selector);
+    if(!element)return;
+    element.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'});
+    if(element.matches('input,select,textarea'))element.focus({preventScroll:true});
+    if(lineIds&&target.tab==='order'){
+      const sourceRow=vendor?ordRows.find(row=>String(row.vendor||'')===vendor):null;
+      const row=sourceRow?document.querySelector(`#ordtbody tr[data-rid="${sourceRow.id}"]`):document.querySelector('#ordtbody tr[data-rid]');
+      row?.classList.add('ledger-jump-highlight');
+      row?.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>row?.classList.remove('ledger-jump-highlight'),2200);
+    }
+  },180);
 }
 
 function openScheduleCalendar(){

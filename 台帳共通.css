@@ -501,7 +501,6 @@ tbody tr:hover td.empty-cell {
   background: var(--yellow) !important;
 }
 
-td.empty-cell.guide-auto::after,
 td.empty-cell.guide-manual::after {
   position: absolute;
   right: 4px;
@@ -517,16 +516,35 @@ td.empty-cell.guide-manual::after {
   pointer-events: none;
 }
 
-td.empty-cell.guide-auto::after {
-  content: "↗";
-  background: #e4efff;
-  color: #245da8;
-}
-
 td.empty-cell.guide-manual::after {
   content: "＋";
   background: #fff0bc;
   color: #7a5700;
+}
+
+.source-jump {
+  position: absolute;
+  right: 4px;
+  top: 3px;
+  z-index: 3;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #e4efff;
+  color: #245da8;
+  font: 900 9px/15px Arial, sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+.source-jump:hover,
+.source-jump:focus-visible {
+  background: #245da8;
+  color: #fff;
+  outline: 2px solid #9ec1f5;
+  outline-offset: 1px;
 }
 
 td.selected,
