@@ -605,7 +605,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   </div>
   <div class="ui-card" style="margin-top:14px">
     <div class="ui-h">社員マスタ・印鑑管理
-      <button class="ubtn px" style="margin-left:auto;font-size:11px" onclick="openEmpModal(-1)">＋ 社員追加</button>
+      <button id="addEmployeeButton" class="ubtn px" style="margin-left:auto;font-size:11px" onclick="openEmpModal(-1)">＋ 社員追加</button>
     </div>
     <div style="font-size:11px;color:var(--tm);margin-bottom:12px">社員の印鑑画像を登録すると、発注書の注文確認書に使用されます。</div>
     <div id="employeeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
@@ -7988,7 +7988,7 @@ var INIT_VENDORS_FULL = [
   {name:'稲垣機材株式会社',category:'設備',zip:'',addr:'',tel:'',fax:'',contact:'',note:''},
   {name:'(有)ケーアンドワイコーポレーション',category:'設備',zip:'',addr:'',tel:'',fax:'',contact:'',note:''},
 ];
-var INIT_EMPLOYEES = ['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田'];
+var INIT_EMPLOYEES = ['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田','林'];
 const EMPLOYEE_PROFILES = {
   '大島':{title:'取締役',email:'ooshima@izumisoubi.co.jp',access:'最高権限'},
   '花田':{title:'営業',email:'hanada@izumisoubi.co.jp',access:'従業員権限'},
@@ -7998,7 +7998,8 @@ const EMPLOYEE_PROFILES = {
   '田中':{title:'事務',email:'tanaka@izumisoubi.co.jp',access:'最高権限'},
   '出町':{title:'事務',email:'demachi@izumisoubi.co.jp',access:'最高権限'},
   '水口':{title:'事務',email:'mizuguchi@izumisoubi.co.jp',access:'従業員権限'},
-  '飯田':{title:'管理部長',email:'iida@izumisoubi.co.jp',access:'最高権限'}
+  '飯田':{title:'管理部長',email:'iida@izumisoubi.co.jp',access:'最高権限'},
+  '林':{title:'営業　外注',email:'',access:'従業員権限'}
 };
 const BUNDLED_EMPLOYEE_STAMPS = {
   '大島':'assets/stamps/oshima.png?v=20260720',
@@ -8009,7 +8010,8 @@ const BUNDLED_EMPLOYEE_STAMPS = {
   '古磯':'assets/stamps/koiso.png?v=20260720',
   '大塚':'assets/stamps/otsuka.png?v=20260720',
   '池野':'assets/stamps/ikeno.png?v=20260720',
-  '花田':'assets/stamps/hanada.png?v=20260720'
+  '花田':'assets/stamps/hanada.png?v=20260720',
+  '林':'assets/stamps/hayashi.png?v=20260727'
 };
 function needsBundledEmployeeStamp(stamp){
   return !stamp
@@ -8032,9 +8034,6 @@ function loadAllMasters(){
   try{ vendorDetails = JSON.parse(localStorage.getItem(LS_VENDORS2)||'null') || JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }catch(e){ vendorDetails=JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }
   try{ employeeList  = JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'null') || INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }catch(e){ employeeList=INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }
   let employeeStampsUpdated=false;
-  const employeeCountBeforeRemoval=employeeList.length;
-  employeeList=employeeList.filter(employee=>employee.name!=='林');
-  if(employeeList.length!==employeeCountBeforeRemoval)employeeStampsUpdated=true;
   Object.entries(BUNDLED_EMPLOYEE_STAMPS).forEach(([name,stamp])=>{
     const employee=employeeList.find(emp=>emp.name===name);
     if(employee){
@@ -8527,10 +8526,12 @@ function deleteProperty(i){ openPropertyModal(i); }
 // ===== 社員・印鑑マスタ =====
 function renderEmployeeGrid(){
   const wrap=document.getElementById('employeeGrid'); if(!wrap) return;
+  const addButton=document.getElementById('addEmployeeButton');
+  if(addButton)addButton.style.display=sharedMasterAdmin?'':'none';
   wrap.innerHTML=employeeList.map((emp,i)=>`
     <div style="background:var(--tc);border:1px solid var(--tbr);border-radius:10px;padding:14px;text-align:center">
       <div style="font-size:13px;font-weight:800;color:var(--tt);margin-bottom:2px">${esc(emp.name)}</div>
-      <div style="font-size:9px;color:var(--tm);margin-bottom:4px">${esc(emp.title||'')}　${esc(emp.access||'')}</div>
+      ${sharedMasterAdmin?`<div style="font-size:9px;color:var(--tm);margin-bottom:4px">${esc(emp.title||'')}　${esc(emp.access||'')}</div>`:''}
       <div style="height:18px;margin-bottom:5px">${emp.isBoss?'<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(79,142,247,.15);color:var(--ta);font-size:9px;font-weight:800">承認印</span>':''}</div>
       <div style="width:72px;height:72px;margin:0 auto 10px;border:2px solid ${emp.stamp?'var(--ta)':'var(--tbr)'};border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ti);${sharedMasterAdmin?'cursor:pointer':''}" ${sharedMasterAdmin?`onclick="uploadEmployeeStamp(${i})" title="クリックで印鑑を登録"`:'title="印鑑の変更は最高権限のみ"'}>
         ${emp.stamp?`<img src="${emp.stamp}" style="width:100%;height:100%;object-fit:contain">`:

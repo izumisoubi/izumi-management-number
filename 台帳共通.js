@@ -747,7 +747,7 @@ async function loadData(){
   projectMap=new Map(projects.map(project=>[project.id,project]));
   lineItems=lineResult.data||[];
   employees=employeeResult.data||[];
-  const staffNames=[...new Set(projects.map(project=>project.staff_name).filter(Boolean))];
+  const staffNames=[...new Set([...projects.map(project=>project.staff_name).filter(Boolean),'林'])];
   staffNames.forEach((name,index)=>{
     if(!employees.some(employee=>employee.name===name))employees.push({name,display_order:900+index});
   });
