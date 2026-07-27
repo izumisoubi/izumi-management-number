@@ -5965,6 +5965,9 @@ async function loadOnlineProjectByNumber(managementNumber){
   onlineDraftId='';
   onlineDraftRevision=null;
   await subscribeOnlineProjectUpdates(managementNumber);
+  // 既存案件でも、基本情報の派生列（完工予定日・完工日など）を台帳へ自動整合する。
+  // 日付の固定や「今すぐ保存」は不要で、正本を読み込んだ後にだけ安全な保存RPCを通す。
+  scheduleOnlineAutosave(350);
   showToastMsg('☁ クラウド案件を読み込みました：'+managementNumber);
 }
 
