@@ -94,6 +94,16 @@ const LEDGER_TO_ESTIMATE_BLANK_FIELDS=new Set([
   'reception_date','staff_name','work_name','scheduled_completion_date','completed_on',
   'accounting_month','customer_name','customer_contact_name','notes'
 ]);
+// ↗ は「編集できる実際の入力元」が一意にある列だけに表示する。
+// 台帳内だけで完結する列や、複数の経路を持つ列へは誤案内しない。
+const ESTIMATE_JUMP_FIELDS=new Set([
+  'reception_date','input_date','staff_name','property_name','property_room','work_name',
+  'scheduled_completion_date','completed_on','accounting_month','customer_name','customer_contact_name',
+  'category','vendor_name','estimate_amount_ex_tax','invoice_amount_ex_tax',
+  'sales_estimate_ex_tax','landlord_burden_ex_tax','tenant_burden_ex_tax',
+  'invoice_to_customer_date','invoice_date','client_name','customer_invoice_amount',
+  'sales_invoice_ex_tax','sales_invoice_tax_in','fee_amount','external_cost'
+]);
 function initSourceGuide(){
   if($('sourceGuide'))return;
   document.body.insertAdjacentHTML('beforeend',`
@@ -962,7 +972,7 @@ function estimateOpenLink(managementNumber){
 }
 function sourceJumpButton(field,row){
   const guide=fieldGuides[field.key];
-  if(!guide||!['auto','mixed'].includes(guide.mode)||field.locked||field.computed)return '';
+  if(!guide||!ESTIMATE_JUMP_FIELDS.has(field.key)||field.locked||field.computed)return '';
   const managementNumber=row?.auto?.management_number||'';
   if(!managementNumber)return '';
   const lineIds=(row?.lineItemIds||[]).filter(Boolean).join(',');
