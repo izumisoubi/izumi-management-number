@@ -779,7 +779,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
       <div id="csumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
-      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）</div>
+      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）</div>
       <div style="overflow-x:auto;">
         <table class="sync-tbl ctbl" id="ctbl" style="table-layout:fixed;width:1555px;min-width:1555px">
           <colgroup>
@@ -2198,6 +2198,7 @@ function hasBurdenRate(row){
 }
 function syncBurdenFromRate(row,sourceField='landlordRate'){
   if(!row||row.type==='section')return;
+  row._burdenAmountSource='';
   const source=normalizeBurdenRate(row[sourceField]);
   const otherField=sourceField==='landlordRate'?'tenantRate':'landlordRate';
   row[sourceField]=source;
@@ -2211,7 +2212,33 @@ function syncBurdenFromRate(row,sourceField='landlordRate'){
   row.landlordTaxIn=Math.round(landlordNet*1.1);
   row.tenantTaxIn=Math.round(tenantNet*1.1);
 }
+function syncBurdenFromGross(row,sourceField='landlordTaxIn'){
+  if(!row||row.type==='section')return;
+  const sourceValue=row[sourceField];
+  if(sourceValue===''||sourceValue===null||sourceValue===undefined){
+    row._burdenAmountSource='';
+    row.landlordRate='';row.tenantRate='';
+    row.landlordTaxIn='';row.tenantTaxIn='';
+    return;
+  }
+  const lineNet=rSell(row);
+  const split=window.IzumiEstimateMath.burdenSplitFromGross(
+    lineNet,
+    sourceValue,
+    sourceField==='tenantTaxIn'?'tenant':'landlord'
+  );
+  if(!split)return;
+  row._burdenAmountSource=sourceField;
+  row.landlordRate=split.landlordRate;
+  row.tenantRate=split.tenantRate;
+  row.landlordTaxIn=split.landlordGross;
+  row.tenantTaxIn=split.tenantGross;
+}
 function syncBurdenForSellChange(row){
+  if(row?._burdenAmountSource&&row[row._burdenAmountSource]!==''&&row[row._burdenAmountSource]!==undefined){
+    syncBurdenFromGross(row,row._burdenAmountSource);
+    return;
+  }
   if(!hasBurdenRate(row))return;
   syncBurdenFromRate(row,row.landlordRate!==''&&row.landlordRate!==undefined?'landlordRate':'tenantRate');
 }
@@ -2323,7 +2350,7 @@ function applyEstimateLayoutMode(value,{render=false,persist=true}={}){
   screen?.classList.toggle('estimate-layout-portrait',!detailed);
   const hint=document.getElementById('estimatePasteHint');
   if(hint)hint.innerHTML=detailed
-    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）'
+    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）'
     :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
   document.querySelectorAll('#ctbody tr.sec-r td[colspan]').forEach(td=>td.colSpan=detailed?15:9);
   // ブラウザへの保存はしない（横見積を常に既定にするため。案件ごとの保存はJSONペイロード側で行う）
@@ -6649,10 +6676,12 @@ function sfnFromPrint(id,f,v){
   r[f]=n===''?'':(isNaN(parseFloat(n))?'':parseFloat(n));
   if(f==='landlordRate')syncBurdenFromRate(r,'landlordRate');
   else if(f==='tenantRate')syncBurdenFromRate(r,'tenantRate');
+  else if(f==='landlordTaxIn')syncBurdenFromGross(r,'landlordTaxIn');
+  else if(f==='tenantTaxIn')syncBurdenFromGross(r,'tenantTaxIn');
   else if(['qty','cost','sellOverride'].includes(f))syncBurdenForSellChange(r);
   const inp=document.querySelector(`#ctbody tr[data-rid="${id}"] [data-f="${f}"]`);
   if(inp&&document.activeElement!==inp)inp.value=['landlordRate','tenantRate','landlordTaxIn','tenantTaxIn'].includes(f)?fmtNum(r[f]):(r[f]??'');
-  _recalcRow(id);
+  _recalcRow(id,!['landlordTaxIn','tenantTaxIn'].includes(f));
   renderTotals();syncInv();requestAnimationFrame(syncHeights);
 }
 
@@ -6682,6 +6711,8 @@ function sfnCalc(id,f,v,inputEl){
   }
   if(f==='landlordRate')syncBurdenFromRate(r,'landlordRate');
   else if(f==='tenantRate')syncBurdenFromRate(r,'tenantRate');
+  else if(f==='landlordTaxIn')syncBurdenFromGross(r,'landlordTaxIn');
+  else if(f==='tenantTaxIn')syncBurdenFromGross(r,'tenantTaxIn');
   else if(['qty','cost','sellOverride'].includes(f))syncBurdenForSellChange(r);
   if(f==='qty'&&isEmpty){
     r.unit='';
@@ -6691,7 +6722,7 @@ function sfnCalc(id,f,v,inputEl){
     const sel=tr&&tr.querySelector('[data-f=unit]');
     if(sel){sel.value='';}
   }
-  _recalcRow(id);
+  _recalcRow(id,!['landlordTaxIn','tenantTaxIn'].includes(f));
   renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);
 }
 
@@ -6760,10 +6791,10 @@ function syncEstimateCalculationInputs(id,row){
 }
 
 // 1行分の計算セルを即時更新
-function _recalcRow(id){
+function _recalcRow(id,recalculateBurdenAmounts=true){
   const r=rows.find(r=>r.id===id);if(!r)return;
   const ctr=syncEstimateCalculationInputs(id,r);
-  syncBurdenForSellChange(r);
+  if(recalculateBurdenAmounts)syncBurdenForSellChange(r);
   const rate=getRate();
   const costAmount=window.IzumiEstimateMath.costAmount(r.qty,r.cost);
   const su=getSellUnit(r,rate);
@@ -9855,6 +9886,14 @@ document.addEventListener('DOMContentLoaded',function(){
   function syncEstimateRowAfterEdit(tbodyId,row,changedFields=[]){
     if(tbodyId!=='ctbody'||!row||row.type==='section')return;
     const fields=new Set(changedFields);
+    if(fields.has('landlordTaxIn')){
+      syncBurdenFromGross(row,'landlordTaxIn');
+      return;
+    }
+    if(fields.has('tenantTaxIn')){
+      syncBurdenFromGross(row,'tenantTaxIn');
+      return;
+    }
     if(fields.has('landlordRate')&&row.landlordRate!==''&&row.landlordRate!==undefined){
       syncBurdenFromRate(row,'landlordRate');
       return;
