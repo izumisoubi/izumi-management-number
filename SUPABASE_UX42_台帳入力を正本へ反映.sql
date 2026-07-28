@@ -23,6 +23,7 @@ declare
   writeback_meta jsonb;
   field_key text;
   requested text;
+  editor_name text;
   applied text[]:=array[]::text[];
 begin
   if not public.is_current_app_user_enabled() then
@@ -36,6 +37,10 @@ begin
   if estimate_row.project_id is null then
     return jsonb_build_object('applied','[]'::jsonb,'revision',null);
   end if;
+  select profile.display_name into editor_name
+    from public.app_user_profiles profile
+    join auth.users account on lower(account.email::text)=profile.email
+   where account.id=auth.uid();
 
   merged_payload:=coalesce(estimate_row.payload,'{}'::jsonb);
   writeback_meta:=coalesce(merged_payload->'ledgerWriteback','{}'::jsonb);
@@ -116,7 +121,7 @@ begin
 
   foreach field_key in array applied loop
     writeback_meta:=jsonb_set(writeback_meta,array[p_view_key||'.'||field_key],
-      jsonb_build_object('at',now(),'label','台帳から修正'),true);
+      jsonb_build_object('at',now(),'label','台帳から修正','by',coalesce(editor_name,'')),true);
   end loop;
   merged_payload:=jsonb_set(merged_payload,'{ledgerWriteback}',writeback_meta,true);
 
