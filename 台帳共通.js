@@ -45,6 +45,7 @@ let loadedLedgerYear='';
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
 let quickHintTimer=null;
 const saveTimers=new Map();
+let pendingWritebackReconciliation=false;
 const fieldGuides={
   meeting_checked:{mode:'manual',source:'この台帳で直接チェック',note:'経営会議で確認したい行の印です。ドラッグまたはコピーで下方向へ一括入力できます。'},
   management_number:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 管理番号',note:'管理番号マスターから選択した番号を自動同期します。'},
@@ -757,6 +758,9 @@ async function loadData(){
   populateStaffFilter();
   allRows=buildRows();
   applyView(true);
+  // UX42適用前に保存された「台帳上書き」を一度だけ正本へ救済する。
+  // 以後は通常のsaveRowで即時に正本へ反映される。
+  reconcilePendingLedgerWritebacks();
 }
 function currentFiscalCode(){
   const today=new Date();
@@ -1830,6 +1834,42 @@ async function syncLedgerInputsToEstimate(source,manual){
     p_changes:Object.fromEntries(Object.entries(manual).map(([fieldKey,requested])=>[fieldKey,{requested}]))
   });
   return {applied:Array.isArray(data?.applied)?data.applied:[],error};
+}
+function pendingWritebackFields(manual){
+  const allowed=config.viewKey==='management'
+    ?['reception_date','input_date','staff_name','work_name','scheduled_completion_date','completed_on','accounting_month','customer_name','customer_contact_name','notes']
+    :config.viewKey==='billing'
+      ?['invoice_date','accounting_month']
+      :['invoice_amount_ex_tax','invoice_from_vendor_date','payment_date','reminder_required'];
+  return Object.fromEntries(Object.entries(manual||{}).filter(([key])=>allowed.includes(key)));
+}
+async function reconcilePendingLedgerWritebacks(){
+  if(pendingWritebackReconciliation)return;
+  const candidates=allRows.filter(source=>source.projectId&&Object.keys(pendingWritebackFields(overrides.get(source.key)||{})).length);
+  if(!candidates.length)return;
+  pendingWritebackReconciliation=true;
+  let repaired=0;
+  try{
+    for(const source of candidates){
+      const manual={...(overrides.get(source.key)||{})};
+      const pending=pendingWritebackFields(manual);
+      const result=await syncLedgerInputsToEstimate(source,pending);
+      if(result.error)continue;
+      result.applied.forEach(fieldKey=>{
+        source.auto[fieldKey]=manual[fieldKey];
+        delete manual[fieldKey];
+      });
+      if(!result.applied.length)continue;
+      const error=await persistManualOverride(source,source.key,manual);
+      if(!error)repaired+=result.applied.length;
+    }
+  }finally{
+    pendingWritebackReconciliation=false;
+  }
+  if(repaired){
+    applyView(true);
+    setStatus(`以前の台帳入力 ${repaired}項目を見積元データへ反映しました。`);
+  }
 }
 async function persistManualOverride(source,key,manual){
   const {data,error}=await db.rpc('save_project_manual_override',{
