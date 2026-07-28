@@ -123,8 +123,20 @@ begin
   update public.estimate_projects set payload=merged_payload,revision=estimate_row.revision+1,
     updated_by=auth.uid(),updated_at=now()
    where id=estimate_row.id;
-  update public.management_numbers set project_data=merged_payload,revision=project_row.revision+1,
-    synced_at=now(),synced_by=auth.uid(),updated_by=auth.uid(),updated_at=now()
+  -- project_data と台帳表示用の正本列を同じ更新で揃える。
+  -- ここを更新しないと、次回台帳を開いた時に旧値が再表示されてしまう。
+  update public.management_numbers set project_data=merged_payload,
+    reception_date=coalesce(nullif(basic->>'uketsuke','')::date,reception_date),
+    staff_name=coalesce(nullif(trim(basic->>'staff'),''),staff_name),
+    work_name=coalesce(nullif(trim(basic->>'summary'),''),work_name),
+    client_name=coalesce(nullif(trim(basic->>'client'),''),client_name),
+    customer_name=coalesce(nullif(trim(basic->>'client'),''),customer_name),
+    customer_contact_name=coalesce(nullif(trim(basic->>'clientContact'),''),customer_contact_name),
+    scheduled_completion_date=coalesce(nullif(basic->>'kanko_date','')::date,scheduled_completion_date),
+    completed_on=coalesce(nullif(basic->>'completedOn','')::date,completed_on),
+    accounting_month=coalesce(nullif(trim(basic->>'keijo'),''),accounting_month),
+    notes=coalesce(nullif(trim(basic->>'invNote'),''),notes),
+    revision=project_row.revision+1,synced_at=now(),synced_by=auth.uid(),updated_by=auth.uid(),updated_at=now()
    where id=project_row.id;
   insert into public.project_audit_log(project_id,management_number,action,source,before_data,after_data,changed_by)
   values(project_row.id,project_row.management_number,'台帳入力を見積正本へ反映',p_view_key,
