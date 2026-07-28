@@ -6,6 +6,7 @@
 <title>イズミ装美 見積/発注/原価/管理請求システム</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
+<script src="見積計算共通.js?v=20260729-UX47"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -765,7 +766,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
       <div id="csumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
-      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　売価単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）</div>
+      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）</div>
       <div style="overflow-x:auto;">
         <table class="sync-tbl ctbl" id="ctbl" style="table-layout:fixed;width:1555px;min-width:1555px">
           <colgroup>
@@ -790,7 +791,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
           </colgroup>
           <thead><tr>
             <th></th><th>No.</th><th>名　称</th><th>仕　様</th><th>数量</th><th>単位</th>
-            <th>原価単価</th><th>原価金額</th><th>備考</th><th>売価単価</th><th>売価金額</th>
+            <th>原価単価</th><th>原価金額</th><th>備考</th><th>客先単価</th><th>客先金額</th>
             <th>貸主割合<br>(％)</th><th>借主割合<br>(％)</th><th>貸主負担額</th><th>借主負担額</th><th>(貸主税抜)</th><th>(借主税抜)</th><th></th>
           </tr></thead>
           <tbody id="ctbody"></tbody>
@@ -2169,9 +2170,9 @@ function toggleEstimateRowNumber(id){
 }
 
 function getRate(){return parseFloat(document.getElementById('rateInput').value)||0;}
-function c2s(cost,rate){return rate>=100?cost:Math.round(cost/(1-rate/100));}
-function rSell(r){const q=parseFloat(r.qty);const su=getSellUnit(r,getRate());if(isNaN(q)||su==='')return null;return Math.round(q*su);}
-function rCost(r){const q=parseFloat(r.qty),c=parseFloat(r.cost);return(isNaN(q)||isNaN(c))?null:Math.round(q*c);}
+function c2s(cost,rate){return window.IzumiEstimateMath.unitFromMargin(cost,rate)??cost;}
+function rSell(r){return window.IzumiEstimateMath.customerAmount(r.qty,r.cost,getRate(),r.sellOverride,r.type);}
+function rCost(r){return window.IzumiEstimateMath.costAmount(r.qty,r.cost);}
 function totSell(){return rows.reduce((s,r)=>r.type==='section'?s:s+(rSell(r)??0),0);}
 function normalizeBurdenRate(value){
   if(value===''||value===null||value===undefined)return'';
@@ -2309,8 +2310,8 @@ function applyEstimateLayoutMode(value,{render=false,persist=true}={}){
   screen?.classList.toggle('estimate-layout-portrait',!detailed);
   const hint=document.getElementById('estimatePasteHint');
   if(hint)hint.innerHTML=detailed
-    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　売価単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）'
-    :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　売価単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
+    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合は％、反対側の割合・税込・税抜は自動計算）'
+    :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
   document.querySelectorAll('#ctbody tr.sec-r td[colspan]').forEach(td=>td.colSpan=detailed?15:9);
   // ブラウザへの保存はしない（横見積を常に既定にするため。案件ごとの保存はJSONペイロード側で行う）
   if(render){
@@ -2426,12 +2427,13 @@ function renderCost(){
         // sellOverrideが未入力の場合、placeholderに自動計算値を表示
         const c=parseFloat(r.cost);
         const autoSu=r.type==='discount'?'':(!isNaN(c)&&c>0?fmtNum(c2s(c,rate)):'');
-        soInp.placeholder=autoSu||'売価単価';
+        soInp.placeholder=autoSu||'客先単価';
       }
-      const q=parseFloat(r.qty),c2=parseFloat(r.cost);
-      const ca=isNaN(q)||isNaN(c2)?'':yen(Math.round(q*c2));
+      const costAmount=rCost(r);
+      const ca=costAmount===null?'':yen(costAmount);
       const su=getSellUnit(r,rate);
-      const sa=(isNaN(q)||su==='')?'':yen(Math.round(q*su));
+      const customerAmount=rSell(r);
+      const sa=customerAmount===null?'':yen(customerAmount);
       tr.querySelector('.cca').textContent=ca;
       tr.querySelector('.csa').textContent=sa;
       tr.querySelector('.landlord-net').textContent=r.landlordTaxIn!==''&&r.landlordTaxIn!==undefined?yen(burdenNetValue(r.landlordTaxIn)):'';
@@ -6600,13 +6602,7 @@ function sfSellOverrideCtbl(id,v){
 }
 
 function getSellUnit(r,rate){
-  if(r.sellOverride!==undefined&&r.sellOverride!==''){
-    const v=parseFloat(r.sellOverride);
-    return isNaN(v)?'':v;
-  }
-  if(r.type==='discount') return '';
-  const c=parseFloat(r.cost);
-  return isNaN(c)?'':c2s(c,rate);
+  return window.IzumiEstimateMath.customerUnit(r.cost,rate,r.sellOverride,r.type)??'';
 }
 
 function sfSellOverride(id,el){
@@ -6708,7 +6704,7 @@ function sfSellOverrideFmt(id,el){
   _fmtInput(el);
   sfSellOverrideCtbl(id,el.value);
 }
-// 原価単価・売価単価は、入力中に取引先別単価などが非同期で自動復元されると
+// 原価単価・客先単価は、入力中に取引先別単価などが非同期で自動復元されると
 // （restore処理はフォーカスが外れるまでDOM表示を更新しないため）表示が
 // 実データと食い違ったまま残ることがある。フォーカスが外れた瞬間に
 // 必ず現在のrowデータへ表示を合わせ直すための補助関数。
@@ -6725,7 +6721,7 @@ function syncEstimateFieldDisplay(id,f){
     const c=parseFloat(r.cost);
     const rate=getRate();
     const autoSu=r.type==='discount'?'':(!isNaN(c)&&c>0?fmtNum(c2s(c,rate)):'');
-    inp.placeholder=autoSu||'売価単価';
+    inp.placeholder=autoSu||'客先単価';
   }
 }
 
@@ -6734,29 +6730,44 @@ function recalcAllRows(){
   rows.forEach(r=>{if(r.type!=='section')_recalcRow(r.id);});
 }
 
+// 表示中の入力値と行データがずれた場合でも、金額欄は画面に見えている
+// 数量・原価単価を正として計算する。フィルハンドルやブラウザ補完など、
+// DOMが先に変わる入力経路に対する安全網。
+function syncEstimateCalculationInputs(id,row){
+  const tr=document.querySelector(`#ctbody tr[data-rid="${id}"]`);
+  if(!tr)return tr;
+  ['qty','cost'].forEach(field=>{
+    const input=tr.querySelector(`[data-f="${field}"]`);
+    if(!input)return;
+    const number=window.IzumiEstimateMath.numberOrNull(input.value);
+    row[field]=number===null?'':number;
+  });
+  return tr;
+}
+
 // 1行分の計算セルを即時更新
 function _recalcRow(id){
   const r=rows.find(r=>r.id===id);if(!r)return;
+  const ctr=syncEstimateCalculationInputs(id,r);
   syncBurdenForSellChange(r);
   const rate=getRate();
-  const q=parseFloat(r.qty),c=parseFloat(r.cost);
+  const costAmount=window.IzumiEstimateMath.costAmount(r.qty,r.cost);
   const su=getSellUnit(r,rate);
-  // 右パネルのtr
-  const ctr=document.querySelector(`#ctbody tr[data-rid="${id}"]`);
+  const customerAmount=window.IzumiEstimateMath.customerAmount(r.qty,r.cost,rate,r.sellOverride,r.type);
   if(ctr){
     const cca=ctr.querySelector('.cca');
-    if(cca)cca.textContent=(!isNaN(q)&&!isNaN(c))?yen(Math.round(q*c)):'';
+    if(cca)cca.textContent=costAmount===null?'':yen(costAmount);
     if(r.type!=='discount'){
       const csp=ctr.querySelector('.csp');
       if(csp)csp.textContent=su!==''?yen(su):'';
       const csa=ctr.querySelector('.csa');
-      if(csa)csa.textContent=(!isNaN(q)&&su!=='')?yen(Math.round(q*su)):'';
+      if(csa)csa.textContent=customerAmount===null?'':yen(customerAmount);
       // sellOverride inputのplaceholderも更新
       const soInp=ctr.querySelector('[data-f=sellOverride]');
       if(soInp&&document.activeElement!==soInp){
         soInp.value=r.sellOverride!==undefined&&r.sellOverride!==''?fmtNum(r.sellOverride):'';
-        const autoSu=(!isNaN(c)&&c>0)?fmtNum(c2s(c,rate)):'';
-        soInp.placeholder=autoSu||'売価単価';
+        const autoSu=window.IzumiEstimateMath.unitFromMargin(r.cost,rate);
+        soInp.placeholder=autoSu===null?'客先単価':fmtNum(autoSu);
       }
     }
     const landlordNet=ctr.querySelector('.landlord-net');
@@ -6774,7 +6785,7 @@ function _recalcRow(id){
     const priceEl=ptr.querySelector('.p-sell-price');
     if(priceEl&&document.activeElement!==priceEl)priceEl.textContent=su!==''?yen(su):'';
     const amtEl=ptr.querySelector('.p-amt');
-    if(amtEl)amtEl.textContent=(!isNaN(q)&&su!=='')?yen(Math.round(q*su)):'';
+    if(amtEl)amtEl.textContent=customerAmount===null?'':yen(customerAmount);
     const setPrint=(selector,value)=>{const el=ptr.querySelector(selector);if(el&&document.activeElement!==el)el.textContent=value;};
     setPrint('.p-landlord-rate',r.landlordRate!==''?fmtNum(r.landlordRate)+'%':'');
     setPrint('.p-tenant-rate',r.tenantRate!==''?fmtNum(r.tenantRate)+'%':'');
