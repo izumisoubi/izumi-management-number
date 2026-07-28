@@ -2,6 +2,8 @@ const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const config=window.LEDGER_CONFIG;
+const gridCore=window.IzumiGridCore;
+if(!gridCore)throw new Error('表入力共通.js を先に読み込んでください。');
 if(!config.fields.some(field=>field.key==='meeting_checked')){
   config.fields.unshift({key:'meeting_checked',label:'会議用',type:'checkbox',width:'w-meeting'});
 }
@@ -1350,9 +1352,9 @@ function updateSelectionSummary(){
   if(target)target.textContent=`${cells.length}セル　数値${numeric}件　合計 ${money(sum)}`;
 }
 function selectRectangle(start,end){
-  const minRow=Math.min(start.row,end.row),maxRow=Math.max(start.row,end.row),minCol=Math.min(start.col,end.col),maxCol=Math.max(start.col,end.col);
+  const range=gridCore.normalizeRange(start,end,{rows:pageRows().length,cols:config.fields.length});
   document.querySelectorAll('#ledgerBody td[data-col]').forEach(cell=>{
-    const selected=+cell.dataset.row>=minRow&&+cell.dataset.row<=maxRow&&+cell.dataset.col>=minCol&&+cell.dataset.col<=maxCol;
+    const selected=+cell.dataset.row>=range.r1&&+cell.dataset.row<=range.r2&&+cell.dataset.col>=range.c1&&+cell.dataset.col<=range.c2;
     cell.classList.toggle('selected',selected);
   });
   updateSelectionSummary();
@@ -1370,10 +1372,11 @@ function selectedCellsText(){
   if(!cells.length)return '';
   const rows=[...new Set(cells.map(cell=>+cell.dataset.row))];
   const cols=[...new Set(cells.map(cell=>+cell.dataset.col))];
-  return rows.map(row=>cols.map(col=>{
+  const matrix=rows.map(row=>cols.map(col=>{
     const cell=document.querySelector(`#ledgerBody td[data-row="${row}"][data-col="${col}"]`);
     return cell&&cell.classList.contains('selected')?cellPlainValue(cell):'';
-  }).join('\t')).join('\n');
+  }));
+  return gridCore.matrixToTsv(matrix);
 }
 async function copySelection(){
   const cells=selectedCells();
@@ -1399,17 +1402,14 @@ function pasteSelection(text){
   if(!first||!text)return;
   const selectedRows=[...new Set(selected.map(cell=>+cell.dataset.row))];
   const selectedCols=[...new Set(selected.map(cell=>+cell.dataset.col))];
-  const startRow=Math.min(...selectedRows),startCol=Math.min(...selectedCols);
-  const endRow=Math.max(...selectedRows),endCol=Math.max(...selectedCols);
-  const lines=text.replace(/\r/g,'').split('\n').filter((line,index,array)=>line!==''||index<array.length-1);
-  const matrix=lines.map(line=>line.split('\t'));
-  const clipRows=matrix.length;
-  const clipCols=Math.max(1,...matrix.map(row=>row.length));
-  matrix.forEach(row=>{while(row.length<clipCols)row.push('')});
-  const rangeRows=endRow-startRow+1,rangeCols=endCol-startCol+1;
-  const fillSelection=(rangeRows>1||rangeCols>1)&&rangeRows%clipRows===0&&rangeCols%clipCols===0;
-  const pasteRows=fillSelection?rangeRows:clipRows;
-  const pasteCols=fillSelection?rangeCols:clipCols;
+  const selectedRange=gridCore.normalizeRange(
+    {row:Math.min(...selectedRows),col:Math.min(...selectedCols)},
+    {row:Math.max(...selectedRows),col:Math.max(...selectedCols)},
+    {rows:pageRows().length,cols:config.fields.length}
+  );
+  const matrix=gridCore.parseTsv(text);
+  const pastePlan=gridCore.planPaste(matrix,selectedRange,config.fields.length);
+  const {startRow,startCol,rows:pasteRows,cols:pasteCols}=pastePlan;
   const touched=new Set();
   const applyValue=(cell,value)=>{
     const input=cell?.querySelector('[data-field]');
@@ -1431,7 +1431,7 @@ function pasteSelection(text){
   for(let rowOffset=0;rowOffset<pasteRows;rowOffset++){
     for(let colOffset=0;colOffset<pasteCols;colOffset++){
       const cell=document.querySelector(`#ledgerBody td[data-row="${startRow+rowOffset}"][data-col="${startCol+colOffset}"]`);
-      applyValue(cell,matrix[rowOffset%clipRows][colOffset%clipCols]);
+      applyValue(cell,pastePlan.valueAt(rowOffset,colOffset));
     }
   }
   touched.forEach(key=>queueRowSave(key,150));
@@ -1632,12 +1632,8 @@ document.addEventListener('keydown',event=>{
   const moves={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
   if(moves[event.key]){
     event.preventDefault();
-    const [rowDelta,colDelta]=moves[event.key];
     const origin=selectionFocus||activeCell;
-    const target={
-      row:Math.max(0,Math.min(pageRows().length-1,origin.row+rowDelta)),
-      col:Math.max(0,Math.min(config.fields.length-1,origin.col+colDelta))
-    };
+    const target=gridCore.movePoint(origin,event.key,{rows:pageRows().length,cols:config.fields.length});
     if(event.shiftKey){
       selectionFocus=target;
       selectRectangle(activeCell,target);
@@ -1650,11 +1646,8 @@ document.addEventListener('keydown',event=>{
   if(event.key==='Tab'){
     event.preventDefault();
     const origin=selectionFocus||activeCell;
-    const direction=event.shiftKey?-1:1;
-    let nextRow=origin.row,nextCol=origin.col+direction;
-    if(nextCol>=config.fields.length){nextCol=0;nextRow=Math.min(pageRows().length-1,nextRow+1)}
-    if(nextCol<0){nextCol=config.fields.length-1;nextRow=Math.max(0,nextRow-1)}
-    focusCell(nextRow,nextCol);
+    const target=gridCore.movePoint(origin,'Tab',{rows:pageRows().length,cols:config.fields.length},{shiftKey:event.shiftKey});
+    focusCell(target.row,target.col);
     return;
   }
   if(event.key.length===1&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&typeIntoActiveCell(event.key)){

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>イズミ装美 見積/発注/原価/管理請求システム</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="表入力共通.js?v=20260729-UX46"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -9689,6 +9690,8 @@ document.addEventListener('DOMContentLoaded',function(){
 // Excel互換クリップボード（見積・請求・発注・原価管理表）
 // ===================================================
 (function(){
+  const gridCore=window.IzumiGridCore;
+  if(!gridCore)throw new Error('表入力共通.js を先に読み込んでください。');
   const gridConfigs={
     ctbody:{
       cols:EDIT_COLS,
@@ -9785,18 +9788,9 @@ document.addEventListener('DOMContentLoaded',function(){
     return String(row[field]??'');
   }
   function copySelection(info,writeSystemClipboard=true){
-    const same=selection.tbodyId===info.tbody.id&&selection.r1>=0;
-    const r1=same?Math.min(selection.r1,selection.r2):info.row;
-    const r2=same?Math.max(selection.r1,selection.r2):info.row;
-    const c1=same?Math.min(selection.c1,selection.c2):info.col;
-    const c2=same?Math.max(selection.c1,selection.c2):info.col;
-    const lines=[];
-    for(let ri=r1;ri<=r2;ri++){
-      const values=[];
-      for(let ci=c1;ci<=c2;ci++)values.push(cellText(info,ri,ci));
-      lines.push(values.join('\t'));
-    }
-    const text=lines.join('\r\n');
+    const range=selectedRange(info);
+    const matrix=gridCore.rangeMatrix(range,(row,col)=>cellText(info,row,col));
+    const text=gridCore.matrixToTsv(matrix,'\r\n');
     let gridPayload='';
     try{gridPayload=selectionClipboardPayload(info);}catch(_error){}
     _internalClipboard={text,rows:[],gridPayload};
@@ -9816,11 +9810,9 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   function selectedRange(info){
     const same=selection.tbodyId===info.tbody.id&&selection.r1>=0;
-    const r1=same?Math.min(selection.r1,selection.r2):info.row;
-    const r2=same?Math.max(selection.r1,selection.r2):info.row;
-    const c1=same?Math.min(selection.c1,selection.c2):info.col;
-    const c2=same?Math.max(selection.c1,selection.c2):info.col;
-    return{r1,r2,c1,c2,rows:r2-r1+1,cols:c2-c1+1};
+    const start=same?{row:selection.r1,col:selection.c1}:{row:info.row,col:info.col};
+    const end=same?{row:selection.r2,col:selection.c2}:start;
+    return gridCore.normalizeRange(start,end,{rows:info.trs.length,cols:info.config.cols.length});
   }
   function hasNativeTextSelection(control){
     if(!control)return false;
@@ -9845,21 +9837,12 @@ document.addEventListener('DOMContentLoaded',function(){
     if(['qty','cost','sellOverride'].some(field=>fields.has(field)))syncBurdenForSellChange(row);
   }
   function applyPaste(info,text,gridPayload=''){
-    const lines=String(text||'').replace(/\r/g,'').split('\n');
-    while(lines.length>1&&lines[lines.length-1]==='')lines.pop();
-    if(!lines.length)return;
-    const matrix=lines.map(line=>line.split('\t'));
+    const matrix=gridCore.parseTsv(text);
     const clipRows=matrix.length;
     const clipCols=Math.max(1,...matrix.map(values=>values.length));
-    matrix.forEach(values=>{while(values.length<clipCols)values.push('');});
     const range=selectedRange(info);
-    const canFillSelection=(range.rows>1||range.cols>1)&&
-      range.rows%clipRows===0&&range.cols%clipCols===0;
-    const pasteRows=canFillSelection?range.rows:clipRows;
-    const startRow=range.r1;
-    const startCol=range.c1;
-    const requestedPasteCols=canFillSelection?range.cols:clipCols;
-    const pasteCols=Math.max(0,Math.min(requestedPasteCols,info.config.cols.length-startCol));
+    const pastePlan=gridCore.planPaste(matrix,range,info.config.cols.length);
+    const {startRow,startCol,rows:pasteRows,cols:pasteCols}=pastePlan;
     if(!pasteCols)return;
     let internalMatrix=null;
     if(gridPayload){
@@ -9902,7 +9885,7 @@ document.addEventListener('DOMContentLoaded',function(){
         const field=looksLikeLegacyEstimate?legacyEstimateFields[sourceOffset]:info.config.cols[startCol+colOffset];
         if(!field)continue;
         changedFields.push(field);
-        const value=matrix[rowOffset%clipRows][sourceOffset];
+        const value=pastePlan.valueAt(rowOffset,sourceOffset);
         if(info.config.numeric.includes(field))row[field]=normalizeNumber(value);
         else if(field==='date')row[field]=normalizeDate(value);
         else if(field==='vendor'&&value.trim()&&!vendors.includes(value.trim())){row[field]=value.trim();invalidVendors++;}
@@ -9998,8 +9981,13 @@ document.addEventListener('DOMContentLoaded',function(){
   function moveSelection(info,rowDelta,colDelta,extend){
     const originRow=extend?selection.r2:info.row;
     const originCol=extend?selection.c2:info.col;
-    const targetRow=Math.max(0,Math.min(info.trs.length-1,originRow+rowDelta));
-    const targetCol=Math.max(0,Math.min(info.config.cols.length-1,originCol+colDelta));
+    const key=rowDelta<0?'ArrowUp':rowDelta>0?'ArrowDown':colDelta<0?'ArrowLeft':'ArrowRight';
+    const targetPoint=gridCore.movePoint(
+      {row:originRow,col:originCol},
+      key,
+      {rows:info.trs.length,cols:info.config.cols.length}
+    );
+    const targetRow=targetPoint.row,targetCol=targetPoint.col;
     const target=info.trs[targetRow]?.querySelector('[data-f="'+info.config.cols[targetCol]+'"]');
     if(!target)return;
     if(extend){
