@@ -957,9 +957,10 @@ function applyLedgerDate(value){
 }
 function inputHtml(field,value){
   const display=field.type==='money'&&value!==''&&value!==null?formatNumber(value):field.type==='rate'?`${numberValue(value).toFixed(1)}%`:value??'';
-  const title=esc(display);
   const classes=`${field.type==='money'?' money':''}${field.key==='management_number'?' number':''}${shrinkClass(display)}`;
-  const attributes=`data-field="${field.key}" data-type="${field.type||'text'}" title="${title}"`;
+  // セルの内容をそのまま繰り返すブラウザ標準ツールチップは表示しない。
+  // title は日付ボタン・入力元矢印など、追加の説明が必要な操作だけに付与する。
+  const attributes=`data-field="${field.key}" data-type="${field.type||'text'}"`;
   if(field.computed)return `<input class="${classes} computed" ${attributes} value="${esc(display)}" readonly>`;
   if(field.locked&&field.key==='management_number')return `<input class="${classes} management-number-link" ${attributes} value="${esc(display)}" readonly onclick="openEstimateOnline('${esc(display)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEstimateOnline('${esc(display)}')}" aria-label="管理番号 ${esc(display)} の保存済み見積を開く">`;
   if(field.locked)return `<input class="${classes}" ${attributes} value="${esc(display)}" disabled>`;
@@ -1819,6 +1820,17 @@ async function applyLedgerBlanksToEstimate(source,manual){
   });
   return {applied:Array.isArray(data?.applied)?data.applied:[],error};
 }
+async function syncLedgerInputsToEstimate(source,manual){
+  if(!source.projectId||!Object.keys(manual).length)return {applied:[],error:null};
+  const {data,error}=await db.rpc('sync_ledger_inputs_to_estimate',{
+    p_project_id:source.projectId,
+    p_view_key:config.viewKey,
+    p_vendor_name:source.auto.vendor_name||'',
+    p_category:source.auto.category||'',
+    p_changes:Object.fromEntries(Object.entries(manual).map(([fieldKey,requested])=>[fieldKey,{requested}]))
+  });
+  return {applied:Array.isArray(data?.applied)?data.applied:[],error};
+}
 async function persistManualOverride(source,key,manual){
   const {data,error}=await db.rpc('save_project_manual_override',{
     p_view_key:config.viewKey,p_row_key:key,p_project_id:source.projectId||null,
@@ -1883,6 +1895,20 @@ async function saveRow(key){
   if(canonicalError){
     setStatus(`台帳表示は保存しましたが、正本DBへ反映できません：${canonicalError.message}`,true);
     return alert(`正本DBへ反映できません。\n${canonicalError.message}\n\nSUPABASE_UX16_統合更新.sql の最新版を確認してください。`);
+  }
+  const sourceWrite=await syncLedgerInputsToEstimate(source,manual);
+  if(sourceWrite.error){
+    const missingFunction=/sync_ledger_inputs_to_estimate|schema cache|PGRST202/i.test(sourceWrite.error.message||'');
+    setStatus(missingFunction
+      ?'台帳は保存しました。元データへの反映には「SUPABASE_UX42_台帳入力を正本へ反映.sql」の適用が必要です。'
+      :`台帳は保存しましたが、元データへの反映に失敗しました：${sourceWrite.error.message}`,true);
+  }else if(sourceWrite.applied.length){
+    sourceWrite.applied.forEach(fieldKey=>{
+      source.auto[fieldKey]=manual[fieldKey];
+      delete manual[fieldKey];
+    });
+    error=await persistManualOverride(source,key,manual);
+    if(error)return alert(`元データへ反映しましたが、台帳上書きを整理できません：${error.message}`);
   }
   if(manualChanged&&source.projectId){
     const requestedChanges={};

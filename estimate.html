@@ -32,6 +32,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ubtn.px:hover{opacity:.85;}
 .ledger-jump-highlight{animation:ledgerJumpHighlight 2.2s ease-out;}
 @keyframes ledgerJumpHighlight{0%,55%{box-shadow:inset 0 0 0 2px #f7b955;background:rgba(247,185,85,.22)}100%{box-shadow:inset 0 0 0 0 transparent;background:transparent}}
+.ledger-writeback-hint{display:inline-flex;align-items:center;margin:3px 0 0 6px;padding:2px 6px;border:1px solid #f1b15a;border-radius:999px;background:#fff3df;color:#a95700;font:700 10px/1.2 'Helvetica Neue','Hiragino Sans',sans-serif;vertical-align:middle;white-space:nowrap;}
+.ledger-writeback-order-note{display:inline-flex;margin-left:7px;padding:2px 6px;border:1px solid #f1b15a;border-radius:999px;background:#fff3df;color:#a95700;font:700 10px/1.2 'Helvetica Neue','Hiragino Sans',sans-serif;white-space:nowrap;}
 .bar-sep{width:1px;height:20px;background:var(--tbr);}
 @media(max-width:1550px){
   .tabbar{padding:0 10px}
@@ -1290,6 +1292,7 @@ function duplicateProject(){
   ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const status=document.getElementById('b-status');if(status)status.value='見積中';
   activeScheduleId='';
+  ledgerWritebackMeta={};
   onlineProjectRevision=null;
   onlineDraftId='';
   onlineDraftRevision=null;
@@ -5328,6 +5331,7 @@ async function pickManagementMasterItem(index){
   rows=[];rowId=0;
   for(let i=0;i<12;i++) rows.push(createEstimateRow('item'));
   ordRows=[];ordRowId=0;ensureOrdMinRows();
+  ledgerWritebackMeta={};
   renderAll();
   renderOrdTable();renderOrdLeft();saveOrdRows();
   // 新規案件では、前に開いていた案件の基本情報を絶対に引き継がない。
@@ -5360,6 +5364,56 @@ let onlineProjectRealtimeManagementNumber='';
 let onlineProjectId=null;
 let onlineProjectIdManagementNumber='';
 let onlinePurchaseOrderSignature='';
+// 台帳からの簡易入力が正本へ反映された印。通常の元データ編集時には消す。
+let ledgerWritebackMeta={};
+
+const LEDGER_WRITEBACK_TARGETS={
+  'management.reception_date':'#b-uketsuke','management.input_date':'#b-uketsuke',
+  'management.staff_name':'#b-staff','management.work_name':'#b-summary',
+  'management.scheduled_completion_date':'#b-kanko-date','management.completed_on':'#b-completed-on',
+  'management.accounting_month':'#b-keijo-sel','management.customer_name':'#b-client',
+  'management.customer_contact_name':'#b-client-contact','management.notes':'#b-inv-note',
+  'billing.invoice_date':'#i-date-in','billing.accounting_month':'#b-keijo-sel'
+};
+const LEDGER_WRITEBACK_INPUT_KEYS={
+  'b-uketsuke':['management.reception_date','management.input_date'],
+  'b-staff':['management.staff_name'],'b-summary':['management.work_name'],
+  'b-kanko-date':['management.scheduled_completion_date'],'b-completed-on':['management.completed_on'],
+  'b-keijo':['management.accounting_month','billing.accounting_month'],
+  'b-keijo-sel':['management.accounting_month','billing.accounting_month'],
+  'b-client':['management.customer_name'],'b-client-contact':['management.customer_contact_name'],
+  'b-inv-note':['management.notes'],'i-date-in':['billing.invoice_date']
+};
+function ledgerWritebackDate(meta){
+  const raw=String(meta?.at||'');
+  const date=raw?new Date(raw):null;
+  if(!date||Number.isNaN(date.getTime()))return '';
+  return `${date.getMonth()+1}/${date.getDate()}`;
+}
+function renderLedgerWritebackHints(){
+  document.querySelectorAll('.ledger-writeback-hint,.ledger-writeback-order-note').forEach(el=>el.remove());
+  Object.entries(LEDGER_WRITEBACK_TARGETS).forEach(([key,selector])=>{
+    const meta=ledgerWritebackMeta[key];const target=document.querySelector(selector);
+    if(!meta||!target)return;
+    const hint=document.createElement('span');hint.className='ledger-writeback-hint';
+    const date=ledgerWritebackDate(meta);hint.textContent=`台帳から修正${date?` ${date}`:''}`;
+    hint.title=`台帳で入力し、見積システムの元データへ反映しました${date?`（${date}）`:''}`;
+    target.insertAdjacentElement('afterend',hint);
+  });
+  const hasCostWriteback=Object.keys(ledgerWritebackMeta).some(key=>key.startsWith('cost.')||key.startsWith('unordered.'));
+  const orderTitle=document.querySelector('#sc-order .ui-h');
+  if(hasCostWriteback&&orderTitle){
+    const hint=document.createElement('span');hint.className='ledger-writeback-order-note';
+    hint.textContent='台帳から修正済（外注請求・支払情報）';hint.title='原価台帳で入力した外注請求・支払情報を、この発注明細へ反映しています。';
+    orderTitle.append(hint);
+  }
+}
+function clearLedgerWritebackHintForInput(input){
+  const keys=LEDGER_WRITEBACK_INPUT_KEYS[input?.id];
+  if(!keys)return;
+  let changed=false;keys.forEach(key=>{if(Object.hasOwn(ledgerWritebackMeta,key)){delete ledgerWritebackMeta[key];changed=true;}});
+  if(changed)renderLedgerWritebackHints();
+}
 
 const LEDGER_BLANK_BASIC_FIELDS=[
   ['uketsuke','b-uketsuke'],
@@ -5412,11 +5466,36 @@ async function subscribeOnlineProjectUpdates(managementNumber){
     },event=>{
       const revision=Number(event.new?.revision??0);
       if(revision<=Number(onlineProjectRevision??0))return;
-      const applied=mergeLatestBlankBasicFields(event.new?.payload);
+      const applied=applyLedgerWritebackFromLatest(event.new?.payload)||mergeLatestBlankBasicFields(event.new?.payload);
       onlineProjectRevision=revision;
       if(applied.length)setOnlineSaveStatus(`台帳から${applied.length}項目を反映`,'saved');
     })
     .subscribe();
+}
+
+function applyLedgerWritebackFromLatest(payload){
+  const meta=payload?.ledgerWriteback;
+  if(!meta||typeof meta!=='object'||Array.isArray(meta))return [];
+  ledgerWritebackMeta=meta;
+  const basic=payload?.basic||{},invoice=payload?.invOv||{};
+  const sources={
+    'management.reception_date':()=>setBasicValue('b-uketsuke',basic.uketsuke),
+    'management.input_date':()=>setBasicValue('b-uketsuke',basic.uketsuke),
+    'management.staff_name':()=>setBasicValue('b-staff',basic.staff),
+    'management.work_name':()=>setBasicValue('b-summary',basic.summary),
+    'management.scheduled_completion_date':()=>setBasicValue('b-kanko-date',basic.kanko_date),
+    'management.completed_on':()=>setBasicValue('b-completed-on',basic.completedOn),
+    'management.accounting_month':()=>setBasicValue('b-keijo',basic.keijo),
+    'management.customer_name':()=>setBasicValue('b-client',basic.client),
+    'management.customer_contact_name':()=>setBasicValue('b-client-contact',basic.clientContact),
+    'management.notes':()=>setBasicValue('b-inv-note',basic.invNote),
+    'billing.invoice_date':()=>setBasicValue('i-date-in',invoice.date),
+    'billing.accounting_month':()=>setBasicValue('b-keijo',basic.keijo)
+  };
+  const applied=[];
+  Object.keys(meta).forEach(key=>{if(sources[key]){sources[key]();applied.push(key);}});
+  if(applied.length){syncKeijoSelect();syncCompletedDate('basic');syncEst();syncInv();renderLedgerWritebackHints();}
+  return applied;
 }
 
 function setOnlineSaveStatus(text,state='idle'){
@@ -5475,9 +5554,11 @@ function cancelOnlineAutosave(){
 }
 
 document.addEventListener('input',event=>{
+  clearLedgerWritebackHintForInput(event.target);
   if(projectEditorControl(event.target))scheduleOnlineAutosave();
 },true);
 document.addEventListener('change',event=>{
+  clearLedgerWritebackHintForInput(event.target);
   if(projectEditorControl(event.target))scheduleOnlineAutosave(250);
 },true);
 document.addEventListener('paste',event=>{
@@ -6676,7 +6757,7 @@ function uopts(cur){
 function buildSaveData(){
   const invoiceDate=vv('i-date-in');
   const invoiceExTax=invoiceDate?onlineInvoiceExTax():0;
-  return {v:19,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
+  return {v:19,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',ledgerWriteback:ledgerWritebackMeta,co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
     rate:document.getElementById('rateInput').value,
     estMemo:document.getElementById('estMemo')?.value||'',
     invMemo:document.getElementById('invMemo')?.value||'',
@@ -6798,6 +6879,7 @@ function loadAll(input){
 function loadAllFromText(text){
   try{
       const d=JSON.parse(text);
+      ledgerWritebackMeta=(d.ledgerWriteback&&typeof d.ledgerWriteback==='object'&&!Array.isArray(d.ledgerWriteback))?d.ledgerWriteback:{};
       applyEstimateLayoutMode(d.estimateLayout||'landscape',{render:false,persist:true});
       activeScheduleId=d.calendarEventId||'';
       onlineDraftId=d.draftId||onlineDraftId||'';
@@ -6859,7 +6941,7 @@ function loadAllFromText(text){
       rebuildSels();renderCoGrid();
       if(d.co&&companies[d.co])document.getElementById('coSel').value=d.co;
       if(d.invCo&&companies[d.invCo])document.getElementById('coSel2').value=d.invCo;
-      applyEstCo();applyInvCo();syncEst();renderMemo();renderInvMemo();
+      applyEstCo();applyInvCo();syncEst();renderMemo();renderInvMemo();renderLedgerWritebackHints();
       showToastMsg('✅ 読み込み完了');
     }catch(err){alert('読み込み失敗: '+err.message);}
 }
