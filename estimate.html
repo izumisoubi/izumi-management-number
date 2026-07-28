@@ -203,6 +203,19 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .cs.profit .cv{color:var(--tg);font-size:28px;letter-spacing:-1px;}
 .pbar{height:5px;background:rgba(128,128,128,.15);border-radius:3px;margin-top:6px;overflow:hidden;}
 .pfill{height:100%;background:linear-gradient(90deg,var(--tg),var(--ta));border-radius:3px;transition:width .35s;}
+.estimate-cost-panel .cost-head{padding:7px 14px;}
+.estimate-cost-panel .estimate-layout-picker{padding:6px 14px;}
+.estimate-cost-panel .estimate-layout-button{padding:5px 12px;}
+.estimate-cost-panel .csum{padding:8px 16px;}
+.estimate-cost-panel .cs{padding:2px 0;}
+.estimate-cost-panel .cs .cv{font-size:16px;}
+.estimate-cost-panel .cs.profit .cv{font-size:25px;}
+.estimate-cost-panel .pbar{margin-top:4px;}
+.estimate-cost-panel .estimate-referral-panel{padding:7px 16px 8px!important;}
+.estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
+.estimate-cost-panel #csumFinal{padding:6px 16px 8px!important;}
+.estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
+.self-cost-note{grid-column:1/-1;margin-top:2px;padding-top:4px;border-top:1px dashed rgba(100,120,160,.35);color:var(--tm);font-size:9.5px;line-height:1.4;}
 /* A4 doc */
 .doc-title{text-align:center;font-size:20px;letter-spacing:10px;font-weight:700;padding-bottom:8px;border-bottom:2px solid #000;margin-bottom:11px;}
 .top-row{display:flex;justify-content:space-between;align-items:stretch;gap:12px;margin-bottom:10px;}
@@ -717,14 +730,14 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   </div><!-- /est-left -->
   <div class="est-divider" id="estDiv"></div>
   <div class="est-right" id="estRight">
-    <div class="cost-panel">
+    <div class="cost-panel estimate-cost-panel">
       <div class="cost-head">
         <span class="cost-title">原価入力（社内用・印刷されません）</span>
         <div class="rate-row">
           <label>利益率</label>
           <input type="number" class="rate-num" id="rateInput" value="25" min="0" max="99" oninput="recalc()">
           <span style="color:var(--tg);font-weight:700">%</span>
-          <span style="font-size:10px;color:var(--tm)">利益率＝(売価－原価)÷売価　売価＝原価÷(1－利益率)</span>
+          <span style="font-size:10px;color:var(--tm)">利益率＝(客先単価－原価単価)÷客先単価　客先単価＝原価単価÷(1－利益率)</span>
         </div>
       </div>
       <div class="estimate-layout-picker">
@@ -741,10 +754,10 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
       <div class="csum" id="csum"></div>
       <!-- 紹介料：静的HTML -->
-      <div id="shokaiPanelStatic" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
+      <div id="shokaiPanelStatic" class="estimate-referral-panel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
           <div>
-            <div style="color:var(--tm);font-size:10px;font-weight:700;margin-bottom:4px">紹介料1</div>
+            <div class="estimate-referral-label" style="color:var(--tm);font-size:10px;font-weight:700;margin-bottom:4px">紹介料1</div>
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
               <input type="text" inputmode="decimal" id="shokai_yen" placeholder="税抜金額" min="0" style="width:90px;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:12px;text-align:right;" oninput="updateShokai1()" onblur="var _v=this.value.replace(/,/g,'');var _n=parseFloat(_v);if(!isNaN(_n)&&_v!=='')this.value=_n.toLocaleString('ja-JP');" onfocus="this.value=this.value.replace(/,/g,'');">
               <input type="number" id="shokai_pct_in" placeholder="%" min="0" style="width:40px;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:12px;text-align:right;" oninput="updateShokaiFromPct('shokai_pct_in','shokai_yen','shokai_yen_inc','shokai_pct_inc_in')">
@@ -754,7 +767,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
             </div>
           </div>
           <div>
-            <div style="color:var(--tm);font-size:10px;font-weight:700;margin-bottom:4px">紹介料2</div>
+            <div class="estimate-referral-label" style="color:var(--tm);font-size:10px;font-weight:700;margin-bottom:4px">紹介料2</div>
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
               <input type="text" inputmode="decimal" id="shokai_yen2" placeholder="税抜金額" min="0" style="width:90px;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:12px;text-align:right;" oninput="updateShokai2()" onblur="var _v=this.value.replace(/,/g,'');var _n=parseFloat(_v);if(!isNaN(_n)&&_v!=='')this.value=_n.toLocaleString('ja-JP');" onfocus="this.value=this.value.replace(/,/g,'');">
               <input type="number" id="shokai_pct2_in" placeholder="%" min="0" style="width:40px;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:12px;text-align:right;" oninput="updateShokaiFromPct('shokai_pct2_in','shokai_yen2','shokai_yen2_inc','shokai_pct2_inc_in')">
@@ -2804,6 +2817,7 @@ function renderTotals(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:6px;padding-top:6px;border-top:1px solid var(--tbr);">
       <div class="cs"><span style="color:var(--tm)">自社人工（税抜）</span><span class="cv">${yen(estimateSelfLabor)}</span></div>
       <div class="cs"><span style="color:var(--tm)">自社資材（税抜）</span><span class="cv">${yen(estimateSelfMaterials)}</span></div>
+      <div class="self-cost-note">※自社人工・自社資材は原価・粗利益の計算に含まれます。見積書には明細表示されません。</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:8px;padding-top:8px;border-top:2px solid var(--tbr);">
       <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税抜粗利益</span><span class="cv">${yen(profit)}&ensp;<span style="font-size:12px">(${pRate}%)</span></span></div>
