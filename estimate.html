@@ -5364,6 +5364,7 @@ let onlineProjectRealtimeManagementNumber='';
 let onlineProjectId=null;
 let onlineProjectIdManagementNumber='';
 let onlinePurchaseOrderSignature='';
+let onlineLedgerRefreshInFlight=false;
 // 台帳からの簡易入力が正本へ反映された印。通常の元データ編集時には消す。
 let ledgerWritebackMeta={};
 
@@ -5472,6 +5473,30 @@ async function subscribeOnlineProjectUpdates(managementNumber){
     })
     .subscribe();
 }
+
+// 別タブの台帳で入力した内容はRealtimeで即時に届くが、PCの復帰や長時間
+// 開きっぱなしの画面では通知を取り逃すことがある。画面へ戻った時だけ、
+// 未保存入力を上書きしない条件で台帳由来の項目を再確認する。
+async function refreshLedgerWritebackFromCloud(){
+  if(onlineLedgerRefreshInFlight||onlineAutosaveTimer||onlineAutosaveInFlight)return;
+  const managementNumber=vv('b-kanri').trim();
+  if(!managementDb||!managementNumber)return;
+  onlineLedgerRefreshInFlight=true;
+  try{
+    const session=await getOnlineSession();if(!session)return;
+    const {data,error}=await managementDb.from('estimate_projects')
+      .select('payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();
+    if(error||!data?.payload)return;
+    const applied=applyLedgerWritebackFromLatest(data.payload);
+    onlineProjectRevision=Math.max(Number(onlineProjectRevision||0),Number(data.revision||0));
+    if(applied.length)setOnlineSaveStatus(`台帳から${applied.length}項目を再確認`,'saved');
+  }finally{onlineLedgerRefreshInFlight=false;}
+}
+
+window.addEventListener('focus',()=>setTimeout(refreshLedgerWritebackFromCloud,80));
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)setTimeout(refreshLedgerWritebackFromCloud,80);
+});
 
 function applyLedgerWritebackFromLatest(payload){
   const meta=payload?.ledgerWriteback;
