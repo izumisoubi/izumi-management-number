@@ -1089,7 +1089,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
           <label title="発行日を入力すると自動保存され、台帳へ反映します">発行日</label>
           <div style="display:flex;align-items:center;gap:5px;min-width:0;">
             <button type="button" class="abtn" onclick="const input=document.getElementById('i-date-in');input.value=new Date().toLocaleDateString('sv-SE');input.dispatchEvent(new Event('input',{bubbles:true}));" title="発行日に本日の日付を入力します" style="flex:none;padding:5px 9px;">本日</button>
-            <input type="date" id="i-date-in" oninput="syncInv()" title="発行日を入力すると、請求日・請求金額が自動で台帳へ反映されます" style="min-width:0;">
+            <input type="date" id="i-date-in" oninput="syncInv()" title="発行日を入力すると、請求日・請求金額が自動で台帳へ反映されます" style="width:145px;min-width:145px;flex:none;">
           </div>
           <label>振込期日</label>
           <input type="text" id="i-due-in" value="貴社規定に従います" placeholder="例：月末締め翌月末払い" oninput="syncInv()">
