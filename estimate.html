@@ -4214,23 +4214,24 @@ function ctNav(e){
   }
   if(e.key==='Tab'){
     e.preventDefault();e.stopPropagation();
-    const d=e.shiftKey?-1:1; let nc=ci+d,nr=ri;
-    if(nc>=CT_COLS.length){nc=0;nr++;} else if(nc<0){nc=CT_COLS.length-1;nr--;}
-    if(!goGrid(nr,nc)) goFlat(d); return;
+    const d=e.shiftKey?-1:1;
+    const next=window.IzumiGridCore.movePoint({row:ri,col:ci},'Tab',{rows:trs.length,cols:CT_COLS.length},{shiftKey:e.shiftKey});
+    if(!goGrid(next.row,next.col)) goFlat(d); return;
   }
-  if(e.key==='ArrowDown'){e.preventDefault();e.stopPropagation();if(!goGrid(ri+1,ci))goFlat(1);return;}
-  if(e.key==='ArrowUp')  {e.preventDefault();e.stopPropagation();if(!goGrid(ri-1,ci))goFlat(-1);return;}
+  if(e.key==='ArrowDown'){e.preventDefault();e.stopPropagation();const next=window.IzumiGridCore.movePoint({row:ri,col:ci},e.key,{rows:trs.length,cols:CT_COLS.length});if(!goGrid(next.row,next.col))goFlat(1);return;}
+  if(e.key==='ArrowUp')  {e.preventDefault();e.stopPropagation();const next=window.IzumiGridCore.movePoint({row:ri,col:ci},e.key,{rows:trs.length,cols:CT_COLS.length});if(!goGrid(next.row,next.col))goFlat(-1);return;}
   if(e.key==='ArrowRight'&&el.selectionStart===el.value?.length){
-    e.preventDefault();e.stopPropagation();if(!goGrid(ri,ci+1))goFlat(1);return;
+    e.preventDefault();e.stopPropagation();const next=window.IzumiGridCore.movePoint({row:ri,col:ci},e.key,{rows:trs.length,cols:CT_COLS.length});if(!goGrid(next.row,next.col))goFlat(1);return;
   }
   if(e.key==='ArrowLeft'&&el.selectionStart===0){
-    e.preventDefault();e.stopPropagation();if(!goGrid(ri,ci-1))goFlat(-1);return;
+    e.preventDefault();e.stopPropagation();const next=window.IzumiGridCore.movePoint({row:ri,col:ci},e.key,{rows:trs.length,cols:CT_COLS.length});if(!goGrid(next.row,next.col))goFlat(-1);return;
   }
 }
 
 
 // ===== 売上原価管理表 ドラッグ範囲選択 + Ctrl+C =====
 (function(){
+  var gridCoreCT=window.IzumiGridCore;
   var ctSelStart=null, ctSelEnd=null, ctDragging=false;
 
   function ctGetAllInputs(){
@@ -4255,11 +4256,11 @@ function ctNav(e){
       var sri=trs.indexOf(startTr), eri=trs.indexOf(endTr);
       var CT_COLS=['f0','f1','f2','f3','f4','f5'];
       var sci=CT_COLS.indexOf(ctSelStart.dataset.f), eci=CT_COLS.indexOf(ctSelEnd.dataset.f);
-      var r1=Math.min(sri,eri),r2=Math.max(sri,eri),c1=Math.min(sci,eci),c2=Math.max(sci,eci);
+      var range=gridCoreCT.normalizeRange({row:sri,col:sci},{row:eri,col:eci},{rows:trs.length,cols:CT_COLS.length});
       trs.forEach(function(tr,ri){
-        if(ri<r1||ri>r2) return;
+        if(ri<range.r1||ri>range.r2) return;
         CT_COLS.forEach(function(f,ci){
-          if(ci<c1||ci>c2) return;
+          if(ci<range.c1||ci>range.c2) return;
           var inp=tr.querySelector('[data-f="'+f+'"]');
           if(inp){ inp.style.background='rgba(59,130,246,.22)'; inp.style.outline='1px solid #3b82f6'; }
         });
@@ -4288,19 +4289,12 @@ function ctNav(e){
       var sri=trs.indexOf(startTr), eri=trs.indexOf(endTr);
       var CT_COLS=['f0','f1','f2','f3','f4','f5'];
       var sci=CT_COLS.indexOf(ctSelStart.dataset.f), eci=CT_COLS.indexOf(ctSelEnd.dataset.f);
-      var r1=Math.min(sri,eri),r2=Math.max(sri,eri),c1=Math.min(sci,eci),c2=Math.max(sci,eci);
-      var rows=[];
-      trs.forEach(function(tr,ri){
-        if(ri<r1||ri>r2) return;
-        var cols=[];
-        CT_COLS.forEach(function(f,ci){
-          if(ci<c1||ci>c2) return;
-          var inp=tr.querySelector('[data-f="'+f+'"]');
-          cols.push(inp?inp.value:'');
-        });
-        rows.push(cols.join('\t'));
+      var range=gridCoreCT.normalizeRange({row:sri,col:sci},{row:eri,col:eci},{rows:trs.length,cols:CT_COLS.length});
+      var matrix=gridCoreCT.rangeMatrix(range,function(ri,ci){
+        var inp=trs[ri]?.querySelector('[data-f="'+CT_COLS[ci]+'"]');
+        return inp?inp.value:'';
       });
-      text=rows.join('\n');
+      text=gridCoreCT.matrixToTsv(matrix);
     } else {
       text=all.slice(Math.min(si,ei),Math.max(si,ei)+1).map(function(i){return i.value;}).join('\t');
     }
@@ -4310,13 +4304,7 @@ function ctNav(e){
   }
   function ctPasteToSel(text){
     if(!ctSelStart) return;
-    var lines=String(text||'').replace(/\r/g,'').split('\n');
-    while(lines.length>1&&lines[lines.length-1]==='') lines.pop();
-    if(!lines.length) return;
-    var matrix=lines.map(function(line){return line.split('\t');});
-    var clipRows=matrix.length;
-    var clipCols=Math.max.apply(null,matrix.map(function(row){return Math.max(1,row.length);}));
-    matrix.forEach(function(row){while(row.length<clipCols) row.push('');});
+    var matrix=gridCoreCT.parseTsv(text);
     var startTr=ctSelStart.closest('tr[data-crid]');
     var startTbody=ctSelStart.closest('tbody');
     if(startTbody&&startTr){
@@ -4327,18 +4315,16 @@ function ctNav(e){
       var sri=trs.indexOf(startTr), sci=CT_COLS.indexOf(ctSelStart.dataset.f);
       var eri=(endTbody===startTbody&&endTr)?trs.indexOf(endTr):sri;
       var eci=(endTbody===startTbody&&ctSelEnd)?CT_COLS.indexOf(ctSelEnd.dataset.f):sci;
-      var r1=Math.min(sri,eri),r2=Math.max(sri,eri),c1=Math.min(sci,eci),c2=Math.max(sci,eci);
-      var selectedRows=r2-r1+1,selectedCols=c2-c1+1;
-      var fillSelection=(selectedRows>1||selectedCols>1)&&selectedRows%clipRows===0&&selectedCols%clipCols===0;
-      var pasteRows=fillSelection?selectedRows:clipRows;
-      var pasteCols=fillSelection?selectedCols:clipCols;
+      var range=gridCoreCT.normalizeRange({row:sri,col:sci},{row:eri,col:eci},{rows:trs.length,cols:CT_COLS.length});
+      var pastePlan=gridCoreCT.planPaste(matrix,range,CT_COLS.length);
+      var r1=pastePlan.startRow,c1=pastePlan.startCol,pasteRows=pastePlan.rows,pasteCols=pastePlan.cols;
       ctPushUndo();
       for(var li=0;li<pasteRows;li++){
         var tr=trs[r1+li]; if(!tr) continue;
         for(var ci=0;ci<pasteCols;ci++){
           var inp=tr.querySelector('[data-f="'+CT_COLS[c1+ci]+'"]');
           if(!inp) continue;
-          var value=matrix[li%clipRows][ci%clipCols];
+          var value=pastePlan.valueAt(li,ci);
           inp.value=value;
           ctData[inp.dataset.ctid]=value;
         }
@@ -4357,11 +4343,13 @@ function ctNav(e){
     var CT_COLS=['f0','f1','f2','f3','f4','f5'];
     if(startTbody&&startTbody===endTbody&&startTr&&endTr){
       var trs=[...startTbody.querySelectorAll('tr[data-crid]')];
-      var r1=Math.min(trs.indexOf(startTr),trs.indexOf(endTr)),r2=Math.max(trs.indexOf(startTr),trs.indexOf(endTr));
-      var c1=Math.min(CT_COLS.indexOf(ctSelStart.dataset.f),CT_COLS.indexOf((ctSelEnd||ctSelStart).dataset.f));
-      var c2=Math.max(CT_COLS.indexOf(ctSelStart.dataset.f),CT_COLS.indexOf((ctSelEnd||ctSelStart).dataset.f));
+      var range=gridCoreCT.normalizeRange(
+        {row:trs.indexOf(startTr),col:CT_COLS.indexOf(ctSelStart.dataset.f)},
+        {row:trs.indexOf(endTr),col:CT_COLS.indexOf((ctSelEnd||ctSelStart).dataset.f)},
+        {rows:trs.length,cols:CT_COLS.length}
+      );
       var result=[];
-      for(var ri=r1;ri<=r2;ri++)for(var ci=c1;ci<=c2;ci++){
+      for(var ri=range.r1;ri<=range.r2;ri++)for(var ci=range.c1;ci<=range.c2;ci++){
         var input=trs[ri]?.querySelector('[data-f="'+CT_COLS[ci]+'"]');if(input)result.push(input);
       }
       return result;
@@ -4380,14 +4368,15 @@ function ctNav(e){
     var tbody=ctSelStart.closest('tbody');
     if(!tbody||tbody!==ctSelEnd.closest('tbody'))return;
     var trs=[...tbody.querySelectorAll('tr[data-crid]')],cols=['f0','f1','f2','f3','f4','f5'];
-    var r1=Math.min(trs.indexOf(ctSelStart.closest('tr[data-crid]')),trs.indexOf(ctSelEnd.closest('tr[data-crid]')));
-    var r2=Math.max(trs.indexOf(ctSelStart.closest('tr[data-crid]')),trs.indexOf(ctSelEnd.closest('tr[data-crid]')));
-    var c1=Math.min(cols.indexOf(ctSelStart.dataset.f),cols.indexOf(ctSelEnd.dataset.f));
-    var c2=Math.max(cols.indexOf(ctSelStart.dataset.f),cols.indexOf(ctSelEnd.dataset.f));
-    if(r2<=r1)return;
+    var range=gridCoreCT.normalizeRange(
+      {row:trs.indexOf(ctSelStart.closest('tr[data-crid]')),col:cols.indexOf(ctSelStart.dataset.f)},
+      {row:trs.indexOf(ctSelEnd.closest('tr[data-crid]')),col:cols.indexOf(ctSelEnd.dataset.f)},
+      {rows:trs.length,cols:cols.length}
+    );
+    if(range.r2<=range.r1)return;
     ctPushUndo();
-    for(var ri=r1+1;ri<=r2;ri++)for(var ci=c1;ci<=c2;ci++){
-      var source=trs[r1]?.querySelector('[data-f="'+cols[ci]+'"]');
+    for(var ri=range.r1+1;ri<=range.r2;ri++)for(var ci=range.c1;ci<=range.c2;ci++){
+      var source=trs[range.r1]?.querySelector('[data-f="'+cols[ci]+'"]');
       var target=trs[ri]?.querySelector('[data-f="'+cols[ci]+'"]');
       if(source&&target){target.value=source.value;ctData[target.dataset.ctid]=source.value;}
     }
@@ -4398,14 +4387,15 @@ function ctNav(e){
     var tbody=ctSelStart.closest('tbody');
     if(!tbody||tbody!==ctSelEnd.closest('tbody'))return;
     var trs=[...tbody.querySelectorAll('tr[data-crid]')],cols=['f0','f1','f2','f3','f4','f5'];
-    var r1=Math.min(trs.indexOf(ctSelStart.closest('tr[data-crid]')),trs.indexOf(ctSelEnd.closest('tr[data-crid]')));
-    var r2=Math.max(trs.indexOf(ctSelStart.closest('tr[data-crid]')),trs.indexOf(ctSelEnd.closest('tr[data-crid]')));
-    var c1=Math.min(cols.indexOf(ctSelStart.dataset.f),cols.indexOf(ctSelEnd.dataset.f));
-    var c2=Math.max(cols.indexOf(ctSelStart.dataset.f),cols.indexOf(ctSelEnd.dataset.f));
-    if(c2<=c1)return;
+    var range=gridCoreCT.normalizeRange(
+      {row:trs.indexOf(ctSelStart.closest('tr[data-crid]')),col:cols.indexOf(ctSelStart.dataset.f)},
+      {row:trs.indexOf(ctSelEnd.closest('tr[data-crid]')),col:cols.indexOf(ctSelEnd.dataset.f)},
+      {rows:trs.length,cols:cols.length}
+    );
+    if(range.c2<=range.c1)return;
     ctPushUndo();
-    for(var ri=r1;ri<=r2;ri++)for(var ci=c1+1;ci<=c2;ci++){
-      var source=trs[ri]?.querySelector('[data-f="'+cols[c1]+'"]');
+    for(var ri=range.r1;ri<=range.r2;ri++)for(var ci=range.c1+1;ci<=range.c2;ci++){
+      var source=trs[ri]?.querySelector('[data-f="'+cols[range.c1]+'"]');
       var target=trs[ri]?.querySelector('[data-f="'+cols[ci]+'"]');
       if(source&&target){target.value=source.value;ctData[target.dataset.ctid]=source.value;}
     }
