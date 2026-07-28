@@ -1942,6 +1942,9 @@ async function saveRow(key){
     setStatus(missingFunction
       ?'台帳は保存しました。元データへの反映には「SUPABASE_UX42_台帳入力を正本へ反映.sql」の適用が必要です。'
       :`台帳は保存しましたが、元データへの反映に失敗しました：${sourceWrite.error.message}`,true);
+    // 台帳だけ保存できたことを「自動保存完了」で上書きしない。
+    // 上書き印を残して、次回の自動再試行と利用者の確認対象にする。
+    return;
   }else if(sourceWrite.applied.length){
     sourceWrite.applied.forEach(fieldKey=>{
       source.auto[fieldKey]=manual[fieldKey];
