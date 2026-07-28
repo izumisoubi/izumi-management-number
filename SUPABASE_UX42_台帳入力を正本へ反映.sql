@@ -33,7 +33,7 @@ begin
   if project_row.id is null then raise exception '案件が見つかりません'; end if;
   select * into estimate_row from public.estimate_projects
    where management_number=project_row.management_number and deleted_at is null for update;
-  if estimate_row.id is null then
+  if estimate_row.project_id is null then
     return jsonb_build_object('applied','[]'::jsonb,'revision',null);
   end if;
 
@@ -122,7 +122,7 @@ begin
 
   update public.estimate_projects set payload=merged_payload,revision=estimate_row.revision+1,
     updated_by=auth.uid(),updated_at=now()
-   where id=estimate_row.id;
+   where project_id=estimate_row.project_id;
   -- project_data と台帳表示用の正本列を同じ更新で揃える。
   -- ここを更新しないと、次回台帳を開いた時に旧値が再表示されてしまう。
   update public.management_numbers set project_data=merged_payload,
