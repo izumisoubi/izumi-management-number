@@ -241,11 +241,13 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
 .estimate-cost-panel #csumFinal{padding:5px 16px 7px!important;}
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
-.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);background:rgba(20,136,96,.07);font-family:'Helvetica Neue',sans-serif;}
-.self-cost-slot-row{display:grid;grid-template-columns:74px repeat(3,minmax(138px,1fr)) 86px;align-items:center;gap:5px;margin:2px 0;}
+.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;}
+.self-cost-slot-row{display:grid;grid-template-columns:74px repeat(3,minmax(180px,1fr)) 98px;align-items:end;gap:5px;margin:3px 0;}
 .self-cost-slot-label{color:var(--tm);font-size:10px;font-weight:800;white-space:nowrap;}
-.self-cost-slot-pair{display:grid;grid-template-columns:minmax(50px,1fr) minmax(64px,.8fr);gap:3px;min-width:0;}
-.self-cost-slot-input{width:100%;min-width:0;background:rgba(20,136,96,.13);border:1px solid rgba(20,136,96,.42);border-radius:4px;padding:3px 6px;color:var(--tt);font-size:11px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.self-cost-slot-pair{display:block;min-width:0;padding:3px;border:1px solid var(--tbr);border-radius:5px;}
+.self-cost-slot-head,.self-cost-slot-fields{display:grid;grid-template-columns:minmax(58px,1fr) minmax(58px,1fr) minmax(46px,.75fr);gap:3px;min-width:0;}
+.self-cost-slot-head span{padding:0 2px 2px;color:var(--tm);font-size:8.5px;font-weight:700;text-align:center;white-space:nowrap;}
+.self-cost-slot-input{width:100%;min-width:0;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:10.5px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
 .self-cost-slot-name{text-align:left;}
 .self-cost-slot-input:focus{border-color:var(--ta);}
 .self-cost-slot-total{color:var(--tg);font-size:10px;font-weight:800;text-align:right;white-space:nowrap;}
@@ -801,7 +803,23 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </select>
       </div>
       <div class="csum" id="csum"></div>
-      <!-- 紹介料：静的HTML -->
+      <div id="selfCostSlotsPanel" class="self-cost-slots-panel">
+        <div class="self-cost-slot-row">
+          <span class="self-cost-slot-label">自社人工</span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" aria-label="自社人工1税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" aria-label="自社人工1税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" aria-label="自社人工の名前1"></span></span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" aria-label="自社人工2税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" aria-label="自社人工2税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" aria-label="自社人工の名前2"></span></span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" aria-label="自社人工3税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" aria-label="自社人工3税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" aria-label="自社人工の名前3"></span></span>
+          <span class="self-cost-slot-total" id="selfLaborSlotsTotal">税抜計 ¥0</span>
+        </div>
+        <div class="self-cost-slot-row">
+          <span class="self-cost-slot-label">自社資材</span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" aria-label="自社資材1税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" aria-label="自社資材1税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" aria-label="自社資材の名前1"></span></span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" aria-label="自社資材2税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" aria-label="自社資材2税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" aria-label="自社資材の名前2"></span></span>
+          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" aria-label="自社資材3税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" aria-label="自社資材3税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" aria-label="自社資材の名前3"></span></span>
+          <span class="self-cost-slot-total" id="selfMaterialSlotsTotal">税抜計 ¥0</span>
+        </div>
+      </div>
+      <!-- 紹介料：静的HTML（従来位置・内容を保持） -->
       <div id="shokaiPanelStatic" class="estimate-referral-panel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
           <div>
@@ -824,22 +842,6 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
               <input type="text" id="shokai_name2" placeholder="名前" style="width:50px;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:11px;">
             </div>
           </div>
-        </div>
-      </div>
-      <div id="selfCostSlotsPanel" class="self-cost-slots-panel">
-        <div class="self-cost-slot-row">
-          <span class="self-cost-slot-label">自社人工</span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" placeholder="名前1" aria-label="自社人工の名前1"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" placeholder="金額" aria-label="自社人工1"></span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" placeholder="名前2" aria-label="自社人工の名前2"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" placeholder="金額" aria-label="自社人工2"></span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" placeholder="名前3" aria-label="自社人工の名前3"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" placeholder="金額" aria-label="自社人工3"></span>
-          <span class="self-cost-slot-total" id="selfLaborSlotsTotal">合計 ¥0</span>
-        </div>
-        <div class="self-cost-slot-row">
-          <span class="self-cost-slot-label">自社資材</span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" placeholder="名前1" aria-label="自社資材の名前1"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" placeholder="金額" aria-label="自社資材1"></span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" placeholder="名前2" aria-label="自社資材の名前2"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" placeholder="金額" aria-label="自社資材2"></span>
-          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" placeholder="名前3" aria-label="自社資材の名前3"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" placeholder="金額" aria-label="自社資材3"></span>
-          <span class="self-cost-slot-total" id="selfMaterialSlotsTotal">合計 ¥0</span>
         </div>
       </div>
       <div id="csumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
@@ -4138,13 +4140,17 @@ function renderSelfCostSlots(data=ctData){
     const value=normalized[input.dataset.selfCostSlot];
     if(document.activeElement!==input)input.value=window.IzumiSelfCosts.numberValue(value)?window.IzumiSelfCosts.numberValue(value).toLocaleString('ja-JP'):'';
   });
+  document.querySelectorAll('[data-self-cost-gross]').forEach(input=>{
+    const value=normalized[input.dataset.selfCostGross];
+    if(document.activeElement!==input)input.value=window.IzumiSelfCosts.numberValue(value)?window.IzumiSelfCosts.numberValue(value).toLocaleString('ja-JP'):'';
+  });
   document.querySelectorAll('[data-self-cost-name]').forEach(input=>{
     if(document.activeElement!==input)input.value=normalized[input.dataset.selfCostName]||'';
   });
   const laborTotal=document.getElementById('selfLaborSlotsTotal');
   const materialTotal=document.getElementById('selfMaterialSlotsTotal');
-  if(laborTotal)laborTotal.textContent='合計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_jin'));
-  if(materialTotal)materialTotal.textContent='合計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_mat'));
+  if(laborTotal)laborTotal.textContent='税抜計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_jin'));
+  if(materialTotal)materialTotal.textContent='税抜計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_mat'));
   const laborNames=document.getElementById('ct-self-labor-names');
   const materialNames=document.getElementById('ct-self-material-names');
   if(laborNames)laborNames.textContent=selfCostNames('jisha_jin',normalized).join('・');
@@ -4155,6 +4161,11 @@ function updateSelfCostSlot(input){
   saveCtData();
   ctUpdateTotals();
 }
+function updateSelfCostGross(input){
+  ctData=window.IzumiSelfCosts.setGross(ctData,input.dataset.selfCostGross,input.value);
+  saveCtData();
+  ctUpdateTotals();
+}
 function updateSelfCostName(input){
   ctData[input.dataset.selfCostName]=input.value;
   saveCtData();
@@ -4162,13 +4173,14 @@ function updateSelfCostName(input){
 }
 document.addEventListener('input',event=>{
   if(event.target.matches?.('[data-self-cost-slot]'))updateSelfCostSlot(event.target);
+  if(event.target.matches?.('[data-self-cost-gross]'))updateSelfCostGross(event.target);
   if(event.target.matches?.('[data-self-cost-name]'))updateSelfCostName(event.target);
 });
 document.addEventListener('focusin',event=>{
-  if(event.target.matches?.('[data-self-cost-slot]'))event.target.value=event.target.value.replace(/,/g,'');
+  if(event.target.matches?.('[data-self-cost-slot],[data-self-cost-gross]'))event.target.value=event.target.value.replace(/,/g,'');
 });
 document.addEventListener('focusout',event=>{
-  if(event.target.matches?.('[data-self-cost-slot]'))renderSelfCostSlots(ctData);
+  if(event.target.matches?.('[data-self-cost-slot],[data-self-cost-gross]'))renderSelfCostSlots(ctData);
 });
 var _ctLastFocusSnapshot=null; // focusin時のスナップショット
 function ctSet(k,v){
