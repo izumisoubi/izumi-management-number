@@ -241,11 +241,11 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
 .estimate-cost-panel #csumFinal{padding:5px 16px 7px!important;}
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
-.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;}
+.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);background:rgba(20,136,96,.07);font-family:'Helvetica Neue',sans-serif;}
 .self-cost-slot-row{display:grid;grid-template-columns:74px repeat(3,minmax(138px,1fr)) 86px;align-items:center;gap:5px;margin:2px 0;}
 .self-cost-slot-label{color:var(--tm);font-size:10px;font-weight:800;white-space:nowrap;}
 .self-cost-slot-pair{display:grid;grid-template-columns:minmax(50px,1fr) minmax(64px,.8fr);gap:3px;min-width:0;}
-.self-cost-slot-input{width:100%;min-width:0;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 6px;color:var(--tt);font-size:11px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.self-cost-slot-input{width:100%;min-width:0;background:rgba(20,136,96,.13);border:1px solid rgba(20,136,96,.42);border-radius:4px;padding:3px 6px;color:var(--tt);font-size:11px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
 .self-cost-slot-name{text-align:left;}
 .self-cost-slot-input:focus{border-color:var(--ta);}
 .self-cost-slot-total{color:var(--tg);font-size:10px;font-weight:800;text-align:right;white-space:nowrap;}
@@ -2881,10 +2881,10 @@ function renderTotals(){
   // ptfootはrenderPrintで管理するため、ここでは更新しない
   const pct=Math.min(100,Math.max(0,pRate));
   const csum=document.getElementById('csum');
-  const s1exc=parseFloat(document.getElementById('shokai_yen')?.value)||0;
-  const s1inc=parseFloat(document.getElementById('shokai_yen_inc')?.value)||0;
-  const s2exc=parseFloat(document.getElementById('shokai_yen2')?.value)||0;
-  const s2inc=parseFloat(document.getElementById('shokai_yen2_inc')?.value)||0;
+  const s1exc=numberValue(document.getElementById('shokai_yen')?.value);
+  const s1inc=numberValue(document.getElementById('shokai_yen_inc')?.value);
+  const s2exc=numberValue(document.getElementById('shokai_yen2')?.value);
+  const s2inc=numberValue(document.getElementById('shokai_yen2_inc')?.value);
   const totalShokaiExc=s1exc+s2exc;
   const totalShokaiInc=s1inc+s2inc;
   const taxIncProfit=tot-Math.round(cost*1.1);
@@ -2938,7 +2938,7 @@ function renderTotals(){
 // ===== 見積書紹介料（1と2は完全独立） =====
 function _shokaiCalc(excId,incId,pExcId,pIncId){
   const sub=totSell(),tot=sub+Math.round(sub*.1);
-  const raw=parseFloat(document.getElementById(excId)?.value);
+  const raw=numberValue(document.getElementById(excId)?.value);
   const exc=isNaN(raw)?0:Math.max(0,raw);
   const incEl=document.getElementById(incId);
   const pExcEl=document.getElementById(pExcId);
@@ -3050,10 +3050,10 @@ function syncInvShokai(){
   renderInvCsumFromDOM();
 }
 function renderInvCsumFromDOM(){
-  const s1=parseFloat(document.getElementById('inv_shokai_yen')?.value)||0;
-  const s1inc=parseFloat(document.getElementById('inv_shokai_yen_inc')?.value)||0;
-  const s2=parseFloat(document.getElementById('inv_shokai_yen2')?.value)||0;
-  const s2inc=parseFloat(document.getElementById('inv_shokai_yen2_inc')?.value)||0;
+  const s1=numberValue(document.getElementById('inv_shokai_yen')?.value);
+  const s1inc=numberValue(document.getElementById('inv_shokai_yen_inc')?.value);
+  const s2=numberValue(document.getElementById('inv_shokai_yen2')?.value);
+  const s2inc=numberValue(document.getElementById('inv_shokai_yen2_inc')?.value);
   const totalShokai=s1+s2;
   const totalShokaiInc=s1inc+s2inc;
   const linked=document.getElementById('invLink')?.checked;
@@ -6983,8 +6983,12 @@ function uopts(cur){
 function buildSaveData(){
   const invoiceDate=vv('i-date-in');
   const invoiceExTax=invoiceDate?onlineInvoiceExTax():0;
-  return {v:20,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',ledgerWriteback:ledgerWritebackMeta,co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
+  return {v:21,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',ledgerWriteback:ledgerWritebackMeta,co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
     costTable:window.IzumiSelfCosts.normalize(ctData),
+    referralFees:{
+      shokai_yen:vv('shokai_yen'),shokai_pct_in:vv('shokai_pct_in'),shokai_yen_inc:vv('shokai_yen_inc'),shokai_name1:vv('shokai_name1'),
+      shokai_yen2:vv('shokai_yen2'),shokai_pct2_in:vv('shokai_pct2_in'),shokai_yen2_inc:vv('shokai_yen2_inc'),shokai_name2:vv('shokai_name2')
+    },
     rate:document.getElementById('rateInput').value,
     estMemo:document.getElementById('estMemo')?.value||'',
     invMemo:document.getElementById('invMemo')?.value||'',
@@ -7112,6 +7116,12 @@ function loadAllFromText(text){
       }else{
         loadCtData();
       }
+      if(d.referralFees&&typeof d.referralFees==='object'&&!Array.isArray(d.referralFees)){
+        ['shokai_yen','shokai_pct_in','shokai_yen_inc','shokai_name1','shokai_yen2','shokai_pct2_in','shokai_yen2_inc','shokai_name2'].forEach(id=>{
+          const input=document.getElementById(id);
+          if(input&&d.referralFees[id]!==undefined)input.value=d.referralFees[id];
+        });
+      }
       ledgerWritebackMeta=(d.ledgerWriteback&&typeof d.ledgerWriteback==='object'&&!Array.isArray(d.ledgerWriteback))?d.ledgerWriteback:{};
       applyEstimateLayoutMode(d.estimateLayout||'landscape',{render:false,persist:true});
       activeScheduleId=d.calendarEventId||'';
@@ -7174,7 +7184,8 @@ function loadAllFromText(text){
       rebuildSels();renderCoGrid();
       if(d.co&&companies[d.co])document.getElementById('coSel').value=d.co;
       if(d.invCo&&companies[d.invCo])document.getElementById('coSel2').value=d.invCo;
-      applyEstCo();applyInvCo();syncEst();renderMemo();renderInvMemo();renderLedgerWritebackHints();
+      _invShokaiEdited=false;
+      applyEstCo();applyInvCo();syncEst();updateShokai1();updateShokai2();syncInvShokai();renderMemo();renderInvMemo();renderLedgerWritebackHints();
       showToastMsg('✅ 読み込み完了');
     }catch(err){alert('読み込み失敗: '+err.message);}
 }
