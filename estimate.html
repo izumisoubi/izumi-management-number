@@ -80,9 +80,17 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ord-info-row>.date-actions input{width:132px!important;flex:0 0 132px!important}
 .ord-info-wide{grid-column:1/-1}
 .ord-info-photo textarea{min-height:34px;max-height:54px;resize:vertical}
+.inv-settings-body{padding:9px 12px 10px}
+.fg.inv-settings-grid{grid-template-columns:82px minmax(0,1fr) 82px minmax(0,1fr);gap:6px 10px}
+.inv-settings-grid>.inv-wide-control{grid-column:2/-1}
+.inv-settings-grid>.inv-address{grid-column:2/-1;min-height:34px!important}
+.inv-settings-grid .sec-div{margin-top:1px;padding-top:5px}
+.inv-settings-grid #invoiceTemplateHint{margin-top:2px!important;line-height:1.35!important}
 @media(max-width:1050px){
   .ord-info-grid,.ord-info-bottom{grid-template-columns:1fr}
   .ord-info-wide{grid-column:auto}
+  .fg.inv-settings-grid{grid-template-columns:90px minmax(0,1fr)}
+  .inv-settings-grid>.inv-wide-control,.inv-settings-grid>.inv-address{grid-column:2}
 }
 .sec-div{grid-column:1/-1;font-size:10px;font-weight:800;color:var(--ta);text-transform:uppercase;letter-spacing:1px;padding-top:7px;border-top:1px solid var(--tbr);margin-top:3px;font-family:'Helvetica Neue',sans-serif;}
 .co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
@@ -1104,18 +1112,18 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       <strong>🔗 見積書から自動連動</strong>
       見積書の内容が請求書に反映されます。以下で個別に上書きできます。
     </div>
-    <div class="cost-panel">
+    <div class="cost-panel" id="invSettingsPanel">
       <div class="cost-head"><span class="cost-title">請求書設定</span></div>
-      <div style="padding:13px 15px;">
-        <div class="fg" style="grid-template-columns:90px 1fr;">
+      <div class="inv-settings-body">
+        <div class="fg inv-settings-grid">
           <label>発行会社</label>
-          <select class="cosel" id="coSel2" onchange="applyInvCo()" style="width:100%;min-width:0;"></select>
+          <select class="cosel inv-wide-control" id="coSel2" onchange="applyInvCo()" style="width:100%;min-width:0;"></select>
           <label>宛名上書き</label>
           <input id="i-ov-client" placeholder="空白なら基本情報の請求先名" oninput="syncInv()">
           <label>部署上書き</label>
           <input id="i-ov-dept" placeholder="空白なら基本情報の請求先部署" oninput="syncInv()">
           <label>住所上書き</label>
-          <textarea id="i-ov-addr" placeholder="空白なら基本情報の請求先住所" oninput="syncInv()" style="min-height:42px;"></textarea>
+          <textarea class="inv-address" id="i-ov-addr" placeholder="空白なら基本情報の請求先住所" oninput="syncInv()"></textarea>
           <label title="発行日を入力すると自動保存され、台帳へ反映します">発行日</label>
           <div style="display:flex;align-items:center;gap:5px;min-width:0;">
             <button type="button" class="abtn" onclick="const input=document.getElementById('i-date-in');input.value=new Date().toLocaleDateString('sv-SE');input.dispatchEvent(new Event('input',{bubbles:true}));" title="発行日に本日の日付を入力します" style="flex:none;padding:5px 9px;">本日</button>
