@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#078b4b">
   <title>イズミ装美 経営会議資料</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="年度共通.js?v=20260729-UX51"></script>
   <script src="会議月度共通.js?v=20260729-UX50"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -43,7 +44,7 @@
   </section>
   <main id="app" class="hidden">
     <section class="controls">
-      <div class="field"><label>年度</label><select id="fiscalYear"><option value="26">2026年度</option><option value="27">2027年度</option></select></div>
+      <div class="field"><label>年度</label><select id="fiscalYear"></select></div>
       <div class="field"><label>対象月</label><select id="targetMonth"></select></div>
       <button class="green" onclick="renderReport()">集計更新</button>
       <button class="primary print" onclick="window.print()">印刷 / PDF</button>
@@ -126,7 +127,7 @@
       const match=String(value||'').match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
       return match?{year:Number(match[1]),month:Number(match[2]),day:Number(match[3])}:null;
     };
-    const fiscalCalendarYear=(fiscal,month)=>2000+Number(fiscal)-(month>=9?1:0);
+    const fiscalCalendarYear=(fiscal,month)=>window.IzumiFiscalYear.fiscalCalendarYear(fiscal,month);
     const projectSales=project=>num(project.invoice_subtotal_ex_tax||project.sales_estimate_ex_tax);
     const projectCost=project=>num(project.total_cost_ex_tax||project.external_cost_ex_tax);
     const financialFieldIds={
@@ -336,12 +337,11 @@
       return {data:rows,error:null};
     }
     function fiscalCodeForDate(date=new Date()){
-      return String((date.getFullYear()+(date.getMonth()>=8?1:0))%100).padStart(2,'0');
+      return window.IzumiFiscalYear.codeForDate(date);
     }
     function populateFiscalYears(){
       const codes=new Set(projects.map(project=>String(project.management_number||'').match(/^(\d{2})-/)?.[1]).filter(Boolean));
-      codes.add(fiscalCodeForDate());
-      const options=[...codes].sort((a,b)=>Number(b)-Number(a));
+      const options=window.IzumiFiscalYear.options({minimumCode:22,futureYears:3,includeCodes:[...codes]}).map(item=>item.code);
       const current=$('fiscalYear').value;
       $('fiscalYear').innerHTML=options.map(code=>`<option value="${esc(code)}">20${esc(code)}年度</option>`).join('');
       $('fiscalYear').value=options.includes(current)?current:fiscalCodeForDate();

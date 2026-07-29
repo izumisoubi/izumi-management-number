@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#163b6d">
   <title>イズミ装美 管理番号取得</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="年度共通.js?v=20260729-UX51"></script>
   <style>
     :root{--navy:#163b6d;--blue:#2867d7;--line:#d6def0;--bg:#f3f6fb;--text:#172033;--muted:#64718b;}
     *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -28,7 +29,7 @@
       <div id="result" class="result"><div>管理番号を取得しました</div><div id="issuedNumber" class="number"></div><p id="issuedDetail"></p></div>
       <section class="card"><h2>新しい管理番号を取得</h2><div class="notice">「取得」を押した時点で番号を確保します。二重押ししないでください。</div>
         <div class="grid" style="margin-top:14px">
-          <div><label>年度</label><select id="fiscalYear"><option value="22">2022年度（22-）</option><option value="23">2023年度（23-）</option><option value="24">2024年度（24-）</option><option value="25">2025年度（25-）</option><option value="26">2026年度（26-）</option><option value="27">2027年度（27-）</option><option value="28">2028年度（28-）</option><option value="29">2029年度（29-）</option><option value="30">2030年度（30-）</option></select></div>
+          <div><label>年度（受付日から自動・変更可）</label><select id="fiscalYear"></select></div>
           <div><label>受付日</label><input id="receptionDate" type="date"></div>
           <div><label>工事担当者 *</label><select id="staffName"><option value="">社員マスタから選択</option></select></div>
           <div><label>請求先</label><input id="clientName" placeholder="会社名"></div>
@@ -51,13 +52,19 @@
     const todayLocal=()=>{const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());return now.toISOString().slice(0,10)};
     $('receptionDate').value=todayLocal();
     const linkedCalendarEventId=new URL(location.href).searchParams.get('calendar_event_id')||'';
-    const fiscalCodeFor=dateValue=>{const date=dateValue?new Date(`${dateValue}T00:00:00`):new Date();return String(date.getFullYear()+(date.getMonth()>=8?1:0)).slice(-2)};
-    $('fiscalYear').value=[...$('fiscalYear').options].some(option=>option.value===fiscalCodeFor())?fiscalCodeFor():'26';
+    const fiscalCodeFor=dateValue=>window.IzumiFiscalYear.codeForDate(dateValue?`${dateValue}T00:00:00`:new Date());
+    function populateFiscalYears(preferred=fiscalCodeFor()){
+      const options=window.IzumiFiscalYear.options({minimumCode:22,futureYears:3,includeCodes:[preferred]});
+      $('fiscalYear').innerHTML=options.map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('');
+      $('fiscalYear').value=preferred;
+    }
+    populateFiscalYears();
+    $('receptionDate').addEventListener('change',()=>populateFiscalYears(fiscalCodeFor($('receptionDate').value)));
     function message(id,text,isError=false){const el=$(id);el.textContent=text;el.className='status'+(isError?' error':'');}
     async function signIn(){message('loginStatus','ログイン中…');const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)return message('loginStatus',error.message,true);message('loginStatus','');await showApp();}
     async function signOut(){await db.auth.signOut();$('app').classList.add('hidden');$('loginCard').classList.remove('hidden');$('loginUser').classList.add('hidden');}
     async function loadEmployees(){const select=$('staffName');const previous=select.value;const {data,error}=await db.from('employee_master').select('name').eq('active',true).order('display_order',{ascending:true});if(error){message('issueStatus','社員マスタを読み込めません。ログイン後に更新してください。',true);return;}const names=[...new Set((data||[]).map(row=>row.name).filter(Boolean))];select.innerHTML='<option value="">社員マスタから選択</option>'+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join('');if(names.includes(previous))select.value=previous;}
-    async function loadCalendarDraft(){if(!linkedCalendarEventId)return;let result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,work_name,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();if(result.error&&/work_name|column|schema cache/i.test(result.error.message||''))result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();const {data,error}=result;if(error||!data){message('issueStatus','カレンダー予定を読み込めませんでした。',true);return}if(data.management_number){message('issueStatus',`この予定は管理番号 ${data.management_number} に連携済みです。`);return}$('receptionDate').value=data.event_date||todayLocal();$('fiscalYear').value=[...$('fiscalYear').options].some(option=>option.value===fiscalCodeFor(data.event_date))?fiscalCodeFor(data.event_date):$('fiscalYear').value;$('staffName').value=data.staff_name||'';$('clientName').value=data.client_name||'';$('propertyName').value=data.property_name||'';$('roomNumber').value=data.room_number||'';$('workName').value=data.work_name||data.event_type||'';message('issueStatus','カレンダーの登録内容を取り込みました。取得後は予定と台帳へ同じ管理番号を連携します。')}
+    async function loadCalendarDraft(){if(!linkedCalendarEventId)return;let result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,work_name,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();if(result.error&&/work_name|column|schema cache/i.test(result.error.message||''))result=await db.from('calendar_events').select('event_date,staff_name,client_name,property_name,room_number,event_type,notes,management_number').eq('id',linkedCalendarEventId).is('deleted_at',null).maybeSingle();const {data,error}=result;if(error||!data){message('issueStatus','カレンダー予定を読み込めませんでした。',true);return}if(data.management_number){message('issueStatus',`この予定は管理番号 ${data.management_number} に連携済みです。`);return}$('receptionDate').value=data.event_date||todayLocal();populateFiscalYears(fiscalCodeFor(data.event_date));$('staffName').value=data.staff_name||'';$('clientName').value=data.client_name||'';$('propertyName').value=data.property_name||'';$('roomNumber').value=data.room_number||'';$('workName').value=data.work_name||data.event_type||'';message('issueStatus','カレンダーの登録内容を取り込みました。取得後は予定と台帳へ同じ管理番号を連携します。')}
     function revealLogin(){const card=$('loginCard');if(card)card.classList.remove('hidden');}
     async function showApp(){const {data:{session}}=await db.auth.getSession();const user=session?.user;if(!user){revealLogin();return}const [{data:enabled,error:accessError},{data:isAdmin}]=await Promise.all([db.rpc('is_current_app_user_enabled'),db.rpc('is_management_admin')]);if(accessError||enabled!==true){await db.auth.signOut();message('loginStatus',accessError?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。',true);revealLogin();return;}$('loginCard').classList.add('hidden');$('app').classList.remove('hidden');$('loginUser').classList.remove('hidden');$('userEmail').textContent=user.email;$('adminLinks').innerHTML=isAdmin===true?'<a href="システム管理.html">システム管理</a><a href="バックアップ管理.html">バックアップ</a>':'';$('receptionDate').value=$('receptionDate').value||todayLocal();await loadEmployees();await Promise.all([loadRecent(),loadCalendarDraft()]);}
     async function linkCalendarEvent(managementNumber){

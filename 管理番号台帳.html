@@ -26,7 +26,7 @@
   <main id="app" class="hidden">
     <section class="controls">
       <div class="toolbar">
-        <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option><option value="23">2023年度</option><option value="24">2024年度</option><option value="25">2025年度</option><option value="26">2026年度</option><option value="27">2027年度</option><option value="28">2028年度</option><option value="29">2029年度</option><option value="30">2030年度</option></select></div>
+        <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option></select></div>
         <div class="field search"><label>検索</label><input id="search" placeholder="番号・担当者・物件・請求先"></div>
         <div class="field zoom"><label>縮尺</label><select id="zoom"><option value=".7">70%</option><option value=".8">80%</option><option value=".9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option></select></div>
         <button class="secondary" onclick="clearSearch()">解除</button><button class="secondary" onclick="loadData()">更新</button><button class="primary" onclick="downloadCsv()">CSV</button>
@@ -60,7 +60,7 @@
         {key:'notes',label:'備考',type:'text',width:'w-note'},
         {key:'fee_amount',label:'手数料',type:'money',width:'w-money'},
         {key:'closing_sales_accounting_month',label:'締め後売上<br>計上月',type:'month',width:'w-month'},
-        {key:'accounting_year',label:'計上年度',type:'fiscalYear',width:'w-year'}
+        {key:'accounting_year',label:'計上年度<br>（補正可）',type:'fiscalYear',width:'w-year'}
       ],
       summaries:[
         {label:'表示件数',type:'count'},{label:'売上見積（税抜）',key:'sales_estimate_ex_tax'},
@@ -69,7 +69,8 @@
     };
   </script>
   <script src="表入力共通.js?v=20260729-UX46"></script>
-  <script src="台帳共通.js?v=20260729-UX50"></script>
+  <script src="年度共通.js?v=20260729-UX51"></script>
+  <script src="台帳共通.js?v=20260729-UX51"></script>
 <script src="見積作業タブ.js?v=20260722"></script>
 </body>
 </html>

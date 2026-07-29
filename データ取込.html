@@ -7,6 +7,7 @@
   <title>イズミ装美 データ取込・出力</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="年度共通.js?v=20260729-UX51"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--line:#d8e1ed;--muted:#66758c;--bg:#f3f6fb;--green:#12805c;--red:#bd3344}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#162033;font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}button,input,select{font:inherit}
@@ -27,7 +28,7 @@
     </section>
     <div class="grid">
       <section class="card">
-        <h2>過去データを取り込む</h2><p>推奨シート名は「クラウドデータ」「原価」「原価 (未発注)」です。2022年度（22-）から2030年度（30-）まで判別します。</p>
+        <h2>過去データを取り込む</h2><p>推奨シート名は「クラウドデータ」「原価」「原価 (未発注)」です。年度候補は毎年自動で追加され、管理番号から判別します。</p>
         <div class="controls"><label class="file-label">Excel / CSVを選択<input id="fileInput" type="file" accept=".xlsx,.xlsm,.xls,.csv"></label><div class="field"><label>取込対象</label><select id="importPrefix"><option value="">全年度</option></select></div><button id="importButton" class="btn primary" disabled>オンライン台帳へ取り込む</button></div>
         <div class="stats"><div class="stat"><small>案件</small><strong id="projectCount">0</strong></div><div class="stat"><small>原価明細</small><strong id="costCount">0</strong></div><div class="stat"><small>未発注明細</small><strong id="unorderedCount">0</strong></div></div>
         <div id="importProgress" class="progress hidden"><span></span></div><div id="importStatus" class="status">ファイルを選択すると、ここに確認結果を表示します。</div><div id="preview" class="preview hidden"></div>
@@ -49,7 +50,7 @@
     let currentUser=null,isAdmin=false,parsed={projects:[],lines:[],fileName:''};
     function normalizeStableUrl(){const url=new URL(location.href);if(url.searchParams.has('v')){url.searchParams.delete('v');history.replaceState(null,'',url.pathname+(url.searchParams.size?'?'+url.searchParams.toString():''))}}
     normalizeStableUrl();
-    function prefixOptions(){return Array.from({length:9},(_,index)=>String(index+22).padStart(2,'0')).map(code=>`<option value="${code}">${2000+Number(code)}年度（${code}-）</option>`).join('')}
+    function prefixOptions(){return window.IzumiFiscalYear.options({minimumCode:22,futureYears:3}).map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('')}
     $('importPrefix').insertAdjacentHTML('beforeend',prefixOptions());$('exportPrefix').insertAdjacentHTML('beforeend',prefixOptions());
     function setStatus(id,text,type=''){const node=$(id);node.textContent=text;node.className=`status ${type}`}
     function setProgress(id,ratio){const node=$(id);node.classList.remove('hidden');node.querySelector('span').style.width=`${Math.max(0,Math.min(100,ratio*100))}%`;if(ratio>=1)setTimeout(()=>node.classList.add('hidden'),600)}

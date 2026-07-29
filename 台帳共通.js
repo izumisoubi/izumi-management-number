@@ -4,6 +4,7 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const config=window.LEDGER_CONFIG;
 const gridCore=window.IzumiGridCore;
 const meetingPeriod=window.IzumiMeetingPeriod;
+const fiscalYearCore=window.IzumiFiscalYear;
 if(!gridCore)throw new Error('表入力共通.js を先に読み込んでください。');
 if(config.viewKey==='meeting'&&!config.fields.some(field=>field.key==='meeting_checked')){
   config.fields.unshift({key:'meeting_checked',label:'翌月へ<br>繰越',type:'checkbox',width:'w-meeting'});
@@ -39,9 +40,7 @@ const numberValue=value=>{const parsed=Number(String(value??'').replace(/[,，¥
 const formatNumber=value=>Math.round(numberValue(value)).toLocaleString('ja-JP');
 const money=value=>'¥'+formatNumber(value);
 const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
-const currentCalendarYear=new Date().getFullYear();
-const fiscalYearMax=Math.max(2030,currentCalendarYear+3);
-const fiscalYearOptions=['',...Array.from({length:fiscalYearMax-2023+1},(_,index)=>`${fiscalYearMax-index}年度`)];
+const fiscalYearOptions=['',...(fiscalYearCore?.options({minimumCode:22,futureYears:3})||[]).map(item=>item.label)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
 let currentPage=1,pageSize=200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
@@ -85,7 +84,7 @@ const fieldGuides={
   parking_expense:{mode:'manual',source:'駐車場などの実費をこの台帳で入力'},
   fee_amount:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 紹介料・手数料'},
   closing_sales_accounting_month:{mode:'manual',source:'締め後に繰り越す売上計上月をこの台帳で選択'},
-  accounting_year:{mode:'mixed',source:'請求日（未請求時は完工日・完工予定日・受付日）から9月始まりで自動計算',note:'9月1日から翌年8月31日までを同じ計上年度として扱います。必要時のみプルダウンで補正できます。'},
+  accounting_year:{mode:'mixed',source:'請求日（未請求時は完工日・完工予定日・受付日）から9月始まりで自動計算',note:'9月1日から翌年8月31日までを同じ計上年度として扱います。例外時は担当者がプルダウンで補正でき、変更日時と変更者は操作履歴に残ります。'},
   client_name:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 請求先名'},
   customer_invoice_amount:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 請求合計（税抜）'},
   sales_invoice_ex_tax:{mode:'auto',source:'見積システム ＞ 請求タブ ＞ 請求合計（税抜）'},
@@ -162,7 +161,8 @@ function updateQuickHint(fieldKey,cell){
     reminder_required:'<b>要確認</b>は、社内メモ兼・色分けです。確認が済んだらチェックを外します。',
     invoice_amount_ex_tax:'<b>請求金額</b>は、外注請求書を見て入力する金額です（得意先への請求額ではありません）。',
     meeting_checked:'<b>翌月へ繰越</b>をチェックすると、今月の集計から外して翌月へ送ります。繰越先の月では薄紫で表示します。',
-    meeting_month:'<b>会議月度</b>は、この案件を集計する月です。元の計上月から変更した案件は薄紫で表示します。'
+    meeting_month:'<b>会議月度</b>は、この案件を集計する月です。元の計上月から変更した案件は薄紫で表示します。',
+    accounting_year:'<b>計上年度</b>は通常、日付から自動で決まります。例外時だけ変更してください。変更日時と変更者は操作履歴に残ります。'
   };
   const message=messages[fieldKey];
   clearTimeout(quickHintTimer);
@@ -436,10 +436,11 @@ function nullableDate(value){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''))?value:'';
 }
 function accountingYearForDate(value){
+  if(fiscalYearCore)return fiscalYearCore.accountingYearForDate(value);
   const match=String(value||'').match(/^(\d{4})[-/](\d{1,2})/);
   if(!match)return'';
   const year=Number(match[1]),month=Number(match[2]);
-  return `${month>=9?year:year-1}年度`;
+  return `${month>=9?year+1:year}年度`;
 }
 function projectAccountingYear(project){
   return project.accounting_year||accountingYearForDate(
@@ -794,6 +795,7 @@ async function loadData(){
   reconcilePendingLedgerWritebacks();
 }
 function currentFiscalCode(){
+  if(fiscalYearCore)return fiscalYearCore.codeForDate(new Date());
   const today=new Date();
   const fiscalYear=today.getMonth()+1>=9?today.getFullYear()+1:today.getFullYear();
   return String(fiscalYear).slice(-2);
@@ -801,8 +803,9 @@ function currentFiscalCode(){
 function populateYearFilter(){
   const select=$('yearFilter');
   const previous=loadedLedgerYear||select.value;
-  const current=Number(currentFiscalCode());
-  const years=Array.from({length:Math.max(1,current-22)},(_,index)=>String(current-index).padStart(2,'0'));
+  const years=fiscalYearCore
+    ?fiscalYearCore.options({minimumCode:22,futureYears:3}).map(item=>item.code)
+    :Array.from({length:Math.max(1,Number(currentFiscalCode())-21)},(_,index)=>String(Number(currentFiscalCode())-index).padStart(2,'0'));
   select.innerHTML='<option value="">すべて</option>'+years.map(year=>`<option value="${esc(year)}">20${esc(year)}年度</option>`).join('');
   const preferred=previous||currentFiscalCode();
   if(years.includes(preferred))select.value=preferred;

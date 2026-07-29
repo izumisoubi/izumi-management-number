@@ -8,6 +8,7 @@
 (()=>{const url=new URL(location.href);if(location.protocol==='file:'||['localhost','127.0.0.1'].includes(location.hostname)||url.searchParams.has('_fresh'))return;url.searchParams.set('_fresh',Date.now().toString(36));location.replace(url.href)})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="年度共通.js?v=20260729-UX51"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260729-UX47"></script>
 <script src="自社原価共通.js?v=20260729-UX49"></script>
@@ -5932,10 +5933,11 @@ function numberValue(value){
 }
 
 function fiscalYearForDate(value){
+  if(window.IzumiFiscalYear)return window.IzumiFiscalYear.accountingYearForDate(value);
   const match=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(!match)return'';
   const year=Number(match[1]),month=Number(match[2]);
-  return `${month>=9?year:year-1}年度`;
+  return `${month>=9?year+1:year}年度`;
 }
 
 function onlineInvoiceExTax(){

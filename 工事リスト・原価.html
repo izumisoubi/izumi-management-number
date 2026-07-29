@@ -13,7 +13,7 @@
   <section id="loginCard" class="login hidden"><h2>社員ログイン</h2><div>全社員が閲覧・修正できます。</div><label>メールアドレス</label><input id="email" type="email"><label>パスワード</label><input id="password" type="password"><button class="primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
   <main id="app" class="hidden">
     <section class="controls"><div class="toolbar">
-      <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option><option value="22">2022年度</option><option value="23">2023年度</option><option value="24">2024年度</option><option value="25">2025年度</option><option value="26">2026年度</option><option value="27">2027年度</option><option value="28">2028年度</option><option value="29">2029年度</option><option value="30">2030年度</option></select></div>
+      <div class="field year"><label>年度</label><select id="yearFilter"><option value="">すべて</option></select></div>
       <div class="field search"><label>検索</label><input id="search" placeholder="番号・担当・物件・業者"></div>
       <div class="field zoom"><label>縮尺</label><select id="zoom"><option value=".7">70%</option><option value=".8">80%</option><option value=".9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option></select></div>
       <button class="secondary" onclick="clearSearch()">解除</button><button class="secondary" onclick="loadData()">更新</button><button class="primary" onclick="downloadCsv()">CSV</button>
@@ -51,7 +51,7 @@
         {label:'外注請求合計（税抜）',key:'invoice_amount_ex_tax'},{label:'差異合計（税抜）',key:'variance_ex_tax'}
       ]
     };
-  </script><script src="表入力共通.js?v=20260729-UX46"></script><script src="台帳共通.js?v=20260729-UX50"></script>
+  </script><script src="表入力共通.js?v=20260729-UX46"></script><script src="年度共通.js?v=20260729-UX51"></script><script src="台帳共通.js?v=20260729-UX51"></script>
 <script src="見積作業タブ.js?v=20260722"></script>
 </body>
 </html>
