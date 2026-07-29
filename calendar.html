@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
-    *{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+    *{box-sizing:border-box}html,body{min-height:100%}html{scroll-snap-type:y mandatory;scroll-padding-top:8px}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}body>header{scroll-snap-align:start;scroll-snap-stop:always}
     button,input,select,textarea{font:inherit}button{border:0;border-radius:7px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{border:1px solid #c9d5e6;background:#fff;color:#27466f}.danger{background:#fff;color:var(--red);border:1px solid #edb5bc}.hidden{display:none!important}
     header{background:linear-gradient(115deg,#15345f,#1f4d83);color:#fff;box-shadow:0 3px 14px #17345f2a}.header-inner{max-width:1600px;min-height:68px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px}h1{font-size:19px;margin:0}.sub{font-size:10px;opacity:.78;margin-top:4px}.user,.nav{display:flex;align-items:center;gap:7px;white-space:nowrap}.nav a{padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;font-size:11px;font-weight:800}.nav a:hover,.nav a.current{background:#ffffff20}.logout{padding:6px 9px;background:#ffffff12;border:1px solid #ffffff66;color:#fff}
     .login{max-width:430px;margin:64px auto;background:#fff;border:1px solid var(--line2);border-radius:14px;padding:24px;box-shadow:0 14px 40px #1932581a}.login h2{margin:0 0 8px}.login label,.form label{display:block;margin:12px 0 5px;font-size:11px;font-weight:800;color:#425675}.login input{width:100%;padding:9px;border:1px solid var(--line2);border-radius:7px}
@@ -54,7 +54,7 @@
     .stat span{font-size:9px;letter-spacing:.08em}.stat b{margin-top:1px;font-size:16px;color:#1d3556}
     .status{min-height:18px;padding:0 18px 11px;color:#77849a}
     .sheet-panel{margin-top:14px;border-radius:16px}
-    .sticky-calendar-shell{position:sticky;top:8px;z-index:40;display:flex;height:calc(100vh - 16px);min-height:600px;flex-direction:column}
+    .sticky-calendar-shell{position:sticky;top:8px;z-index:40;display:flex;height:calc(100vh - 16px);min-height:600px;flex-direction:column;scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:8px}
     .sheet-toolbar{min-height:44px;padding:10px 16px;border-bottom-color:#dce4ef;background:linear-gradient(180deg,#fff,#fbfcfe)}
     .sheet-toolbar strong{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.04em}.sheet-toolbar strong:before{content:"";width:4px;height:17px;border-radius:999px;background:linear-gradient(#4a8be4,#235caa)}
     .sheet-toolbar span{font-size:9.5px}.calendar-legend{display:flex;align-items:center;gap:12px;margin-left:10px;color:#65738a;font-size:9px}.calendar-legend i{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;vertical-align:1px}
@@ -89,7 +89,7 @@
     .modal-back{background:#0e203a99;backdrop-filter:blur(5px)}.modal{border:1px solid #ffffff70;border-radius:20px;box-shadow:0 30px 80px #07142666}
     .modal-head{padding:16px 20px;background:#fbfcfe}.modal-head h2{font-size:18px;color:#17345f}.form{padding:8px 20px 20px}.form-grid{gap:2px 16px}.form label{margin-top:13px;color:#4c607d;font-size:10px;letter-spacing:.04em}.form input,.form select,.form textarea{border-color:#d6e0ec;border-radius:9px;padding:9px 10px;background:#fcfdff;transition:.15s ease}.form input:focus,.form select:focus,.form textarea:focus{border-color:#4f8fe7;background:#fff;box-shadow:0 0 0 3px #3b82f618;outline:0}.modal-actions{padding:13px 20px;background:#f8fafc}.modal-actions button{min-height:38px;border-radius:9px}
     @media(max-width:1100px){.toolbar{gap:10px}.calendar-filters{order:3;width:100%}.toolbar-actions{margin-left:auto}.sheet-toolbar span{display:none}}
-    @media(max-width:900px){.header-inner{padding:11px 12px}.nav{overflow:auto;max-width:100%}main{padding:0 8px}.month-nav{width:100%;justify-content:center}.month-title{width:auto;order:0}.calendar-filters{overflow:auto}.toolbar-actions{width:100%;justify-content:flex-end}.sticky-calendar-shell{position:relative;top:auto;height:74vh;min-height:540px}.calendar-legend{display:none}}
+    @media(max-width:900px){html{scroll-snap-type:none}.header-inner{padding:11px 12px}.nav{overflow:auto;max-width:100%}main{padding:0 8px}.month-nav{width:100%;justify-content:center}.month-title{width:auto;order:0}.calendar-filters{overflow:auto}.toolbar-actions{width:100%;justify-content:flex-end}.sticky-calendar-shell{position:relative;top:auto;height:74vh;min-height:540px;scroll-snap-align:none}.calendar-legend{display:none}}
 
     /* UX53: 形は維持し、判断速度を上げる高コントラスト表示 */
     body{color:#101c2f;background:#eef2f6}
