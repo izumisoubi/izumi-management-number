@@ -241,20 +241,18 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
 .estimate-cost-panel #csumFinal{padding:5px 16px 7px!important;}
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
-.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;}
-.self-cost-slot-row{display:grid;grid-template-columns:74px repeat(3,minmax(180px,1fr)) 98px;align-items:end;gap:5px;margin:3px 0;}
-.self-cost-slot-label{color:var(--tm);font-size:10px;font-weight:800;white-space:nowrap;}
-.self-cost-slot-pair{display:block;min-width:0;padding:3px;border:1px solid var(--tbr);border-radius:5px;}
-.self-cost-slot-head,.self-cost-slot-fields{display:grid;grid-template-columns:minmax(58px,1fr) minmax(58px,1fr) minmax(46px,.75fr);gap:3px;min-width:0;}
-.self-cost-slot-head span{padding:0 2px 2px;color:var(--tm);font-size:8.5px;font-weight:700;text-align:center;white-space:nowrap;}
-.self-cost-slot-input{width:100%;min-width:0;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 5px;color:var(--tt);font-size:10.5px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.estimate-cost-panel #csumTop{padding-bottom:4px;border-bottom:0;}
+.estimate-cost-panel #csumProfit{padding-top:5px;}
+.self-cost-slots-panel{padding:0 16px 5px;font-family:'Helvetica Neue',sans-serif;}
+.self-cost-grid{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px;}
+.self-cost-grid th,.self-cost-grid td{border:1px solid var(--tbr);padding:0;background:transparent;}
+.self-cost-grid th{height:17px;color:var(--tm);font-weight:700;text-align:center;background:rgba(100,120,160,.08);}
+.self-cost-grid .self-cost-kind{width:74px;padding:0 6px;color:var(--tm);font-size:10px;font-weight:800;text-align:left;white-space:nowrap;}
+.self-cost-grid .self-cost-total-head,.self-cost-grid .self-cost-total{width:92px;}
+.self-cost-grid .self-cost-total{padding:0 5px;color:var(--tg);font-size:10px;font-weight:800;text-align:right;white-space:nowrap;}
+.self-cost-slot-input{width:100%;min-width:0;height:25px;background:transparent;border:0;border-radius:0;padding:3px 5px;color:var(--tt);font-size:10.5px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
 .self-cost-slot-name{text-align:left;}
-.self-cost-slot-input:focus{border-color:var(--ta);}
-.self-cost-slot-total{color:var(--tg);font-size:10px;font-weight:800;text-align:right;white-space:nowrap;}
-@media(max-width:900px){
-  .self-cost-slot-row{grid-template-columns:64px repeat(3,minmax(66px,1fr));}
-  .self-cost-slot-total{grid-column:2/-1;}
-}
+.self-cost-slot-input:focus{background:rgba(79,142,247,.08);box-shadow:inset 0 0 0 1px var(--ta);}
 .invoice-summary-panel .cost-head,#invSettingsPanel .cost-head{padding:7px 14px}
 .invoice-summary-panel .csum{padding:8px 16px}
 .invoice-summary-panel .cs{padding:2px 0}
@@ -802,23 +800,33 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
           <option value="portrait">縦型（標準・負担内訳なし）</option>
         </select>
       </div>
-      <div class="csum" id="csum"></div>
+      <div class="csum" id="csumTop"></div>
       <div id="selfCostSlotsPanel" class="self-cost-slots-panel">
-        <div class="self-cost-slot-row">
-          <span class="self-cost-slot-label">自社人工</span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" aria-label="自社人工1税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" aria-label="自社人工1税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" aria-label="自社人工の名前1"></span></span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" aria-label="自社人工2税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" aria-label="自社人工2税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" aria-label="自社人工の名前2"></span></span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" aria-label="自社人工3税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" aria-label="自社人工3税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" aria-label="自社人工の名前3"></span></span>
-          <span class="self-cost-slot-total" id="selfLaborSlotsTotal">税抜計 ¥0</span>
-        </div>
-        <div class="self-cost-slot-row">
-          <span class="self-cost-slot-label">自社資材</span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" aria-label="自社資材1税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" aria-label="自社資材1税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" aria-label="自社資材の名前1"></span></span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" aria-label="自社資材2税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" aria-label="自社資材2税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" aria-label="自社資材の名前2"></span></span>
-          <span class="self-cost-slot-pair"><span class="self-cost-slot-head"><span>税抜</span><span>税込</span><span>名前</span></span><span class="self-cost-slot-fields"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" aria-label="自社資材3税抜"><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" aria-label="自社資材3税込"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" aria-label="自社資材の名前3"></span></span>
-          <span class="self-cost-slot-total" id="selfMaterialSlotsTotal">税抜計 ¥0</span>
-        </div>
+        <table class="self-cost-grid" aria-label="自社人工・自社資材">
+          <thead>
+            <tr><th class="self-cost-kind" rowspan="2">区分</th><th colspan="3">1</th><th colspan="3">2</th><th colspan="3">3</th><th class="self-cost-total-head" rowspan="2">税抜計</th></tr>
+            <tr><th>税抜</th><th>税込</th><th>名前</th><th>税抜</th><th>税込</th><th>名前</th><th>税抜</th><th>税込</th><th>名前</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="self-cost-kind">自社人工</th>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" aria-label="自社人工1税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" aria-label="自社人工1税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" aria-label="自社人工の名前1"></td>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" aria-label="自社人工2税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" aria-label="自社人工2税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" aria-label="自社人工の名前2"></td>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" aria-label="自社人工3税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" aria-label="自社人工3税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" aria-label="自社人工の名前3"></td>
+              <td class="self-cost-total" id="selfLaborSlotsTotal">¥0</td>
+            </tr>
+            <tr>
+              <th class="self-cost-kind">自社資材</th>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" aria-label="自社資材1税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" aria-label="自社資材1税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" aria-label="自社資材の名前1"></td>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" aria-label="自社資材2税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" aria-label="自社資材2税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" aria-label="自社資材の名前2"></td>
+              <td><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" aria-label="自社資材3税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" aria-label="自社資材3税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" aria-label="自社資材の名前3"></td>
+              <td class="self-cost-total" id="selfMaterialSlotsTotal">¥0</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="self-cost-note">※自社人工・自社資材は原価・粗利益の計算に含まれます。見積書には明細表示されません。</div>
       </div>
+      <div class="csum" id="csumProfit"></div>
       <!-- 紹介料：静的HTML（従来位置・内容を保持） -->
       <div id="shokaiPanelStatic" class="estimate-referral-panel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
@@ -2876,13 +2884,12 @@ function renderTotals(){
   const cost=totCost(),profit=sub-cost;
   let estimateCostData={};try{estimateCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
   renderSelfCostSlots(estimateCostData);
-  const estimateSelfLabor=parseFloat(String(estimateCostData.jisha_jin||'').replace(/,/g,''))||0;
-  const estimateSelfMaterials=parseFloat(String(estimateCostData.jisha_mat||'').replace(/,/g,''))||0;
   const pRate=sub>0?parseFloat((profit/sub*100).toFixed(1)):0;
   st('e-sub',yen(sub));st('e-tax',yen(tax));st('e-total',yen(tot));
   // ptfootはrenderPrintで管理するため、ここでは更新しない
   const pct=Math.min(100,Math.max(0,pRate));
-  const csum=document.getElementById('csum');
+  const csumTop=document.getElementById('csumTop');
+  const csumProfit=document.getElementById('csumProfit');
   const s1exc=numberValue(document.getElementById('shokai_yen')?.value);
   const s1inc=numberValue(document.getElementById('shokai_yen_inc')?.value);
   const s2exc=numberValue(document.getElementById('shokai_yen2')?.value);
@@ -2900,7 +2907,7 @@ function renderTotals(){
   const setPct=(id,val,base)=>{const el=document.getElementById(id);if(el)el.textContent=base>0&&val?'('+Math.round(val/base*100)+'%)':'%';}
   setPct('shokai_pct_disp',s1exc,sub);setPct('shokai_pct_inc_disp',s1inc,tot);
   setPct('shokai_pct2_disp',s2exc,sub);setPct('shokai_pct2_inc_disp',s2inc,tot);
-  if(csum)csum.innerHTML=`
+  if(csumTop)csumTop.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;">
       <div class="cs"><span style="color:var(--tm)">原価合計（税抜）</span><span class="cv">${yen(cost)}</span></div>
       <div class="cs"><span style="color:var(--tm)">売上合計（税抜）</span><span class="cv">${yen(sub)}</span></div>
@@ -2908,12 +2915,8 @@ function renderTotals(){
       <div class="cs"><span style="color:var(--tm)">売上消費税（10%）</span><span class="cv">${yen(tax)}</span></div>
       <div class="cs"><span style="color:var(--tm)">原価合計（税込）</span><span class="cv">${yen(Math.round(cost*1.1))}</span></div>
       <div class="cs"><span style="color:var(--tm)">売上合計（税込）</span><span class="cv" style="color:var(--ta)">${yen(tot)}</span></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:6px;padding-top:6px;border-top:1px solid var(--tbr);">
-      <div class="cs"><span style="color:var(--tm)">自社人工（税抜）</span><span class="cv">${yen(estimateSelfLabor)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">自社資材（税抜）</span><span class="cv">${yen(estimateSelfMaterials)}</span></div>
-      <div class="self-cost-note">※自社人工・自社資材は原価・粗利益の計算に含まれます。見積書には明細表示されません。</div>
-    </div>
+    </div>`;
+  if(csumProfit)csumProfit.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:8px;padding-top:8px;border-top:2px solid var(--tbr);">
       <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税抜粗利益</span><span class="cv">${yen(profit)}&ensp;<span style="font-size:12px">(${pRate}%)</span></span></div>
       <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税込粗利益</span><span class="cv">${yen(taxIncProfit)}&ensp;<span style="font-size:12px">(${taxIncPRate}%)</span></span></div>
@@ -4149,8 +4152,8 @@ function renderSelfCostSlots(data=ctData){
   });
   const laborTotal=document.getElementById('selfLaborSlotsTotal');
   const materialTotal=document.getElementById('selfMaterialSlotsTotal');
-  if(laborTotal)laborTotal.textContent='税抜計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_jin'));
-  if(materialTotal)materialTotal.textContent='税抜計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_mat'));
+  if(laborTotal)laborTotal.textContent=yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_jin'));
+  if(materialTotal)materialTotal.textContent=yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_mat'));
   const laborNames=document.getElementById('ct-self-labor-names');
   const materialNames=document.getElementById('ct-self-material-names');
   if(laborNames)laborNames.textContent=selfCostNames('jisha_jin',normalized).join('・');
