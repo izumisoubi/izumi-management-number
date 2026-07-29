@@ -13,11 +13,11 @@
 <script src="自社原価共通.js?v=20260729-UX49"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
-body.t-warm{--tb:#1c1208;--tc:#271a0e;--tbr:#5a3820;--ta:#e07840;--ta2:#c85020;--tg:#c8a030;--tr:#e04040;--tt:#f0e8d8;--tm:#a08870;--ti:#140c04;}
-body.t-mono{--tb:#0e0e0e;--tc:#1a1a1a;--tbr:#404040;--ta:#c0c0c0;--ta2:#909090;--tg:#a0a0a0;--tr:#e04040;--tt:#e0e0e0;--tm:#707070;--ti:#080808;}
-body.t-white{--tb:#f0f2f5;--tc:#ffffff;--tbr:#d8dce8;--ta:#3070e0;--ta2:#6040c0;--tg:#18a870;--tr:#d03030;--tt:#101828;--tm:#60708a;--ti:#f8f9fc;}
-body.t-light{--tb:#e8edf8;--tc:#f4f6fc;--tbr:#c8d0e8;--ta:#2860d0;--ta2:#5030b0;--tg:#148860;--tr:#c02020;--tt:#0c1420;--tm:#506080;--ti:#edf0f8;}
+:root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--to:#f0a33a;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
+body.t-warm{--tb:#1c1208;--tc:#271a0e;--tbr:#5a3820;--ta:#e07840;--ta2:#c85020;--tg:#c8a030;--to:#e59a3a;--tr:#e04040;--tt:#f0e8d8;--tm:#a08870;--ti:#140c04;}
+body.t-mono{--tb:#0e0e0e;--tc:#1a1a1a;--tbr:#404040;--ta:#c0c0c0;--ta2:#909090;--tg:#a0a0a0;--to:#c99045;--tr:#e04040;--tt:#e0e0e0;--tm:#707070;--ti:#080808;}
+body.t-white{--tb:#f0f2f5;--tc:#ffffff;--tbr:#d8dce8;--ta:#3070e0;--ta2:#6040c0;--tg:#18a870;--to:#d97706;--tr:#d03030;--tt:#101828;--tm:#60708a;--ti:#f8f9fc;}
+body.t-light{--tb:#e8edf8;--tc:#f4f6fc;--tbr:#c8d0e8;--ta:#2860d0;--ta2:#5030b0;--tg:#148860;--to:#c56b08;--tr:#c02020;--tt:#0c1420;--tm:#506080;--ti:#edf0f8;}
 body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:13px;background:var(--tb);color:var(--tt);transition:background .25s,color .25s;}
 .tabbar{background:var(--tc);border-bottom:1px solid var(--tbr);display:flex;align-items:center;flex-wrap:wrap;padding:0 14px;position:sticky;top:0;z-index:300;box-shadow:0 2px 10px rgba(0,0,0,.25);font-family:'Helvetica Neue','Hiragino Sans',sans-serif;gap:0;max-width:100vw;}
 .brand{display:flex;align-items:center;gap:8px;padding:9px 14px 9px 0;border-right:1px solid var(--tbr);margin-right:4px;}
@@ -205,6 +205,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ctbl input:focus,.ctbl select:focus{outline:none;background:transparent;}
 .ctbl select option{background:var(--tc);}
 .ctbl .ca{text-align:right;font-weight:600;color:var(--tg);padding:3.5px 5px;}
+.ctbl [data-f="cost"],.ctbl .cca{color:var(--to);font-weight:700;}
+.ctbl [data-f="sellOverride"],.ctbl .csa{color:var(--ta);font-weight:700;}
 .ctbl .cp{text-align:right;color:var(--tm);font-size:10.5px;padding:3.5px 5px;}
 .ctbl .cdel{cursor:pointer;color:var(--tbr);text-align:center;padding:3.5px 3px;font-size:11px;}
 .ctbl .cdel:hover{color:var(--tr);}
@@ -259,6 +261,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .profit-flow-value{margin-top:2px;color:var(--tt);font-size:18px;font-weight:900;line-height:1.1;letter-spacing:-.035em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .profit-flow-share{flex:0 0 auto;color:var(--tm);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;}
 .profit-flow-card.is-sales .profit-flow-value{color:var(--ta);}
+.profit-flow-card.is-cost{border-color:color-mix(in srgb,var(--to) 32%,var(--tbr));background:color-mix(in srgb,var(--to) 6%,var(--tc));}
+.profit-flow-card.is-cost .profit-flow-value,.profit-flow-card.is-cost .profit-flow-meta strong{color:var(--to);}
 .profit-flow-card.is-result.is-positive .profit-flow-value{color:var(--tg);}
 .profit-flow-card.is-result.is-negative .profit-flow-value{color:var(--tr);}
 .profit-flow-card.is-result.is-neutral .profit-flow-value{color:var(--tm);}
@@ -364,7 +368,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .doc-meta-value{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;}
 .doc-kanri{text-align:right;font-size:10px;line-height:1.2;min-height:13px;margin:0 0 2px;}
 .report-a4{min-height:267mm;}
-.report-date{text-align:right;font-size:11px;margin:5px 0 24px;}
+.report-meta{display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:11px;margin:5px 0 24px;min-height:14px;}
+.report-management{font-variant-numeric:tabular-nums;}
+.report-date{text-align:right;font-size:11px;}
 .report-top{min-height:82px;margin-bottom:28px;}
 .report-top .right-col{padding-top:0;}
 .report-intro{font-size:14px;line-height:1.8;margin:36px 0 48px;}
@@ -517,7 +523,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ord-vcard-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .ord-vcard-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .ord-vcard-name{font-size:13px;font-weight:800;color:var(--tt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ord-vcard-amt{font-size:18px;font-weight:800;font-family:'Helvetica Neue',sans-serif;color:var(--tg);white-space:nowrap;}
+.ord-vcard-amt{font-size:18px;font-weight:800;font-family:'Helvetica Neue',sans-serif;color:var(--to);white-space:nowrap;}
 .ord-vcard-sub{font-size:11px;color:var(--tm);margin-bottom:8px;line-height:1.6;}
 .ord-vcard-btn{
   width:100%;padding:7px;border-radius:5px;
@@ -539,8 +545,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ord-vendor-sel{background:transparent;border:none;width:100%;color:var(--tt);font-size:10px;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;}
 .ord-vendor-sel:focus{background:rgba(247,168,79,.09);}
 .ord-vendor-sel option{background:var(--tc);}
-.ord-order-inp{background:transparent;border:none;width:100%;color:var(--tg);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
-.ord-order-inp:focus{background:rgba(46,207,160,.07);}
+.ord-order-inp{background:transparent;border:none;width:100%;color:var(--to);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
+.ord-order-inp:focus{background:color-mix(in srgb,var(--to) 8%,transparent);}
 .ctbl .ord-has-vendor{background:rgba(46,207,160,.03)!important;}
 /* 単価候補：入力欄の直下にだけ表示し、表のスクロールや印刷には混ざらない */
 .unit-price-suggest{position:fixed;z-index:12000;min-width:250px;max-width:min(430px,calc(100vw - 24px));max-height:280px;overflow:auto;background:var(--tc);border:1px solid var(--ta);border-radius:9px;box-shadow:0 12px 30px rgba(0,0,0,.22);padding:5px;}
@@ -549,7 +555,11 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .unit-price-suggest button:hover,.unit-price-suggest button:focus{background:var(--ti);outline:none;}
 .unit-price-suggest .ups-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .unit-price-suggest .ups-meta{font-size:10px;color:var(--tm);}
-.unit-price-suggest .ups-price{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--tg);font-size:13px;font-weight:800;white-space:nowrap;}
+.unit-price-suggest .ups-price{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--to);font-size:13px;font-weight:800;white-space:nowrap;}
+.ctbl th:nth-child(7),.ctbl th:nth-child(8){color:var(--to);}
+.ctbl th:nth-child(10),.ctbl th:nth-child(11){color:var(--ta);}
+.ctbl .landlord-net,.ctbl .tenant-net{color:var(--ta);}
+#invCtbody [data-f="amount"]{color:var(--ta);font-weight:700;}
 /* 注文確認書プレビュー */
 .ord-preview-h1{font-size:22px;font-weight:700;text-align:center;letter-spacing:6px;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:10px;}
 .ord-preview-tbl{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;}
@@ -1074,8 +1084,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
             <th>仕　様</th>
             <th>数量</th>
             <th>単位</th>
-            <th style="color:var(--tg)">発注単価</th>
-            <th style="color:var(--tg)">発注金額</th>
+            <th style="color:var(--to)">発注単価</th>
+            <th style="color:var(--to)">発注金額</th>
             <th>備考</th>
             <th style="color:#f7a84f">業者割当</th>
             <th></th>
@@ -1347,7 +1357,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="inv-left" id="reportLeft">
     <div class="inv-left-inner" id="reportLeftInner">
       <div class="a4 font-mincho report-a4" id="a4report">
-        <div class="report-date" id="r-date"></div>
+        <div class="report-meta"><div class="report-management">管理番号　<span id="r-kanri"></span></div><div class="report-date" id="r-date"></div></div>
         <div class="doc-title">完　了　報　告　書</div>
         <div class="top-row report-top">
           <div class="left-col"><div class="client-line"><span id="r-client"></span></div></div>
@@ -2250,6 +2260,7 @@ function syncInv(){
 function syncReport(){
   const reportDate=vv('r-date-in')||vv('b-kanko-date')||vv('b-date');
   const completedDate=vv('b-completed-on')||vv('r-completed-in')||vv('b-kanko-date');
+  st('r-kanri',vv('b-kanri'));
   st('r-date',fmtD(reportDate));
   st('r-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));
   st('r-property',vv('b-property'));
@@ -2994,7 +3005,7 @@ function profitFlowHtml({heading,note,salesLabel,salesExTax,lineCost,selfLabor,s
       <div class="profit-flow" aria-label="${heading}">
         <div class="profit-flow-card is-sales"><span class="profit-flow-label">${salesLabel}</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(salesExTax)}</strong></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(salesTaxIn)}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-share">${shareOfSales(lineCost)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(lineCost*1.1))}</strong></span></div>
+        <div class="profit-flow-card is-cost"><span class="profit-flow-label">明細原価</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-share">${shareOfSales(lineCost)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(lineCost*1.1))}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
         <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-share">${shareOfSales(selfLabor)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfLabor*1.1))}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
@@ -7495,8 +7506,8 @@ function renderOrdTable(){
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
           <td><select data-f="unit" onchange="ordSf(${r.id},'unit',this.value)">${uOpts}</select></td>
-          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--tg);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
-          <td class="ca oamt" style="white-space:nowrap;color:var(--tg);font-weight:700"></td>
+          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
+          <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
           <td><select class="ord-vendor-sel" data-f="vendor"
   onchange="setVendor(${r.id},this.value)"
@@ -7522,7 +7533,7 @@ function renderOrdTable(){
       });
       const orderCostInput=tr.querySelector('[data-f=orderCost]');
       if(orderCostInput){
-        orderCostInput.style.color=r._orderCostManual?'var(--ta)':'var(--tg)';
+        orderCostInput.style.color='var(--to)';
         orderCostInput.title=r._orderCostManual
           ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
           :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';
@@ -7758,7 +7769,7 @@ function setOrderCost(id,val){
   setOrderCostManualFlag(r,r.orderCost);
   const orderCostInput=document.querySelector(`#ordtbody tr[data-rid="${id}"] [data-f="orderCost"]`);
   if(orderCostInput){
-    orderCostInput.style.color=r._orderCostManual?'var(--ta)':'var(--tg)';
+    orderCostInput.style.color='var(--to)';
     orderCostInput.title=r._orderCostManual
       ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
       :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';

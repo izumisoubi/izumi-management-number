@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#078b4b">
   <title>イズミ装美 経営会議資料</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="会議月度共通.js?v=20260729-UX50"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root{--green:#00ad55;--deep:#087a45;--navy:#153b67;--line:#b8c5d8;--bg:#edf2f8;--text:#162033;--red:#cb2d3e}
@@ -26,6 +27,8 @@
     .footer{padding:9px 26px;text-align:right;font-size:9px;color:#66748c}.error{color:#b42331}
     @media(max-width:850px){.kpis,.grid2,.financial-grid{grid-template-columns:1fr 1fr}.financial-inputs{grid-template-columns:repeat(2,minmax(120px,1fr))}.report{margin:6px}.section{padding:14px}.hero{padding:16px}.controls{margin:6px}.print{margin-left:0}}
     @media print{@page{size:A4 landscape;margin:8mm}body{background:#fff}.top,.controls{display:none!important}.report{box-shadow:none;max-width:none;margin:0}.hero{padding:12px 18px}.hero h2{font-size:24px}.section{padding:11px 18px;break-inside:avoid}.section h3{font-size:16px;margin-bottom:8px}.kpi{min-height:68px;padding:7px}.kpi b{font-size:19px}.footer{padding:5px 18px}.page-break{break-before:page}}
+    .meeting-rollover-row td{background:#f3efff!important;color:#493777}
+    .meeting-rollover-row td:first-child{box-shadow:inset 4px 0 #8b67d2}
   </style>
 </head>
 <body>
@@ -252,7 +255,7 @@
         if((event.key==='Delete'||event.key==='Backspace')&&financialSelectedControls().length>1&&!hasTextSelection){event.preventDefault();clearFinancialSelection();return}
       });
     }
-    let projects=[],managementOverrides=new Map(),billingOverrides=new Map(),meetingProjects=new Set(),orderCostByProject=new Map(),financialInput={},appOpening=false;
+    let projects=[],managementOverrides=new Map(),billingOverrides=new Map(),meetingOverrides=new Map(),orderCostByProject=new Map(),financialInput={},appOpening=false;
     function setLoginStatus(text){$('loginStatus').textContent=text}
     function revealLogin(){const card=$('loginCard');if(card)card.classList.remove('hidden')}
     async function signIn(){
@@ -398,7 +401,7 @@
       const overrides=overrideResult.data||[];
       managementOverrides=new Map(overrides.filter(item=>item.view_key==='management').map(item=>[item.row_key,item.field_values||{}]));
       billingOverrides=new Map(overrides.filter(item=>item.view_key==='billing').map(item=>[item.row_key,item.field_values||{}]));
-      meetingProjects=new Set(overrides.filter(item=>item.field_values?.meeting_checked).map(item=>item.project_id).filter(Boolean));
+      meetingOverrides=new Map(overrides.filter(item=>item.view_key==='meeting').map(item=>[item.project_id,item.field_values||{}]));
       populateFiscalYears();
       $('loadStatus').textContent=`${projects.length}案件を読み込み`;
       await loadFinancialInput();
@@ -409,8 +412,14 @@
     function projectRecord(project){
       const merged=mergedProject(project);
       const billing=billingOverrides.get(project.id)||{};
+      const meeting=meetingOverrides.get(project.id)||{};
       const invoiceDate=Object.hasOwn(billing,'invoice_date')?billing.invoice_date:merged.invoice_date;
       const invoiceParts=dateParts(invoiceDate);
+      const baseMeetingMonth=window.IzumiMeetingPeriod.normalizeMonth(merged.accounting_month||invoiceDate||merged.completed_on||merged.scheduled_completion_date||merged.reception_date);
+      const meetingMonth=window.IzumiMeetingPeriod.normalizeMonth(meeting.meeting_month)||baseMeetingMonth;
+      const fiscalCode=String(merged.management_number||'').match(/^(\d{2})-/)?.[1];
+      const baseMeetingYear=invoiceParts?.year||(fiscalCode&&baseMeetingMonth?2000+Number(fiscalCode)-(baseMeetingMonth>=9?1:0):0);
+      const meetingYear=window.IzumiMeetingPeriod.inferYear(baseMeetingYear,baseMeetingMonth,meetingMonth);
       const sales=Object.hasOwn(billing,'customer_invoice_amount')?num(billing.customer_invoice_amount):projectSales(merged);
       const orderCost=orderCostByProject.get(project.id)||0;
       const cost=projectCost(merged)||orderCost;
@@ -423,7 +432,9 @@
         billing_client_name:Object.hasOwn(billing,'client_name')?billing.client_name:merged.billing_client_name,
         property_name:Object.hasOwn(billing,'property_room')?billing.property_room:[merged.property_name,merged.room_number].filter(Boolean).join(' '),
         outstanding:Math.max(0,invoiceTaxIn-received),
-        meetingChecked:meetingProjects.has(project.id),
+        meetingMonth,meetingYear,
+        meetingMoved:window.IzumiMeetingPeriod.isMoved(baseMeetingMonth,meetingMonth),
+        meetingFromMonth:baseMeetingMonth,
         invoice_date:invoiceDate,
         invoiceYear:invoiceParts?.year||0,
         invoiceMonth:invoiceParts?.month||0
@@ -507,7 +518,7 @@
       svg.innerHTML=`<line x1="${left}" y1="${baseline}" x2="${right}" y2="${baseline}" stroke="#9aa8ba" stroke-width="1"/><polyline class="line-sales" points="${line('sales')}"/><polyline class="line-profit" points="${line('profit')}"/>${salesDots}${profitDots}${labels}<text x="8" y="${Math.max(12,top+3)}">${yen(maximum)}</text><text x="8" y="${Math.min(222,bottom+3)}">${yen(minimum)}</text>`;
     }
     function autoComment(monthRecords,totals,target,marginTarget,clientGroups,financial){
-      if(!monthRecords.length)return '対象月に請求書を提出した案件がありません。請求書提出日を確認してください。';
+      if(!monthRecords.length)return '対象月の会議案件がありません。会議用案件一覧の「会議月度」を確認してください。';
       const lines=[];
       const targetRate=target?totals.sales/target*100:0;
       lines.push(`売上は${yen(totals.sales)}${target?`（目標比${pct(targetRate)}）`:''}、粗利益は${yen(totals.profit)}、粗利率は${pct(totals.margin)}となりました。`);
@@ -515,8 +526,8 @@
       lines.push(totals.margin>=marginTarget?`粗利率は目標${pct(marginTarget)}を上回っています。`:`粗利率は目標${pct(marginTarget)}を下回っています。原価超過・追加工事・紹介料を確認してください。`);
       if(totals.sga)lines.push(`販管費入力は${yen(totals.sga)}、EBITDA概算は${yen(totals.ebitda)}です。`);
       if(totals.outstanding)lines.push(`未入金は${yen(totals.outstanding)}です。入金予定日と督促状況を確認してください。`);
-      const unchecked=monthRecords.filter(record=>!record.meetingChecked).length;
-      if(unchecked)lines.push(`経営会議チェック未完了の案件が${unchecked}件あります。`);
+      const carried=monthRecords.filter(record=>record.meetingMoved).length;
+      if(carried)lines.push(`前月等から繰り越された案件が${carried}件あります。薄紫表示の案件を確認してください。`);
       if(clientGroups[0]&&totals.sales&&clientGroups[0].sales/totals.sales>=.5)lines.push(`${clientGroups[0].name}の売上構成比が${pct(clientGroups[0].sales/totals.sales*100)}で、取引先集中度が高い状態です。`);
       if(financial.notes)lines.push(`補足：${financial.notes}`);
       return lines.join('\n');
@@ -527,10 +538,10 @@
       const month=Number($('targetMonth').value);
       const records=projects.map(projectRecord);
       const fiscalRecords=records.filter(record=>{
-        if(!record.invoiceYear||!record.invoiceMonth)return false;
-        return record.invoiceYear===fiscalCalendarYear(fiscal,record.invoiceMonth);
+        if(!record.meetingYear||!record.meetingMonth)return false;
+        return record.meetingYear===fiscalCalendarYear(fiscal,record.meetingMonth);
       });
-      const monthRecords=fiscalRecords.filter(record=>record.invoiceYear===fiscalCalendarYear(fiscal,month)&&record.invoiceMonth===month);
+      const monthRecords=fiscalRecords.filter(record=>record.meetingYear===fiscalCalendarYear(fiscal,month)&&record.meetingMonth===month);
       const sum=key=>monthRecords.reduce((total,record)=>total+num(record[key]),0);
       const totals={sales:sum('sales'),cost:sum('cost'),fee:sum('fee'),profit:sum('profit'),outstanding:sum('outstanding'),received:sum('received')};
       totals.margin=totals.sales?totals.profit/totals.sales*100:0;
@@ -550,7 +561,7 @@
         ['EBITDA概算',totals.ebitda,`粗利益－販管費`,totals.ebitda<0],
         ['未入金（税込）',totals.outstanding,`入金済 ${yen(totals.received)}`,totals.outstanding>0],
         ['手数料',totals.fee,'紹介料等',false],
-        ['経営会議対象',monthRecords.filter(record=>record.meetingChecked).length,`未チェック ${monthRecords.filter(record=>!record.meetingChecked).length}件`,false],
+        ['経営会議対象',monthRecords.length,`繰越 ${monthRecords.filter(record=>record.meetingMoved).length}件`,false],
         ['請求済案件',monthRecords.filter(record=>record.invoice_date).length,`全${monthRecords.length}件`,false],
         ['完工済案件',monthRecords.filter(record=>record.completed_on).length,`全${monthRecords.length}件`,false]
       ];
@@ -572,7 +583,7 @@
       $('profitDonutValue').textContent=pct(totals.margin);
       $('profitLegend').innerHTML=`<div><i style="background:var(--green)"></i>粗利益 ${yen(totals.profit)}</div><div><i style="background:#8db9e8"></i>原価 ${yen(totals.cost)}</div><div><i style="background:#e7a34f"></i>手数料 ${yen(totals.fee)}</div>`;
       const months=[9,10,11,12,1,2,3,4,5,6,7,8].map(value=>{
-        const list=fiscalRecords.filter(record=>record.invoiceMonth===value);
+        const list=fiscalRecords.filter(record=>record.meetingMonth===value);
         return {month:value,sales:list.reduce((sum,record)=>sum+record.sales,0),profit:list.reduce((sum,record)=>sum+record.profit,0)};
       });
       $('salesChart').innerHTML=chartHtml(months,'sales');
@@ -582,7 +593,7 @@
       $('clientTotal').innerHTML=`<tr><td colspan="2">総計</td><td class="num">${yen(totals.sales)}</td><td class="num">${yen(totals.cost)}</td><td class="num">${yen(totals.fee)}</td><td class="num">${yen(totals.profit)}</td><td class="num">${pct(totals.margin)}</td><td class="num">${monthRecords.length}</td></tr>`;
       $('staffRows').innerHTML=staffGroups.map(group=>`<tr><td>${esc(group.name)}</td><td class="num">${yen(group.sales)}</td><td class="num">${yen(group.cost)}</td><td class="num">${yen(group.profit)}</td><td class="num">${pct(group.sales?group.profit/group.sales*100:0)}</td><td class="num">${group.count}</td><td class="num">${yen(group.outstanding)}</td></tr>`).join('');
       $('outstandingRows').innerHTML=monthRecords.filter(record=>record.outstanding>0).sort((a,b)=>b.outstanding-a.outstanding).slice(0,20).map(record=>{const clientName=meetingClientName(record.customer_name,record.billing_client_name,record.client_name);return `<tr><td>${esc(record.management_number)}</td><td title="${esc(record.property_name)}">${esc(record.property_name)}</td><td title="${esc(clientName)}">${esc(clientName)}</td><td class="num">${yen(record.invoiceTaxIn)}</td><td class="num">${yen(record.outstanding)}</td></tr>`}).join('')||'<tr><td colspan="5">未入金案件はありません。</td></tr>';
-      $('meetingRows').innerHTML=monthRecords.filter(record=>record.meetingChecked).map(record=>`<tr><td>${esc(record.management_number)}</td><td title="${esc(record.property_name)}">${esc(record.property_name)}</td><td>${esc(record.staff_name)}</td><td class="num">${yen(record.sales)}</td><td>${record.completed_on?'完工':'進行中'}</td></tr>`).join('')||'<tr><td colspan="5">会議チェック済み案件はありません。</td></tr>';
+      $('meetingRows').innerHTML=monthRecords.map(record=>`<tr${record.meetingMoved?' class="meeting-rollover-row" title="元の月度から繰り越された案件です"':''}><td>${esc(record.management_number)}</td><td title="${esc(record.property_name)}">${esc(record.property_name)}</td><td>${esc(record.staff_name)}</td><td class="num">${yen(record.sales)}</td><td>${record.meetingMoved?`${record.meetingFromMonth}月から繰越`:(record.completed_on?'完工':'進行中')}</td></tr>`).join('')||'<tr><td colspan="5">対象月の会議案件はありません。</td></tr>';
     }
     $('targetMonth').innerHTML=Array.from({length:12},(_,index)=>`<option value="${index+1}">${index+1}月</option>`).join('');
     $('targetMonth').value=String(new Date().getMonth()+1);

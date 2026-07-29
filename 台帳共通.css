@@ -279,6 +279,10 @@ button:active {
   width: 142px;
 }
 
+.field.meeting-month-filter {
+  width: 92px;
+}
+
 .excel-help {
   display: inline-flex;
   align-items: center;
@@ -596,6 +600,16 @@ tbody tr.row-overdue td:first-child {
   box-shadow: inset 4px 0 #d94c5b;
 }
 
+tbody tr.row-rollover td:not(.selected),
+tbody tr.row-rollover:hover td:not(.selected) {
+  background: #f3efff !important;
+  color: #493777;
+}
+
+tbody tr.row-rollover td:first-child {
+  box-shadow: inset 4px 0 #8b67d2;
+}
+
 td.warning-cell,
 tbody tr:hover td.warning-cell {
   background: var(--yellow) !important;
@@ -746,6 +760,47 @@ td input[type="checkbox"] {
   width: var(--meeting-width);
   min-width: var(--meeting-width);
   max-width: var(--meeting-width);
+}
+
+.w-meeting-month {
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+}
+
+.rollover-badge {
+  position: absolute;
+  left: 3px;
+  bottom: 1px;
+  padding: 1px 4px;
+  border: 1px solid #b9a5e8;
+  border-radius: 999px;
+  background: #eee8ff;
+  color: #64459c;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.field-sales_invoice_ex_tax input,
+.field-customer_invoice_amount input,
+.field-sales_estimate_ex_tax input {
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.field-external_cost input,
+.field-estimate_amount_ex_tax input,
+.field-invoice_amount_ex_tax input {
+  color: #c56b08;
+  font-weight: 800;
+}
+
+.field-gross_profit_ex_tax input,
+.field-gross_profit_rate input {
+  color: #15805d;
+  font-weight: 800;
 }
 
 .w-number {

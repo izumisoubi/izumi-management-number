@@ -3,9 +3,10 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const config=window.LEDGER_CONFIG;
 const gridCore=window.IzumiGridCore;
+const meetingPeriod=window.IzumiMeetingPeriod;
 if(!gridCore)throw new Error('表入力共通.js を先に読み込んでください。');
-if(!config.fields.some(field=>field.key==='meeting_checked')){
-  config.fields.unshift({key:'meeting_checked',label:'会議用',type:'checkbox',width:'w-meeting'});
+if(config.viewKey==='meeting'&&!config.fields.some(field=>field.key==='meeting_checked')){
+  config.fields.unshift({key:'meeting_checked',label:'翌月へ<br>繰越',type:'checkbox',width:'w-meeting'});
 }
 const APP_VERSION='正式版';
 function normalizeStablePageUrls(){
@@ -31,6 +32,7 @@ const MEETING_USERS_FALLBACK=new Set([
 ]);
 const workspaceWidths={billing:'1600px',management:'1600px',cost:'1600px',unordered:'1600px',meeting:'1600px'};
 document.documentElement.style.setProperty('--workspace-width',config.workspaceWidth||workspaceWidths[config.viewKey]||'1600px');
+document.documentElement.style.setProperty('--meeting-width',config.viewKey==='meeting'?'64px':'0px');
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const numberValue=value=>{const parsed=Number(String(value??'').replace(/[,，¥￥\s]/g,''));return Number.isFinite(parsed)?parsed:0};
@@ -49,7 +51,8 @@ let quickHintTimer=null;
 const saveTimers=new Map();
 let pendingWritebackReconciliation=false;
 const fieldGuides={
-  meeting_checked:{mode:'manual',source:'この台帳で直接チェック',note:'経営会議で確認したい行の印です。ドラッグまたはコピーで下方向へ一括入力できます。'},
+  meeting_checked:{mode:'manual',source:'会議用案件一覧 ＞ 翌月へ繰越',note:'チェックすると現在の会議月度から翌月へ送り、現在月の集計から外します。繰越先では行を薄紫で表示します。'},
+  meeting_month:{mode:'manual',source:'会議用案件一覧 ＞ 会議月度',note:'この案件を集計する会議月度です。月度を変更すると繰越として記録し、元の月度は変更しません。'},
   management_number:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 管理番号',note:'管理番号マスターから選択した番号を自動同期します。'},
   reception_date:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 受付日'},
   input_date:{mode:'auto',source:'見積システム ＞ 基本情報 ＞ 受付日'},
@@ -157,7 +160,9 @@ function updateQuickHint(fieldKey,cell){
   if(!hint)return;
   const messages={
     reminder_required:'<b>要確認</b>は、社内メモ兼・色分けです。確認が済んだらチェックを外します。',
-    invoice_amount_ex_tax:'<b>請求金額</b>は、外注請求書を見て入力する金額です（得意先への請求額ではありません）。'
+    invoice_amount_ex_tax:'<b>請求金額</b>は、外注請求書を見て入力する金額です（得意先への請求額ではありません）。',
+    meeting_checked:'<b>翌月へ繰越</b>をチェックすると、今月の集計から外して翌月へ送ります。繰越先の月では薄紫で表示します。',
+    meeting_month:'<b>会議月度</b>は、この案件を集計する月です。元の計上月から変更した案件は薄紫で表示します。'
   };
   const message=messages[fieldKey];
   clearTimeout(quickHintTimer);
@@ -292,19 +297,19 @@ function initLoginHelp(){
 
 function quickFilterOptions(){
   if(config.viewKey==='meeting')return [
-    ['all','すべて'],['meeting','会議用'],['received','入金済み'],['unreceived','未入金'],['missing','未入力あり']
+    ['all','すべて'],['received','入金済み'],['unreceived','未入金'],['missing','未入力あり']
   ];
   if(config.viewKey==='billing')return [
     ['all','すべて'],['outstanding','未入金リスト'],['paid','入金済み'],['missing','未入力あり']
   ];
   if(config.viewKey==='cost')return [
-    ['all','すべて'],['meeting','会議用'],['vendorInvoiceMissing','外注請求未入力'],['negativeVariance','差異がマイナス'],['missing','未入力あり']
+    ['all','すべて'],['vendorInvoiceMissing','外注請求未入力'],['negativeVariance','差異がマイナス'],['missing','未入力あり']
   ];
   if(config.viewKey==='unordered')return [
-    ['all','すべて'],['meeting','会議用'],['missing','未入力あり']
+    ['all','すべて'],['missing','未入力あり']
   ];
   return [
-    ['all','すべて'],['meeting','会議用'],['notInvoiced','請求書未作成'],['missing','未入力あり']
+    ['all','すべて'],['notInvoiced','請求書未作成'],['missing','未入力あり']
   ];
 }
 
@@ -314,6 +319,7 @@ function initAdvancedControls(){
   const zoomField=toolbar?.querySelector('.field.zoom');
   if(!toolbar||!zoomField)return;
   zoomField.insertAdjacentHTML('afterend',`
+    ${config.viewKey==='meeting'?`<div class="field meeting-month-filter"><label>会議月度</label><select id="meetingMonthFilter"><option value="">すべて</option>${monthOptions.slice(1).map(value=>`<option value="${value}">${value}</option>`).join('')}</select></div>`:''}
     <div class="field staff-filter"><label>工事担当者</label><select id="staffFilter"><option value="">社員マスタから選択</option></select></div>
     <div class="field quick-filter"><label>絞り込み</label><select id="quickFilter">${quickFilterOptions().map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></div>
   `);
@@ -338,6 +344,13 @@ function initAdvancedControls(){
   $('lastPage').addEventListener('click',()=>setPage(totalPages()));
   $('staffFilter').addEventListener('change',()=>applyView(true));
   $('quickFilter').addEventListener('change',()=>applyView(true));
+  if($('meetingMonthFilter')){
+    const requestedMonth=new URL(location.href).searchParams.get('month');
+    $('meetingMonthFilter').value=requestedMonth&&monthOptions.includes(`${Number(requestedMonth)}月`)
+      ?`${Number(requestedMonth)}月`
+      :`${new Date().getMonth()+1}月`;
+    $('meetingMonthFilter').addEventListener('change',()=>applyView(true));
+  }
   const requestedFilter=new URL(location.href).searchParams.get('filter');
   if(requestedFilter&&[...$('quickFilter').options].some(option=>option.value===requestedFilter)){
     $('quickFilter').value=requestedFilter;
@@ -449,6 +462,9 @@ function mergedRow(row){
     values.outstanding_amount=numberValue(values.customer_invoice_amount)-numberValue(values.received_amount);
   }
   if(config.viewKey==='meeting'){
+    // 旧「会議用」チェックだけが残るデータは繰越にはしない。
+    // 会議月度が元月度と異なることを唯一の繰越判定にして、表示と集計を一致させる。
+    values.meeting_checked=Boolean(meetingPeriod?.isMoved(row.auto.meeting_month,values.meeting_month));
     values.gross_profit_ex_tax=numberValue(values.sales_invoice_ex_tax)-numberValue(values.external_cost)-numberValue(values.fee_amount);
     values.gross_profit_rate=numberValue(values.sales_invoice_ex_tax)
       ?values.gross_profit_ex_tax/numberValue(values.sales_invoice_ex_tax)*100
@@ -458,6 +474,9 @@ function mergedRow(row){
 }
 function rowVisualClass(merged){
   const project=projectFor(merged.projectId);
+  if(config.viewKey==='meeting'&&meetingPeriod?.isMoved(merged.auto.meeting_month,merged.values.meeting_month)){
+    return 'row-rollover';
+  }
   if(config.viewKey==='cost'||config.viewKey==='unordered'){
     if(Boolean(merged.values.reminder_required))return 'row-reminder';
     const orderedLines=(merged.lines||[]).filter(line=>line.ordered===true);
@@ -601,6 +620,8 @@ function buildMeetingRows(){
         management_number:project.management_number||'',
         property_room:[project.property_name,project.room_number].filter(Boolean).join(' '),
         staff_name:project.staff_name||'',
+        meeting_checked:false,
+        meeting_month:normalizeMonth(project.accounting_month||project.invoice_date||project.completed_on||project.scheduled_completion_date||project.reception_date),
         sales_invoice_ex_tax:sales,
         external_cost:numberValue(project.external_cost_ex_tax),
         fee_amount:numberValue(project.fee_amount),
@@ -801,13 +822,15 @@ function applyView(resetPage=false){
   flushDirtyRows();
   const year=$('yearFilter').value;
   const staff=$('staffFilter')?.value||'';
+  const meetingMonth=$('meetingMonthFilter')?.value||'';
   const keyword=$('search').value.trim().toLowerCase();
   viewRows=allRows.filter(row=>{
     const merged=mergedRow(row);
     const yearMatch=!year||String(merged.values.management_number||'').startsWith(`${year}-`);
     const staffMatch=!staff||merged.values.staff_name===staff;
+    const meetingMonthMatch=!meetingMonth||normalizeMonth(merged.values.meeting_month)===normalizeMonth(meetingMonth);
     const text=Object.values(merged.values).join(' ').toLowerCase();
-    return yearMatch&&staffMatch&&(!keyword||text.includes(keyword))&&matchesQuickFilter(merged.values);
+    return yearMatch&&staffMatch&&meetingMonthMatch&&(!keyword||text.includes(keyword))&&matchesQuickFilter(merged.values);
   });
   viewRows.sort(compareRows);
   if(resetPage)currentPage=1;
@@ -837,6 +860,7 @@ function clearSearch(){
   $('search').value='';
   if($('staffFilter'))$('staffFilter').value='';
   if($('quickFilter'))$('quickFilter').value='all';
+  if($('meetingMonthFilter'))$('meetingMonthFilter').value='';
   applyView(true);
 }
 function shrinkClass(value){
@@ -1060,7 +1084,7 @@ function renderTable(){
   const deleteHead=config.allowDelete?'<th class="delete-head">削除</th>':'';
   $('ledgerHead').innerHTML=`<tr>${config.fields.map(field=>{
     const sticky=field.key==='meeting_checked'?' meeting-head':field.key==='management_number'?' number-head':'';
-    return `<th class="${field.width||''}${sticky}"><button class="sort${sortField===field.key?' active':''}" onclick="sortLedger('${field.key}')">${field.label}${sortField===field.key?(sortDirection==='asc'?' ▲':' ▼'):''}</button></th>`;
+    return `<th class="${field.width||''}${sticky} field-${field.key}"><button class="sort${sortField===field.key?' active':''}" onclick="sortLedger('${field.key}')">${field.label}${sortField===field.key?(sortDirection==='asc'?' ▲':' ▼'):''}</button></th>`;
   }).join('')}${deleteHead}</tr>`;
   $('ledgerBody').innerHTML=rows.length?rows.map((row,rowIndex)=>{
     const merged=mergedRow(row);
@@ -1072,9 +1096,12 @@ function renderTable(){
       const manualRequired=field.manualRequired&&isEmptyField({...field,optional:false},merged.values[field.key])?' warning-cell':'';
       const warning=field.key==='outstanding_amount'&&numberValue(merged.values[field.key])>0?' warning-cell':'';
       const badge=field.key==='management_number'?estimateUpdateBadge(merged):'';
+      const rolloverBadge=field.key==='meeting_month'&&meetingPeriod?.isMoved(merged.auto.meeting_month,merged.values.meeting_month)
+        ?`<span class="rollover-badge" title="${esc(merged.auto.meeting_month||'元月度')}から${esc(merged.values.meeting_month)}へ繰越">繰越</span>`
+        :'';
       const onlineLink=field.key==='management_number'?estimateOpenLink(merged.values[field.key]):'';
       const jumpButton=sourceJumpButton(field,row);
-      return `<td data-row="${rowIndex}" data-col="${colIndex}" class="${field.width||''}${sticky}${empty}${guideClass}${manualRequired}${warning}">${inputHtml(field,merged.values[field.key])}${badge}${onlineLink}${jumpButton}</td>`;
+      return `<td data-row="${rowIndex}" data-col="${colIndex}" class="${field.width||''}${sticky}${empty}${guideClass}${manualRequired}${warning} field-${field.key}">${inputHtml(field,merged.values[field.key])}${rolloverBadge}${badge}${onlineLink}${jumpButton}</td>`;
     }).join('');
     const visualClass=rowVisualClass(merged);
     return `<tr data-key="${esc(row.key)}" data-row="${rowIndex}" class="${visualClass}">${cells}${deleteCell(row)}</tr>`;
@@ -1094,7 +1121,28 @@ function renderSummary(){
     return `<div class="sum-card"><span>${item.label}</span><b>${item.type==='count'?`${value}件`:money(value)}</b></div>`;
   }).join('')
     +`<div class="sum-card selection-summary"><span>選択範囲</span><b id="selectionSum">0セル　合計 ¥0</b></div>`
-    +`<div class="sum-card meeting-summary"><span>会議チェック</span><b id="meetingCheckedSum">${meetingCheckedCount()}件</b></div>`;
+    +(config.viewKey==='meeting'?`<div class="sum-card meeting-summary"><span>翌月繰越</span><b id="meetingCheckedSum">${meetingCheckedCount()}件</b></div>`:'');
+}
+function meetingSourceRow(row){
+  return allRows.find(item=>String(item.key)===String(row?.dataset?.key));
+}
+function syncMeetingRolloverControls(row,changedField){
+  if(config.viewKey!=='meeting'||!row||!meetingPeriod)return;
+  const source=meetingSourceRow(row);
+  const base=meetingPeriod.normalizeMonth(source?.auto?.meeting_month);
+  const checkbox=row.querySelector('[data-field="meeting_checked"]');
+  const monthSelect=row.querySelector('[data-field="meeting_month"]');
+  if(!base||!checkbox||!monthSelect)return;
+  if(changedField==='meeting_checked'){
+    monthSelect.value=checkbox.checked?`${meetingPeriod.nextMonth(base)}月`:`${base}月`;
+    markUserTouched(monthSelect);
+    setEmptyState(monthSelect);
+  }else if(changedField==='meeting_month'){
+    checkbox.checked=meetingPeriod.isMoved(base,monthSelect.value);
+    markUserTouched(checkbox);
+    setEmptyState(checkbox);
+  }
+  row.classList.toggle('row-rollover',meetingPeriod.isMoved(base,monthSelect.value));
 }
 function bindSheetEvents(){
   document.querySelectorAll('#ledgerBody input,#ledgerBody select').forEach(input=>{
@@ -1105,6 +1153,9 @@ function bindSheetEvents(){
       setEmptyState(input);
       row.classList.add('dirty');
       if(input.dataset.field==='reminder_required')row.classList.toggle('row-reminder',input.checked);
+      if(input.dataset.field==='meeting_checked'||input.dataset.field==='meeting_month'){
+        syncMeetingRolloverControls(row,input.dataset.field);
+      }
       updateComputed(row);
       queueRowSave(row.dataset.key);
     };
@@ -1310,9 +1361,10 @@ function setCheckboxCell(cell,value){
   const row=checkbox.closest('tr');
   row.classList.add('dirty');
   if(checkbox.dataset.field==='reminder_required')row.classList.toggle('row-reminder',Boolean(value));
+  if(checkbox.dataset.field==='meeting_checked')syncMeetingRolloverControls(row,'meeting_checked');
   setEmptyState(checkbox);
   queueRowSave(row.dataset.key,120);
-  // Reflect the change in the 会議チェック counter immediately — the
+  // Reflect the change in the 翌月繰越 counter immediately — the
   // underlying row data isn't updated until the debounced save above
   // completes, so meetingCheckedCount() (which reads from viewRows)
   // would still show the stale figure for the ~120ms-1s in between.
@@ -1826,6 +1878,7 @@ async function applyLedgerBlanksToEstimate(source,manual){
   return {applied:Array.isArray(data?.applied)?data.applied:[],error};
 }
 async function syncLedgerInputsToEstimate(source,manual){
+  if(config.viewKey==='meeting')return {applied:[],error:null};
   if(!source.projectId||!Object.keys(manual).length)return {applied:[],error:null};
   const {data,error}=await db.rpc('sync_ledger_inputs_to_estimate',{
     p_project_id:source.projectId,
@@ -1841,6 +1894,8 @@ function pendingWritebackFields(manual){
     ?['reception_date','input_date','staff_name','work_name','scheduled_completion_date','completed_on','accounting_month','customer_name','customer_contact_name','notes']
     :config.viewKey==='billing'
       ?['invoice_date','accounting_month']
+      :config.viewKey==='meeting'
+        ?[]
       :['invoice_amount_ex_tax','invoice_from_vendor_date','payment_date','reminder_required'];
   return Object.fromEntries(Object.entries(manual||{}).filter(([key])=>allowed.includes(key)));
 }
