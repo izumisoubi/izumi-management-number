@@ -154,6 +154,27 @@
     .leave-picker-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px 22px 15px;border-bottom:1px solid #e0e7ef}.leave-picker-head h2{margin:0;color:#17345f;font-size:18px}.leave-picker-head p{margin:6px 0 0;color:#6b788c;font-size:11px}
     .leave-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:20px 22px 22px}.leave-option{min-height:64px;border:1px solid #bdc9d8;border-radius:11px;background:#f7f9fc;color:#273e5d;font-size:15px;font-weight:800}.leave-option:hover,.leave-option:focus{border-color:#3979c9;background:#edf5ff;color:#135ba9;box-shadow:0 0 0 3px #3478e51a}.leave-option:disabled{cursor:wait;opacity:.45}
     @media(max-width:1100px){.today-attendance{order:2}.toolbar .spacer{display:none}.toolbar-actions{margin-left:auto}}
+
+    /* UX55: 表の精度を保ったまま、硬い罫線を柔らかい予定表へ */
+    .sheet-panel{border-color:#d7e0ea;border-radius:18px;box-shadow:0 16px 38px rgba(18,48,84,.1)}
+    .sheet-toolbar{min-height:46px;padding:10px 17px;background:linear-gradient(180deg,#fff 0%,#f8fafc 100%)}
+    .sheet-wrap{background:#edf2f7}
+    #scheduleTable{background:#f7f9fc}
+    #scheduleTable th,#scheduleTable td{border-right-color:#d6dee8;border-bottom-color:#dbe3ec}
+    #scheduleTable thead th{background:linear-gradient(180deg,#123a61 0%,#0e3153 100%)!important;border-right-color:#ffffff1f!important;box-shadow:none}
+    #scheduleTable thead tr:first-child th:first-child{border-top-left-radius:11px}
+    #scheduleTable thead tr:first-child th:last-child{border-top-right-radius:11px}
+    #scheduleTable thead tr:nth-child(2) th{background:linear-gradient(180deg,#24547f 0%,#1c486f 100%)!important;color:#edf6ff!important}
+    #scheduleTable thead th.staff-group{background:linear-gradient(180deg,#153f68 0%,#11365b 100%)!important}
+    .staff-name{padding:2px 15px;border:1px solid #ffffff24;border-radius:999px;background:#ffffff0d;text-shadow:0 1px 1px #071c31}
+    .staff-group,.staff-start{border-left:1px solid #aebdcd!important}
+    .day-start>td{border-top:2px solid #a5b4c5!important}
+    .date-cell,.day-cell{background:#f2f6fa!important}
+    .day-even td:not(.date-cell):not(.day-cell){background-color:#fafcfe}
+    .empty-cell{background-color:inherit}.empty-cell:hover{background:#f0f6fd!important}
+    .quick-entry,.quick-time,.event-direct{border-radius:6px}
+    .event-slot.staff-start{border-radius:7px 0 0 7px}.event-slot.saved-content{border-radius:0 7px 7px 0}
+    .row-edit,.row-delete,.row-leave{transition:background .15s ease,color .15s ease,opacity .15s ease,box-shadow .15s ease}
   </style>
 </head>
 <body>
