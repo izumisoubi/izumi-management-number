@@ -257,7 +257,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .profit-flow-label{color:var(--tm);font-size:9px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .profit-flow-main{display:flex;align-items:baseline;justify-content:flex-end;gap:5px;min-width:0;}
 .profit-flow-value{margin-top:2px;color:var(--tt);font-size:18px;font-weight:900;line-height:1.1;letter-spacing:-.035em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
-.profit-flow-share{flex:0 0 auto;color:var(--tm);font-size:8.5px;font-weight:800;white-space:nowrap;}
+.profit-flow-share{flex:0 0 auto;color:var(--tm);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;}
 .profit-flow-card.is-sales .profit-flow-value{color:var(--ta);}
 .profit-flow-card.is-result.is-positive .profit-flow-value{color:var(--tg);}
 .profit-flow-card.is-result.is-negative .profit-flow-value{color:var(--tr);}
@@ -322,7 +322,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .after-referral-row.is-profit.is-positive b{color:var(--tg);}
 .after-referral-row.is-profit.is-negative b{color:var(--tr);}
 .after-referral-row.is-profit.is-neutral b{color:var(--tm);}
-.after-referral-rate{margin-left:5px;color:var(--tm);font-size:8px;font-weight:750;}
+.after-referral-rate{margin-left:6px;color:var(--tm);font-size:9.5px;font-weight:800;}
 @media(max-width:1050px){
   .estimate-referral-grid{grid-template-columns:1fr;}
   .profit-flow{grid-template-columns:minmax(110px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(125px,1fr);}
@@ -344,6 +344,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .invoice-summary-panel .pbar{margin-top:4px}
 .invoice-summary-panel #invShokaiPanel{padding:7px 16px 8px!important}
 .invoice-summary-panel #invCsumFinal{padding:6px 16px 8px!important}
+.estimate-cost-panel #shokaiPanelStatic,.invoice-summary-panel #invShokaiPanel{border-top:2px solid var(--tbr)!important}
 .invoice-link-compact{padding:7px 11px;margin-bottom:8px;line-height:1.35}
 .invoice-link-compact strong{display:inline;margin:0 6px 0 0}
 .self-cost-note{grid-column:1/-1;margin-top:2px;padding-top:4px;border-top:1px dashed rgba(100,120,160,.35);color:var(--tm);font-size:9.5px;line-height:1.4;}
@@ -2978,6 +2979,32 @@ function afterReferralSummaryHtml(profitExTax,profitTaxIn,profitRateExTax,profit
     </div>`;
 }
 
+function profitFlowHtml({heading,note,salesLabel,salesExTax,lineCost,selfLabor,selfMaterials}){
+  const salesTaxIn=Math.round(salesExTax*1.1);
+  const totalCost=lineCost+selfLabor+selfMaterials;
+  const profit=salesExTax-totalCost;
+  const profitTaxIn=salesTaxIn-Math.round(totalCost*1.1);
+  const profitRate=salesExTax>0?parseFloat((profit/salesExTax*100).toFixed(1)):0;
+  const profitRateLabel=salesExTax>0?`${profitRate}%`:'—';
+  const shareOfSales=value=>salesExTax>0?`${parseFloat((value/salesExTax*100).toFixed(1))}%`:'—';
+  const profitState=profit<0?'is-negative':profit>0?'is-positive':'is-neutral';
+  return `
+    <div class="profit-flow-wrap">
+      <div class="profit-flow-head"><strong>${heading}</strong><span>${note}</span></div>
+      <div class="profit-flow" aria-label="${heading}">
+        <div class="profit-flow-card is-sales"><span class="profit-flow-label">${salesLabel}</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(salesExTax)}</strong></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(salesTaxIn)}</strong></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-share">${shareOfSales(lineCost)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(lineCost*1.1))}</strong></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-share">${shareOfSales(selfLabor)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfLabor*1.1))}</strong></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社資材</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfMaterials)}</strong><span class="profit-flow-share">${shareOfSales(selfMaterials)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfMaterials*1.1))}</strong></span></div>
+        <div class="profit-flow-op" aria-hidden="true">＝</div>
+        <div class="profit-flow-card is-result ${profitState}"><span class="profit-flow-label">粗利益（紹介料差引前）</span><div class="profit-flow-main"><strong class="profit-flow-value">${profitYen(profit)}</strong><span class="profit-flow-share">${profitRateLabel}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${profitYen(profitTaxIn)}</strong></span></div>
+      </div>
+    </div>`;
+}
+
 function renderTotals(){
   const sub=totSell(),tax=Math.round(sub*.1),tot=sub+tax;
   let estimateCostData={};try{estimateCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
@@ -2986,10 +3013,8 @@ function renderTotals(){
   const selfLabor=window.IzumiSelfCosts.slotTotal(estimateCostData,'jisha_jin');
   const selfMaterials=window.IzumiSelfCosts.slotTotal(estimateCostData,'jisha_mat');
   const cost=lineCost+selfLabor+selfMaterials,profit=sub-cost;
-  const pRate=sub>0?parseFloat((profit/sub*100).toFixed(1)):0;
   st('e-sub',yen(sub));st('e-tax',yen(tax));st('e-total',yen(tot));
   // ptfootはrenderPrintで管理するため、ここでは更新しない
-  const pct=Math.min(100,Math.max(0,pRate));
   const csumTop=document.getElementById('csumTop');
   const csumProfit=document.getElementById('csumProfit');
   const s1exc=numberValue(document.getElementById('shokai_yen')?.value);
@@ -3003,29 +3028,19 @@ function renderTotals(){
   const finalTaxIncProfit=taxIncProfit-totalShokaiInc;
   const finalTaxExcPRate=sub>0?parseFloat((finalTaxExcProfit/sub*100).toFixed(1)):NaN;
   const finalTaxIncPRate=tot>0?parseFloat((finalTaxIncProfit/tot*100).toFixed(1)):NaN;
-  const pRateLabel=sub>0?`${pRate}%`:'—';
-  const shareOfSales=value=>sub>0?`${parseFloat((value/sub*100).toFixed(1))}%`:'—';
-  const stateOf=value=>value<0?'is-negative':value>0?'is-positive':'is-neutral';
-  const profitState=stateOf(profit);
   // %spanを更新
   const setPct=(id,val,base)=>{const el=document.getElementById(id);if(el)el.textContent=base>0&&val?'('+Math.round(val/base*100)+'%)':'%';}
   setPct('shokai_pct_disp',s1exc,sub);setPct('shokai_pct_inc_disp',s1inc,tot);
   setPct('shokai_pct2_disp',s2exc,sub);setPct('shokai_pct2_inc_disp',s2inc,tot);
-  if(csumTop)csumTop.innerHTML=`
-    <div class="profit-flow-wrap">
-      <div class="profit-flow-head"><strong>利益の構成</strong><span>売上から、明細原価・自社人工・自社資材を差し引きます</span></div>
-      <div class="profit-flow" aria-label="売上から粗利益までの計算">
-        <div class="profit-flow-card is-sales"><span class="profit-flow-label">売上（税抜）</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(sub)}</strong></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(tot)}</strong></span></div>
-        <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-share">${shareOfSales(lineCost)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(lineCost*1.1))}</strong></span></div>
-        <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-share">${shareOfSales(selfLabor)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfLabor*1.1))}</strong></span></div>
-        <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">自社資材</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfMaterials)}</strong><span class="profit-flow-share">${shareOfSales(selfMaterials)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfMaterials*1.1))}</strong></span></div>
-        <div class="profit-flow-op" aria-hidden="true">＝</div>
-        <div class="profit-flow-card is-result ${profitState}"><span class="profit-flow-label">粗利益（紹介料差引前）</span><div class="profit-flow-main"><strong class="profit-flow-value">${profitYen(profit)}</strong><span class="profit-flow-share">${pRateLabel}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${profitYen(taxIncProfit)}</strong></span></div>
-      </div>
-    </div>`;
+  if(csumTop)csumTop.innerHTML=profitFlowHtml({
+    heading:'利益の構成',
+    note:'売上から、明細原価・自社人工・自社資材を差し引きます',
+    salesLabel:'売上（税抜）',
+    salesExTax:sub,
+    lineCost,
+    selfLabor,
+    selfMaterials
+  });
   if(csumProfit)csumProfit.innerHTML='';
   const invFinal=document.getElementById('invCsumFinal');
   if(invFinal)invFinal.innerHTML=afterReferralSummaryHtml(finalTaxExcProfit,finalTaxIncProfit,finalTaxExcPRate,finalTaxIncPRate);
@@ -3161,11 +3176,11 @@ function renderInvCsumFromDOM(){
   const invSub=linked?(isNaN(amtOv)?sub:amtOv):invRows.reduce((s,r)=>{const q=parseFloat(r.qty),a=parseFloat(r.amount);return s+(isNaN(q)||isNaN(a)?0:Math.round(q*a));},0);
   const invTax=Math.round(invSub*.1);
   const invTot=invSub+invTax;
-  const cost=totCost();
-  const internalCost=getInternalCost();
-  const selfLabor=parseFloat(String((JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}')).jisha_jin||'').replace(/,/g,''))||0;
-  const selfMaterials=parseFloat(String((JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}')).jisha_mat||'').replace(/,/g,''))||0;
-  const costTax=Math.round(cost*.1);
+  let invoiceCostData={};try{invoiceCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
+  const lineCost=totLineCost();
+  const selfLabor=window.IzumiSelfCosts.slotTotal(invoiceCostData,'jisha_jin');
+  const selfMaterials=window.IzumiSelfCosts.slotTotal(invoiceCostData,'jisha_mat');
+  const cost=lineCost+selfLabor+selfMaterials;
   const costTot=Math.round(cost*1.1);
   const profit=invSub-cost;
   const taxIncProfit=invTot-costTot;
@@ -3178,27 +3193,15 @@ function renderInvCsumFromDOM(){
   setP('inv_shokai_pct_disp',s1,invSub);setP('inv_shokai_pct_inc_disp',s1inc,invTot);
   setP('inv_shokai_pct2_disp',s2,invSub);setP('inv_shokai_pct2_inc_disp',s2inc,invTot);
   const el=document.getElementById('invCsum');if(!el)return;
-  const pRate=invSub>0?parseFloat((profit/invSub*100).toFixed(1)):0;
-  const taxIncPRate=invTot>0?parseFloat((taxIncProfit/invTot*100).toFixed(1)):0;
-  const pct=Math.min(100,Math.max(0,pRate));
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;">
-      <div class="cs"><span style="color:var(--tm)">原価合計（税抜）</span><span class="cv">${yen(cost)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求合計（税抜）</span><span class="cv">${yen(invSub)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">原価消費税（10%）</span><span class="cv">${yen(costTax)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求消費税（10%）</span><span class="cv">${yen(invTax)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">原価合計（税込）</span><span class="cv">${yen(costTot)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求合計（税込）</span><span class="cv" style="color:var(--ta)">${yen(invTot)}</span></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:6px;padding-top:6px;border-top:1px solid var(--tbr);">
-      <div class="cs"><span style="color:var(--tm)">自社人工（税抜）</span><span class="cv">${yen(selfLabor)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">自社資材（税抜）</span><span class="cv">${yen(selfMaterials)}</span></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:8px;padding-top:8px;border-top:2px solid var(--tbr);">
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税抜粗利益</span><span class="cv">${yen(profit)}&ensp;<span style="font-size:12px">(${pRate}%)</span></span></div>
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税込粗利益</span><span class="cv">${yen(taxIncProfit)}&ensp;<span style="font-size:12px">(${taxIncPRate}%)</span></span></div>
-    </div>
-    <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${pct}%"></div></div>`;
+  el.innerHTML=profitFlowHtml({
+    heading:'請求利益の構成',
+    note:'請求売上から、明細原価・自社人工・自社資材を差し引きます',
+    salesLabel:'請求売上（税抜）',
+    salesExTax:invSub,
+    lineCost,
+    selfLabor,
+    selfMaterials
+  });
   const invFinal=document.getElementById('invCsumFinal');
   if(invFinal)invFinal.innerHTML=afterReferralSummaryHtml(finalTaxExcProfit,finalTaxIncProfit,finalTaxExcPRate,finalTaxIncPRate);
 }
@@ -3466,33 +3469,6 @@ function updateAutoAmt(v){
   const parsed=parseFloat(n);
   const el=document.getElementById('invAmtOverride');
   if(el&&!isNaN(parsed))el.value=parsed;
-}
-
-function renderInvCsum(invSub,invTax,invTot){
-  const el=document.getElementById('invCsum');if(!el)return;
-  const cost=totCost();
-  const costTax=Math.round(cost*.1);
-  const costTot=Math.round(cost*1.1);
-  const profit=invSub-cost;
-  const taxIncProfit=invTot-costTot;
-  const pRate=invSub>0?parseFloat((profit/invSub*100).toFixed(1)):0;
-  const taxIncPRate=invTot>0?parseFloat((taxIncProfit/invTot*100).toFixed(1)):0;
-  const pct=Math.min(100,Math.max(0,pRate));
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;">
-      <div class="cs"><span style="color:var(--tm)">原価合計（税抜）</span><span class="cv">${yen(cost)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求合計（税抜）</span><span class="cv">${yen(invSub)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">原価消費税（10%）</span><span class="cv">${yen(costTax)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求消費税（10%）</span><span class="cv">${yen(invTax)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">原価合計（税込）</span><span class="cv">${yen(costTot)}</span></div>
-      <div class="cs"><span style="color:var(--tm)">請求合計（税込）</span><span class="cv" style="color:var(--ta)">${yen(invTot)}</span></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:8px;padding-top:8px;border-top:2px solid var(--tbr);">
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税抜粗利益</span><span class="cv">${yen(profit)}&ensp;<span style="font-size:12px">(${pRate}%)</span></span></div>
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税込粗利益</span><span class="cv">${yen(taxIncProfit)}&ensp;<span style="font-size:12px">(${taxIncPRate}%)</span></span></div>
-    </div>
-    <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${pct}%"></div></div>
-    <div style="font-size:10px;color:var(--tm);margin-top:4px">利益率 ＝ 粗利 ÷ 請求額（請求利益率）</div>`;
 }
 
 let dragRow={el:null,srcRows:null,srcIdx:-1,placeholder:null};
