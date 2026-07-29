@@ -582,6 +582,20 @@ tbody tr.row-reminder td:first-child {
   box-shadow: inset 4px 0 #d94c5b;
 }
 
+tbody tr.row-overdue td:not(.selected),
+tbody tr.row-overdue:hover td:not(.selected) {
+  background: #fff0f1 !important;
+  color: #782733;
+}
+
+tbody tr.row-overdue td.empty-cell:not(.selected) {
+  background: #fff6f6 !important;
+}
+
+tbody tr.row-overdue td:first-child {
+  box-shadow: inset 4px 0 #d94c5b;
+}
+
 td.warning-cell,
 tbody tr:hover td.warning-cell {
   background: var(--yellow) !important;

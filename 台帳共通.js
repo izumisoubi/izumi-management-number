@@ -295,7 +295,7 @@ function quickFilterOptions(){
     ['all','すべて'],['meeting','会議用'],['received','入金済み'],['unreceived','未入金'],['missing','未入力あり']
   ];
   if(config.viewKey==='billing')return [
-    ['all','すべて'],['outstanding','未入金あり'],['paid','入金済み'],['missing','未入力あり']
+    ['all','すべて'],['outstanding','未入金リスト'],['paid','入金済み'],['missing','未入力あり']
   ];
   if(config.viewKey==='cost')return [
     ['all','すべて'],['meeting','会議用'],['vendorInvoiceMissing','外注請求未入力'],['negativeVariance','差異がマイナス'],['missing','未入力あり']
@@ -338,6 +338,10 @@ function initAdvancedControls(){
   $('lastPage').addEventListener('click',()=>setPage(totalPages()));
   $('staffFilter').addEventListener('change',()=>applyView(true));
   $('quickFilter').addEventListener('change',()=>applyView(true));
+  const requestedFilter=new URL(location.href).searchParams.get('filter');
+  if(requestedFilter&&[...$('quickFilter').options].some(option=>option.value===requestedFilter)){
+    $('quickFilter').value=requestedFilter;
+  }
 }
 
 function hasMissingValue(values){
@@ -465,6 +469,10 @@ function rowVisualClass(merged){
     return '';
   }
   const customerPaid=project.customer_payment_status==='入金済'||Boolean(project.payment_received_on)||Boolean(merged.values.received_checked);
+  if(config.viewKey==='billing'&&!customerPaid&&numberValue(merged.values.outstanding_amount)>0
+    &&window.IzumiLedgerDates?.isAtLeastMonthsOld(merged.values.invoice_date,3)){
+    return 'row-overdue';
+  }
   const vendorRequired=numberValue(project.external_cost_ex_tax)>0||project.vendor_payment_status!=='未発注';
   const vendorPaid=project.vendor_payment_status==='支払済'||!vendorRequired;
   if(customerPaid&&vendorPaid)return 'row-customer-paid row-vendor-paid row-complete';
