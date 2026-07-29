@@ -328,6 +328,18 @@
   function assignedTo(event,name){return event.staff_name===name||(event.additional_staff_names||[]).includes(name)}
   function attendanceForDate(dateKey,source=events){const rows=Array.isArray(source)?source:[],leaveNames=employees.filter(name=>rows.some(event=>event.event_date===dateKey&&event.event_type==='休み'&&assignedTo(event,name)));return {present:Math.max(0,employees.length-leaveNames.length),leave:leaveNames.length,leaveNames}}
   function renderTodayAttendance(){const today=new Date(),dateKey=isoDate(today),target=$('todayAttendance');if(!Array.isArray(todayEvents)){target.innerHTML='<span class="attendance-date">本日の状況</span><span class="attendance-count">確認できません</span>';return}const counts=attendanceForDate(dateKey,todayEvents);target.innerHTML=`<span class="attendance-date">${today.getMonth()+1}月${today.getDate()}日（${weekdays[today.getDay()]}）</span><span class="attendance-count present">出勤 <b>${counts.present}</b>名</span><span class="attendance-count leave">休み <b>${counts.leave}</b>名</span>`}
+  function explicitReturnStatus(event){
+    const value=String(event?.return_status_text??'').trim();
+    return value==='予定'?'':value;
+  }
+  function calendarReturnStatus(event){
+    const explicit=explicitReturnStatus(event);
+    if(explicit)return explicit;
+    const end=event?.end_time?.slice(0,5)||'';
+    if(end)return end;
+    const statusValue=String(event?.event_status??'').trim();
+    return statusValue&&!['メモ','予定'].includes(statusValue)?statusValue:'';
+  }
   function render(){
     const year=displayMonth.getFullYear(),month=displayMonth.getMonth(),last=new Date(year,month+1,0),today=isoDate(new Date()),holidays=japaneseHolidayMap(year);
     const type=$('typeFilter').value,staff=$('staffFilter').value,visible=events.filter(event=>!type||event.event_type===type),shownStaff=staff?[staff]:employees;
@@ -348,7 +360,7 @@
             body+=`<td class="time-cell empty-cell staff-start"><input class="quick-time" type="text" autocomplete="off" aria-label="${esc(name)} ${dateKey} の予定時間" data-quick-key="${esc(quickKey)}" data-role="start" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"></td><td class="status-cell empty-cell"><input class="quick-time" type="text" autocomplete="off" aria-label="${esc(name)} ${dateKey} の帰社時間" data-quick-key="${esc(quickKey)}" data-role="end" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"></td><td class="content-cell empty-cell empty-content${canRegisterLeave?' has-leave':''}"><input class="quick-entry" placeholder="予定を入力…" aria-label="${esc(name)} ${dateKey} の予定を直接入力" data-quick-key="${esc(quickKey)}" data-role="content" data-date="${dateKey}" data-staff="${esc(name)}" onkeydown="quickEntryKey(event,this)" onblur="quickEntryBlur(this)"><button class="row-edit" type="button" aria-label="${esc(name)} ${dateKey} の詳細入力を開く" title="詳細を開く" onmousedown="event.preventDefault()" onclick="newMemoFromQuick(event,'${esc(quickKey)}')">✎</button>${canRegisterLeave?`<button class="row-leave" type="button" data-date="${dateKey}" data-staff="${esc(name)}" aria-label="${esc(name)} ${dateKey} の休みを登録" title="この人の休みを登録" onmousedown="event.preventDefault()" onclick="newLeaveFromCell(event,this)">休</button>`:''}</td>`;
             return;
           }
-          const memo=Boolean(event.memo_only||event.event_status==='メモ'),start=event.start_text??event.start_time?.slice(0,5)??'',end=event.end_time?.slice(0,5)||'',returnStatus=event.return_status_text??(end||(event.event_status&&!['メモ','予定'].includes(event.event_status)?event.event_status:'')),title=[event.property_name,event.room_number].filter(Boolean).join(' '),color=calendarEventColor(event),style=`--event-color:${title?color.line:'transparent'};--event-bg:${title?color.bg:'#fff'}`;
+          const memo=Boolean(event.memo_only||event.event_status==='メモ'),start=event.start_text??event.start_time?.slice(0,5)??'',returnStatus=calendarReturnStatus(event),title=[event.property_name,event.room_number].filter(Boolean).join(' '),color=calendarEventColor(event),style=`--event-color:${title?color.line:'transparent'};--event-bg:${title?color.bg:'#fff'}`;
           body+=`<td class="time-cell staff-start event-slot" style="${style}"><input class="event-direct" type="text" autocomplete="off" value="${esc(start)}" data-event-id="${event.id}" data-field="start" data-original="${esc(start)}" aria-label="予定時間" onblur="updateEventDirect(this)"></td><td class="status-cell event-slot" style="${style}"><input class="event-direct" type="text" autocomplete="off" value="${esc(returnStatus)}" data-event-id="${event.id}" data-field="returnStatus" data-original="${esc(returnStatus)}" aria-label="帰社・状況" onblur="updateEventDirect(this)"></td><td class="content-cell saved-content event-slot" style="${style}"><input class="event-direct event-direct-content" type="text" autocomplete="off" value="${esc(title)}" data-event-id="${event.id}" data-field="content" data-original="${esc(title)}" aria-label="予定内容" onblur="updateEventDirect(this)" onmouseenter="showEventTooltip(event,'${event.id}')" onmousemove="moveEventTooltip(event)" onmouseleave="hideEventTooltip()"><button class="row-edit" type="button" aria-label="この予定の詳細を編集" title="詳細を開く" onmousedown="event.preventDefault()" onclick="openEventDetails(event,'${event.id}')">✎</button><button class="row-delete" type="button" aria-label="この予定を削除" title="この予定を削除" onmousedown="event.preventDefault()" onclick="deleteEventDirect(event,'${event.id}')">×</button></td>`;
         });
         body+='</tr>';
@@ -537,7 +549,7 @@
     $('eventDate').value=event.event_date;
     $('eventType').value=event.event_type;
     setTimeSelect('startTime',event.start_text??event.start_time);
-    setTimeSelect('endTime',event.return_status_text??event.end_time??(event.event_status!=='メモ'?event.event_status:''));
+    setTimeSelect('endTime',explicitReturnStatus(event)||event.end_time?.slice(0,5)||'');
     $('eventStaff').innerHTML=staffOptions(event.staff_name);
     $('eventStatus').value=event.event_status||'予定';
     $('eventColor').value=event.color_key||'auto';
