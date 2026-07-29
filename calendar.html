@@ -90,6 +90,44 @@
     .modal-head{padding:16px 20px;background:#fbfcfe}.modal-head h2{font-size:18px;color:#17345f}.form{padding:8px 20px 20px}.form-grid{gap:2px 16px}.form label{margin-top:13px;color:#4c607d;font-size:10px;letter-spacing:.04em}.form input,.form select,.form textarea{border-color:#d6e0ec;border-radius:9px;padding:9px 10px;background:#fcfdff;transition:.15s ease}.form input:focus,.form select:focus,.form textarea:focus{border-color:#4f8fe7;background:#fff;box-shadow:0 0 0 3px #3b82f618;outline:0}.modal-actions{padding:13px 20px;background:#f8fafc}.modal-actions button{min-height:38px;border-radius:9px}
     @media(max-width:1100px){.toolbar{gap:10px}.calendar-filters{order:3;width:100%}.toolbar-actions{margin-left:auto}.sheet-toolbar span{display:none}}
     @media(max-width:900px){.header-inner{padding:11px 12px}.nav{overflow:auto;max-width:100%}main{padding:0 8px}.month-nav{width:100%;justify-content:center}.month-title{width:auto;order:0}.calendar-filters{overflow:auto}.toolbar-actions{width:100%;justify-content:flex-end}.sticky-calendar-shell{position:relative;top:auto;height:74vh;min-height:540px}.calendar-legend{display:none}}
+
+    /* UX53: 形は維持し、判断速度を上げる高コントラスト表示 */
+    body{color:#101c2f;background:#eef2f6}
+    header{background:linear-gradient(112deg,#091d35 0%,#123d69 62%,#195488 100%)}
+    .panel{border-color:#cbd6e3;box-shadow:0 12px 30px rgba(15,40,72,.11)}
+    .calendar-command{background:#fff}
+    .month-nav{border-color:#bdcada;background:#edf2f8}.month-nav button{color:#193f69}.month-title strong{color:#0c2f56;font-size:24px}.month-title .month-year{color:#53657c;font-weight:900}
+    .field select,.scale-control select{border-color:#bfcddd;background:#fff;color:#142f50}.toolbar-actions .primary{background:#1769d2;box-shadow:0 6px 14px #0f5ec42e}
+    .stat{border-color:#cdd8e5;background:#fff}.stat span{color:#53657c;font-weight:800}.stat b{color:#102f54;font-size:18px}
+    .sheet-toolbar{border-bottom:2px solid #9fb0c4;background:#fff}.sheet-toolbar strong{color:#0b2d51}.calendar-legend{color:#40546d;font-weight:750}
+    .sheet-wrap{background:#e8edf3;scrollbar-color:#758ba7 #dbe3ec}
+    table{background:#fff}
+    th,td{border-right-color:#c6d1df;border-bottom-color:#cbd6e2}
+    #scheduleTable thead th{background:#0c2c4e!important;color:#fff!important;box-shadow:inset 0 -1px #ffffff24}
+    #scheduleTable thead tr:nth-child(2) th{background:#17466f!important;color:#fff!important;font-size:9.5px!important}
+    .staff-group{font-size:14px!important;letter-spacing:.09em!important}
+    .staff-group:before{width:8px;height:8px;border-color:#fff;background:#4ca0ff}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(3){box-shadow:inset 0 -4px #4ea1ff}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(4){box-shadow:inset 0 -4px #a178ff}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(5){box-shadow:inset 0 -4px #21b8d1}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(6){box-shadow:inset 0 -4px #2ab37d}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(7){box-shadow:inset 0 -4px #e7a62c}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(8){box-shadow:inset 0 -4px #ef6b56}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(9){box-shadow:inset 0 -4px #ec5f9d}
+    #scheduleTable thead tr:first-child .staff-group:nth-of-type(10){box-shadow:inset 0 -4px #8a9aaf}
+    .staff-group,.staff-start{border-left:3px solid #8399b2!important}
+    .day-start>td{border-top:3px solid #7187a1!important}
+    .date-cell,.day-cell{background:#edf2f7!important}.date-number{color:#102f54;font-size:21px}.date-month{color:#5b6d83;font-size:8.5px}.day-cell{color:#334b68;font-size:12px}
+    .day-even td:not(.date-cell):not(.day-cell){background-color:#f4f7fa}.weekend-day td:not(.date-cell):not(.day-cell){background-color:#fff7f7}
+    .sun.date-cell,.sun.day-cell{background:#fff0f2!important}.sat.date-cell,.sat.day-cell{background:#edf5ff!important}
+    .today-row td{box-shadow:inset 0 1px #3887e5,inset 0 -1px #3887e5}.today-row .date-cell{background:#1769d2!important;box-shadow:inset 4px 0 #84bdff,inset 0 1px #1769d2,inset 0 -1px #1769d2!important}.today-row .date-cell .date-number,.today-row .date-cell .date-month{color:#fff}.today-row .day-cell{background:#dcecff!important;color:#145eae!important}
+    .quick-entry,.quick-time,.event-direct{color:#101c2f;font-weight:600}.quick-entry::placeholder,.quick-time::placeholder{color:#8b99aa;font-weight:500}
+    .empty-cell{background-color:inherit}.empty-cell:hover{background:#eaf2fc!important}
+    .event-slot{background:var(--event-bg,#eef5ff)!important}.event-slot.staff-start{box-shadow:inset 4px 0 var(--event-color,#3478e5)}.event-slot .event-direct{background:transparent;color:#14233a;font-weight:750}.event-slot .event-direct:focus{background:#fff}
+    .event-direct-content{border-left:0;font-size:11.5px;font-weight:800}.saved-content .event-direct-content{padding-left:10px}
+    .row-edit,.row-delete{color:#4d6079}.saved-content:hover .row-edit,.saved-content:hover .row-delete{background:#fff;box-shadow:0 1px 4px #16375520}
+    .add-date{border-color:#9eafc2;color:#234b75;font-weight:800;opacity:.9}.date-row-controls{border-color:#b9c6d5;opacity:.8}
+    .sheet-wrap.is-scrolled #scheduleTable thead tr:nth-child(2) th{box-shadow:inset 0 -2px #4b9af2,0 8px 18px rgba(5,26,49,.28)}
   </style>
 </head>
 <body>
@@ -212,7 +250,7 @@
             return;
           }
           const memo=Boolean(event.memo_only||event.event_status==='メモ'),start=event.start_text??event.start_time?.slice(0,5)??'',end=event.end_time?.slice(0,5)||'',returnStatus=event.return_status_text??(end||(event.event_status&&event.event_status!=='メモ'?event.event_status:'')),title=[event.property_name,event.room_number].filter(Boolean).join(' '),color=calendarEventColor(event),style=`--event-color:${title?color.line:'transparent'};--event-bg:${title?color.bg:'#fff'}`;
-          body+=`<td class="time-cell staff-start"><input class="event-direct" type="text" autocomplete="off" value="${esc(start)}" data-event-id="${event.id}" data-field="start" data-original="${esc(start)}" aria-label="予定時間" onblur="updateEventDirect(this)"></td><td class="status-cell"><input class="event-direct" type="text" autocomplete="off" value="${esc(returnStatus)}" data-event-id="${event.id}" data-field="returnStatus" data-original="${esc(returnStatus)}" aria-label="帰社・状況" onblur="updateEventDirect(this)"></td><td class="content-cell saved-content"><input class="event-direct event-direct-content" style="${style}" type="text" autocomplete="off" value="${esc(title)}" data-event-id="${event.id}" data-field="content" data-original="${esc(title)}" aria-label="予定内容" onblur="updateEventDirect(this)" onmouseenter="showEventTooltip(event,'${event.id}')" onmousemove="moveEventTooltip(event)" onmouseleave="hideEventTooltip()"><button class="row-edit" type="button" aria-label="この予定の詳細を編集" title="詳細を開く" onmousedown="event.preventDefault()" onclick="openEventDetails(event,'${event.id}')">✎</button><button class="row-delete" type="button" aria-label="この予定を削除" title="この予定を削除" onmousedown="event.preventDefault()" onclick="deleteEventDirect(event,'${event.id}')">×</button></td>`;
+          body+=`<td class="time-cell staff-start event-slot" style="${style}"><input class="event-direct" type="text" autocomplete="off" value="${esc(start)}" data-event-id="${event.id}" data-field="start" data-original="${esc(start)}" aria-label="予定時間" onblur="updateEventDirect(this)"></td><td class="status-cell event-slot" style="${style}"><input class="event-direct" type="text" autocomplete="off" value="${esc(returnStatus)}" data-event-id="${event.id}" data-field="returnStatus" data-original="${esc(returnStatus)}" aria-label="帰社・状況" onblur="updateEventDirect(this)"></td><td class="content-cell saved-content event-slot" style="${style}"><input class="event-direct event-direct-content" type="text" autocomplete="off" value="${esc(title)}" data-event-id="${event.id}" data-field="content" data-original="${esc(title)}" aria-label="予定内容" onblur="updateEventDirect(this)" onmouseenter="showEventTooltip(event,'${event.id}')" onmousemove="moveEventTooltip(event)" onmouseleave="hideEventTooltip()"><button class="row-edit" type="button" aria-label="この予定の詳細を編集" title="詳細を開く" onmousedown="event.preventDefault()" onclick="openEventDetails(event,'${event.id}')">✎</button><button class="row-delete" type="button" aria-label="この予定を削除" title="この予定を削除" onmousedown="event.preventDefault()" onclick="deleteEventDirect(event,'${event.id}')">×</button></td>`;
         });
         body+='</tr>';
       }
