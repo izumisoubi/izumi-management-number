@@ -83,7 +83,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ord-info-row>.date-actions input{width:132px!important;flex:0 0 132px!important}
 .ord-info-wide{grid-column:1/-1}
 .ord-info-photo textarea{min-height:34px;max-height:54px;resize:vertical}
-.inv-settings-body{padding:9px 12px 10px}
+.inv-settings-body{padding:7px 12px 8px}
 .fg.inv-settings-grid{grid-template-columns:82px minmax(0,1fr) 82px minmax(0,1fr);gap:6px 10px}
 .inv-settings-grid>.inv-wide-control{grid-column:2/-1}
 .inv-settings-grid>.inv-address{grid-column:2/-1;min-height:34px!important}
@@ -241,6 +241,16 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
 .estimate-cost-panel #csumFinal{padding:6px 16px 8px!important;}
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
+.invoice-summary-panel .cost-head,#invSettingsPanel .cost-head{padding:7px 14px}
+.invoice-summary-panel .csum{padding:8px 16px}
+.invoice-summary-panel .cs{padding:2px 0}
+.invoice-summary-panel .cs .cv{font-size:16px}
+.invoice-summary-panel .cs.profit .cv{font-size:25px}
+.invoice-summary-panel .pbar{margin-top:4px}
+.invoice-summary-panel #invShokaiPanel{padding:7px 16px 8px!important}
+.invoice-summary-panel #invCsumFinal{padding:6px 16px 8px!important}
+.invoice-link-compact{padding:7px 11px;margin-bottom:8px;line-height:1.35}
+.invoice-link-compact strong{display:inline;margin:0 6px 0 0}
 .self-cost-note{grid-column:1/-1;margin-top:2px;padding-top:4px;border-top:1px dashed rgba(100,120,160,.35);color:var(--tm);font-size:9.5px;line-height:1.4;}
 /* A4 doc */
 .doc-title{text-align:center;font-size:20px;letter-spacing:10px;font-weight:700;padding-bottom:8px;border-bottom:2px solid #000;margin-bottom:11px;}
@@ -1081,7 +1091,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="inv-divider" id="invDiv"></div>
   <div class="inv-right" id="invRight">
     <!-- 粗利サマリーを最上部に -->
-    <div class="cost-panel" style="margin-bottom:11px;">
+    <div class="cost-panel invoice-summary-panel" style="margin-bottom:8px;">
       <div class="cost-head"><span class="cost-title">📊 請求・粗利サマリー</span></div>
       <div class="csum" id="invCsum" style="border-bottom:none;"></div>
       <!-- 請求書紹介料 -->
@@ -1111,7 +1121,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
       <div id="invCsumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
     </div>
-    <div class="inv-link-box">
+    <div class="inv-link-box invoice-link-compact">
       <strong>🔗 見積書から自動連動</strong>
       見積書の内容が請求書に反映されます。以下で個別に上書きできます。
     </div>
