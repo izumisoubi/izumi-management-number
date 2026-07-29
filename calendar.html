@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17345f">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>イズミ装美 行動予定</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
     *{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -168,13 +168,55 @@
     #scheduleTable thead th.staff-group{background:linear-gradient(180deg,#153f68 0%,#11365b 100%)!important}
     .staff-name{padding:2px 15px;border:1px solid #ffffff24;border-radius:999px;background:#ffffff0d;text-shadow:0 1px 1px #071c31}
     .staff-group,.staff-start{border-left:1px solid #aebdcd!important}
-    .day-start>td{border-top:2px solid #a5b4c5!important}
+    .day-start>td{border-top:4px double #8fa1b5!important}
     .date-cell,.day-cell{background:#f2f6fa!important}
     .day-even td:not(.date-cell):not(.day-cell){background-color:#fafcfe}
     .empty-cell{background-color:inherit}.empty-cell:hover{background:#f0f6fd!important}
     .quick-entry,.quick-time,.event-direct{border-radius:6px}
     .event-slot.staff-start{border-radius:7px 0 0 7px}.event-slot.saved-content{border-radius:0 7px 7px 0}
     .row-edit,.row-delete,.row-leave{transition:background .15s ease,color .15s ease,opacity .15s ease,box-shadow .15s ease}
+
+    /* UX56: 日付の境界と平日・土曜・日祝を一目で判別 */
+    .weekday-row td:not(.event-slot){background-color:#fff!important}
+    .saturday-row td:not(.event-slot){background-color:#eef6ff!important}
+    .sunday-row td:not(.event-slot),.holiday-row td:not(.event-slot){background-color:#fff0f2!important}
+    .weekday-row .quick-entry,.weekday-row .quick-time,
+    .saturday-row .quick-entry,.saturday-row .quick-time,
+    .sunday-row .quick-entry,.sunday-row .quick-time,
+    .holiday-row .quick-entry,.holiday-row .quick-time{background:transparent}
+    .saturday-row .date-cell,.saturday-row .day-cell{background:#e7f2ff!important;color:#245f9f!important}
+    .sunday-row .date-cell,.sunday-row .day-cell,
+    .holiday-row .date-cell,.holiday-row .day-cell{background:#ffe7ea!important;color:#a92236!important}
+    .day-start>td{border-top:4px double #8194aa!important}
+
+    /* UX57: 淡い業務表から、明快で現代的な月間ボードへ */
+    body{background:#e4eaf2}
+    .calendar-command,.sheet-panel{border-color:#aebed1;box-shadow:0 12px 28px rgba(19,44,75,.13)}
+    .sheet-toolbar{border-bottom:1px solid #aebed1;background:#fff}
+    .sheet-wrap{background:#dce4ee}
+    #scheduleTable{background:#fff}
+    #scheduleTable th,#scheduleTable td{border-right-color:#b8c5d4;border-bottom-color:#c0cbd8}
+    #scheduleTable thead th{background:#103a61!important;border-right-color:#ffffff38!important}
+    #scheduleTable thead tr:nth-child(2) th{background:#205681!important;color:#fff!important}
+    #scheduleTable thead th.staff-group{background:#123f68!important}
+    .staff-name{padding:0;border:0;border-radius:0;background:transparent;text-shadow:none}
+    .staff-group,.staff-start{border-left:2px solid #7f95ac!important}
+    .weekday-row td:not(.event-slot){background:#fff!important}
+    .saturday-row td:not(.event-slot){background:#e0efff!important}
+    .sunday-row td:not(.event-slot),.holiday-row td:not(.event-slot){background:#ffe0e5!important}
+    .saturday-row .date-cell,.saturday-row .day-cell{background:#cfe5ff!important;color:#18599c!important}
+    .sunday-row .date-cell,.sunday-row .day-cell,
+    .holiday-row .date-cell,.holiday-row .day-cell{background:#ffd1d8!important;color:#9f1e32!important}
+    .date-number{color:#122f50}.date-month{color:#53677f}.day-cell{color:#243f5f}
+    .day-start>td{border-top:4px double #566d87!important}
+    .quick-entry,.quick-time,.event-direct{color:#10243d;font-weight:650}
+    .quick-entry::placeholder,.quick-time::placeholder{color:#65758a}
+    .empty-cell:hover{background:#dcecff!important}
+    .event-slot{box-shadow:inset 4px 0 var(--event-color,#3478e5),inset 0 0 0 1px #ffffff70}
+    .event-slot .event-direct{color:#0f243c;font-weight:800}
+    .today-row .date-cell{background:#1267c4!important;box-shadow:inset 5px 0 #84c4ff!important}
+    .today-row .date-cell .date-number,.today-row .date-cell .date-month{color:#fff!important}
+    .today-row .day-cell{background:#bcdcff!important;color:#0d559d!important}
   </style>
 </head>
 <body>
@@ -292,7 +334,7 @@
     for(let day=1;day<=last.getDate();day++){
       const date=new Date(year,month,day),dateKey=isoDate(date),holidayName=holidays.get(dateKey)||'',isHoliday=Boolean(holidayName),isSunday=date.getDay()===0,isSaturday=date.getDay()===6,isWeekend=isSunday||isSaturday,dayClass=isHoliday||isSunday?'sun':isSaturday?'sat':'',attendance=attendanceForDate(dateKey),groups=Object.fromEntries(shownStaff.map(name=>[name,visible.filter(event=>event.event_date===dateKey&&assignedTo(event,name))])),slots=Math.max(rowsForDate(dateKey),...shownStaff.map(name=>groups[name].length));
       for(let slot=0;slot<slots;slot++){
-        body+=`<tr class="${slot===0?'day-start ':''}${day%2===0?'day-even ':''}${isHoliday?'holiday-row ':isSunday?'sunday-row ':isSaturday?'saturday-row ':''}${dateKey===today?'today-row':''}">`;
+        body+=`<tr class="${slot===0?'day-start ':''}${day%2===0?'day-even ':''}${isHoliday?'holiday-row ':isSunday?'sunday-row ':isSaturday?'saturday-row ':'weekday-row '}${dateKey===today?'today-row':''}">`;
         if(slot===0){body+=`<td class="date-col date-cell ${dayClass}" rowspan="${slots}"><span class="date-number">${day}</span><span class="date-month">${month+1}月</span>${holidayName?`<span class="holiday-label">${esc(holidayName)}</span>`:''}<span class="date-attendance" title="${attendance.leaveNames.length?`休み：${esc(attendance.leaveNames.join('、'))}`:'休み登録なし'}"><span>出勤 ${attendance.present}</span><span class="leave">休み ${attendance.leave}</span></span><button class="add-date" onclick="newEvent('${dateKey}')">＋ 予定</button><div class="date-row-controls" title="この日だけ表示行数を変更"><button type="button" onclick="changeDateRows(event,'${dateKey}',-1)">−</button><span>${slots}行</span><button type="button" onclick="changeDateRows(event,'${dateKey}',1)">＋</button></div></td><td class="day-col day-cell ${dayClass}" rowspan="${slots}">${weekdays[date.getDay()]}</td>`}
         shownStaff.forEach(name=>{
           const event=groups[name][slot];
