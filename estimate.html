@@ -207,6 +207,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ctbl .ca{text-align:right;font-weight:600;color:var(--tg);padding:3.5px 5px;}
 .ctbl [data-f="cost"],.ctbl .cca{color:var(--to);font-weight:700;}
 .ctbl [data-f="sellOverride"],.ctbl .csa{color:var(--ta);font-weight:700;}
+.ctbl [data-f="sellOverride"]::placeholder{color:var(--ta);opacity:.72;}
 .ctbl .cp{text-align:right;color:var(--tm);font-size:10.5px;padding:3.5px 5px;}
 .ctbl .cdel{cursor:pointer;color:var(--tbr);text-align:center;padding:3.5px 3px;font-size:11px;}
 .ctbl .cdel:hover{color:var(--tr);}
@@ -2597,7 +2598,7 @@ function renderCost(){
           <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
-          <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':(r.sellOverride!==undefined&&r.sellOverride!==''?'var(--ta)':'var(--tt)')};font-weight:${r.sellOverride!==undefined&&r.sellOverride!==''?'700':'400'};" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
+          <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':'var(--ta)'};font-weight:700;" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
           <td class="ca csa" style="white-space:nowrap"></td>
           <td><input type="text" inputmode="decimal" data-f="landlordRate" placeholder="貸主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordRate',this)"></td>
           <td><input type="text" inputmode="decimal" data-f="tenantRate" placeholder="借主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantRate',this)"></td>
@@ -6849,7 +6850,7 @@ function sfSellOverrideCtbl(id,v){
     const soInp=ctr.querySelector('[data-f=sellOverride]');
     if(soInp){
       const hasOv=r.sellOverride!==undefined&&r.sellOverride!=='';
-      soInp.style.color=r.type==='discount'?'var(--tr)':(hasOv?'var(--ta)':'var(--tt)');
+      soInp.style.color=r.type==='discount'?'var(--tr)':'var(--ta)';
       soInp.style.fontWeight=hasOv?'700':'400';
     }
   }
@@ -6976,7 +6977,7 @@ function syncEstimateFieldDisplay(id,f){
   const hasVal=v!==undefined&&v!=='';
   inp.value=hasVal?fmtNum(v):'';
   if(f==='sellOverride'){
-    inp.style.color=r.type==='discount'?'var(--tr)':(hasVal?'var(--ta)':'var(--tt)');
+    inp.style.color=r.type==='discount'?'var(--tr)':'var(--ta)';
     inp.style.fontWeight=hasVal?'700':'400';
     const c=parseFloat(r.cost);
     const rate=getRate();
