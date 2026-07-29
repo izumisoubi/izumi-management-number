@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260729-UX47"></script>
+<script src="自社原価共通.js?v=20260729-UX48"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -236,11 +237,22 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .cs{padding:2px 0;}
 .estimate-cost-panel .cs .cv{font-size:16px;}
 .estimate-cost-panel .cs.profit .cv{font-size:25px;}
-.estimate-cost-panel .pbar{margin-top:4px;}
 .estimate-cost-panel .estimate-referral-panel{padding:7px 16px 8px!important;}
 .estimate-cost-panel .estimate-referral-label{margin-bottom:2px!important;}
-.estimate-cost-panel #csumFinal{padding:6px 16px 8px!important;}
+.estimate-cost-panel #csumFinal{padding:5px 16px 7px!important;}
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
+.self-cost-slots-panel{padding:6px 16px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;}
+.self-cost-slot-row{display:grid;grid-template-columns:74px repeat(3,minmax(138px,1fr)) 86px;align-items:center;gap:5px;margin:2px 0;}
+.self-cost-slot-label{color:var(--tm);font-size:10px;font-weight:800;white-space:nowrap;}
+.self-cost-slot-pair{display:grid;grid-template-columns:minmax(50px,1fr) minmax(64px,.8fr);gap:3px;min-width:0;}
+.self-cost-slot-input{width:100%;min-width:0;background:var(--ti);border:1px solid var(--tbr);border-radius:4px;padding:3px 6px;color:var(--tt);font-size:11px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.self-cost-slot-name{text-align:left;}
+.self-cost-slot-input:focus{border-color:var(--ta);}
+.self-cost-slot-total{color:var(--tg);font-size:10px;font-weight:800;text-align:right;white-space:nowrap;}
+@media(max-width:900px){
+  .self-cost-slot-row{grid-template-columns:64px repeat(3,minmax(66px,1fr));}
+  .self-cost-slot-total{grid-column:2/-1;}
+}
 .invoice-summary-panel .cost-head,#invSettingsPanel .cost-head{padding:7px 14px}
 .invoice-summary-panel .csum{padding:8px 16px}
 .invoice-summary-panel .cs{padding:2px 0}
@@ -814,6 +826,22 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
           </div>
         </div>
       </div>
+      <div id="selfCostSlotsPanel" class="self-cost-slots-panel">
+        <div class="self-cost-slot-row">
+          <span class="self-cost-slot-label">自社人工</span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" placeholder="名前1" aria-label="自社人工の名前1"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" placeholder="金額" aria-label="自社人工1"></span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" placeholder="名前2" aria-label="自社人工の名前2"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" placeholder="金額" aria-label="自社人工2"></span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" placeholder="名前3" aria-label="自社人工の名前3"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" placeholder="金額" aria-label="自社人工3"></span>
+          <span class="self-cost-slot-total" id="selfLaborSlotsTotal">合計 ¥0</span>
+        </div>
+        <div class="self-cost-slot-row">
+          <span class="self-cost-slot-label">自社資材</span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" placeholder="名前1" aria-label="自社資材の名前1"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" placeholder="金額" aria-label="自社資材1"></span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" placeholder="名前2" aria-label="自社資材の名前2"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" placeholder="金額" aria-label="自社資材2"></span>
+          <span class="self-cost-slot-pair"><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" placeholder="名前3" aria-label="自社資材の名前3"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" placeholder="金額" aria-label="自社資材3"></span>
+          <span class="self-cost-slot-total" id="selfMaterialSlotsTotal">合計 ¥0</span>
+        </div>
+      </div>
       <div id="csumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
       <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）</div>
       <div style="overflow-x:auto;">
@@ -1384,6 +1412,7 @@ function setupDateActions(){
 }
 function init(){
   loadMaster();
+  loadCtData();
   loadBasic(); // ← 基本情報を復元
   const today=new Date().toISOString().split('T')[0];
   if(!document.getElementById('b-date').value)document.getElementById('b-date').value=today;
@@ -2843,7 +2872,8 @@ function _updatePageHeaders(){
 function renderTotals(){
   const sub=totSell(),tax=Math.round(sub*.1),tot=sub+tax;
   const cost=totCost(),profit=sub-cost;
-  let estimateCostData={};try{estimateCostData=JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}');}catch(e){}
+  let estimateCostData={};try{estimateCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
+  renderSelfCostSlots(estimateCostData);
   const estimateSelfLabor=parseFloat(String(estimateCostData.jisha_jin||'').replace(/,/g,''))||0;
   const estimateSelfMaterials=parseFloat(String(estimateCostData.jisha_mat||'').replace(/,/g,''))||0;
   const pRate=sub>0?parseFloat((profit/sub*100).toFixed(1)):0;
@@ -2885,8 +2915,7 @@ function renderTotals(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;margin-top:8px;padding-top:8px;border-top:2px solid var(--tbr);">
       <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税抜粗利益</span><span class="cv">${yen(profit)}&ensp;<span style="font-size:12px">(${pRate}%)</span></span></div>
       <div class="cs profit" style="margin:0;padding:0;border:none;"><span>税込粗利益</span><span class="cv">${yen(taxIncProfit)}&ensp;<span style="font-size:12px">(${taxIncPRate}%)</span></span></div>
-    </div>
-    <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${pct}%"></div></div>`;
+    </div>`;
   const invFinal=document.getElementById('invCsumFinal');
   if(invFinal)invFinal.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;">
@@ -4091,8 +4120,56 @@ function copyFallback(text,silent=false){
 // ===== 売上原価管理表 v19 =====
 const LS_COSTTABLE = 'izumi_costtable_v1';
 let ctData = {};
-function loadCtData(){ try{ctData=JSON.parse(localStorage.getItem(LS_COSTTABLE)||'{}');}catch(e){ctData={};} }
-function saveCtData(){ try{localStorage.setItem(LS_COSTTABLE,JSON.stringify(ctData));}catch(e){} }
+function loadCtData(){
+  try{ctData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem(LS_COSTTABLE)||'{}'));}catch(e){ctData=window.IzumiSelfCosts.normalize({});}
+  try{localStorage.setItem(LS_COSTTABLE,JSON.stringify(ctData));}catch(e){}
+}
+function saveCtData(autosave=true){
+  ctData=window.IzumiSelfCosts.normalize(ctData);
+  try{localStorage.setItem(LS_COSTTABLE,JSON.stringify(ctData));}catch(e){}
+  if(autosave&&typeof scheduleOnlineAutosave==='function')scheduleOnlineAutosave(250);
+}
+function selfCostNames(prefix,data=ctData){
+  return [1,2,3].map(index=>String(data[`${prefix}_name_${index}`]||'').trim()).filter(Boolean);
+}
+function renderSelfCostSlots(data=ctData){
+  const normalized=window.IzumiSelfCosts.normalize(data);
+  document.querySelectorAll('[data-self-cost-slot]').forEach(input=>{
+    const value=normalized[input.dataset.selfCostSlot];
+    if(document.activeElement!==input)input.value=window.IzumiSelfCosts.numberValue(value)?window.IzumiSelfCosts.numberValue(value).toLocaleString('ja-JP'):'';
+  });
+  document.querySelectorAll('[data-self-cost-name]').forEach(input=>{
+    if(document.activeElement!==input)input.value=normalized[input.dataset.selfCostName]||'';
+  });
+  const laborTotal=document.getElementById('selfLaborSlotsTotal');
+  const materialTotal=document.getElementById('selfMaterialSlotsTotal');
+  if(laborTotal)laborTotal.textContent='合計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_jin'));
+  if(materialTotal)materialTotal.textContent='合計 '+yen(window.IzumiSelfCosts.slotTotal(normalized,'jisha_mat'));
+  const laborNames=document.getElementById('ct-self-labor-names');
+  const materialNames=document.getElementById('ct-self-material-names');
+  if(laborNames)laborNames.textContent=selfCostNames('jisha_jin',normalized).join('・');
+  if(materialNames)materialNames.textContent=selfCostNames('jisha_mat',normalized).join('・');
+}
+function updateSelfCostSlot(input){
+  ctData=window.IzumiSelfCosts.setSlot(ctData,input.dataset.selfCostSlot,input.value);
+  saveCtData();
+  ctUpdateTotals();
+}
+function updateSelfCostName(input){
+  ctData[input.dataset.selfCostName]=input.value;
+  saveCtData();
+  renderSelfCostSlots(ctData);
+}
+document.addEventListener('input',event=>{
+  if(event.target.matches?.('[data-self-cost-slot]'))updateSelfCostSlot(event.target);
+  if(event.target.matches?.('[data-self-cost-name]'))updateSelfCostName(event.target);
+});
+document.addEventListener('focusin',event=>{
+  if(event.target.matches?.('[data-self-cost-slot]'))event.target.value=event.target.value.replace(/,/g,'');
+});
+document.addEventListener('focusout',event=>{
+  if(event.target.matches?.('[data-self-cost-slot]'))renderSelfCostSlots(ctData);
+});
 var _ctLastFocusSnapshot=null; // focusin時のスナップショット
 function ctSet(k,v){
   // focusin時のスナップショットをundoスタックに積む
@@ -4102,7 +4179,9 @@ function ctSet(k,v){
     ctRedoStack=[];
     _ctLastFocusSnapshot=null;
   }
-  ctData[k]=v;
+  ctData=(k==='jisha_jin'||k==='jisha_mat')
+    ?window.IzumiSelfCosts.setTotal(ctData,k,v)
+    :{...ctData,[k]:v};
   saveCtData();
   // 数値フィールドの場合は集計値だけ更新（full re-renderは不要・フォーカス失う）
   var numFields=['jisha_jin','jisha_mat','shokai','ord_1','ord_2','ord_3','ord_4','ord_5',
@@ -4146,6 +4225,11 @@ function ctUpdateTotals(){
   setSpan('ct-gpA',N(gpA),gpACol);
   setSpan('ct-gaichu',N(gaichu));
   setSpan('ct-genkaTotal',N(genka));
+  ['jisha_jin','jisha_mat'].forEach(function(key){
+    var input=document.querySelector('#ctPrintArea input[data-ctid="'+key+'"]');
+    if(input&&document.activeElement!==input)input.value=pn(cg(key))?N(pn(cg(key))):'';
+  });
+  renderSelfCostSlots(ctData);
   // 利率スパンを更新
   function setP(id,a,b,col){
     var el=document.getElementById(id);
@@ -4160,7 +4244,12 @@ function ctUpdateTotals(){
   if(typeof renderTotals==='function')renderTotals();
   if(typeof renderInvCsumFromDOM==='function')renderInvCsumFromDOM();
 }
-function ctInput(k,v){ ctData[k]=v; saveCtData(); }
+function ctInput(k,v){
+  ctData=(k==='jisha_jin'||k==='jisha_mat')
+    ?window.IzumiSelfCosts.setTotal(ctData,k,v)
+    :{...ctData,[k]:v};
+  saveCtData();
+}
 function ctSmartFit(el){
   if(!el) return;
   var len=Array.from(String(el.value||'')).length;
@@ -5038,7 +5127,7 @@ function renderCostTable(){
 
   H+='<tr>';
   H+='<td style="background:#fff;border:'+BD+';'+RH+'"></td>';
-  H+='<td style="'+S_TH+'letter-spacing:0.5px;">自社人工</td>';
+  H+='<td style="'+S_TH+'letter-spacing:0.5px;">自社人工<div id="ct-self-labor-names" style="margin-top:2px;font-size:8.5px;font-weight:500;letter-spacing:0;line-height:1.25;overflow-wrap:anywhere;">'+e2(selfCostNames('jisha_jin').join('・'))+'</div></td>';
   H+='<td style="border:'+BD+';'+RH+'padding:0;background:#fff;vertical-align:middle;">';
   H+='<input data-ctid="jisha_jin" data-f="f2" inputmode="decimal" value="'+e2((function(){var v=String(cg('jisha_jin','')||'');return v?N(parseFloat(v.replace(/,/g,'')))||'':'';}()))+'" ';
   H+='oninput="ctInput(\'jisha_jin\',this.value.replace(/,/g,\'\'));ctUpdateTotals();" ';
@@ -5050,7 +5139,7 @@ function renderCostTable(){
 
   H+='<tr>';
   H+='<td style="background:#fff;border:'+BD+';'+RH+'"></td>';
-  H+='<td style="'+S_TH+'letter-spacing:0.5px;">自社資材</td>';
+  H+='<td style="'+S_TH+'letter-spacing:0.5px;">自社資材<div id="ct-self-material-names" style="margin-top:2px;font-size:8.5px;font-weight:500;letter-spacing:0;line-height:1.25;overflow-wrap:anywhere;">'+e2(selfCostNames('jisha_mat').join('・'))+'</div></td>';
   H+='<td style="border:'+BD+';'+RH+'padding:0;background:#fff;vertical-align:middle;">';
   H+='<input data-ctid="jisha_mat" data-f="f2" inputmode="decimal" value="'+e2((function(){var v=String(cg('jisha_mat','')||'');return v?N(parseFloat(v.replace(/,/g,'')))||'':'';}()))+'" ';
   H+='oninput="ctInput(\'jisha_mat\',this.value.replace(/,/g,\'\'));ctUpdateTotals();" ';
@@ -6894,7 +6983,8 @@ function uopts(cur){
 function buildSaveData(){
   const invoiceDate=vv('i-date-in');
   const invoiceExTax=invoiceDate?onlineInvoiceExTax():0;
-  return {v:19,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',ledgerWriteback:ledgerWritebackMeta,co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
+  return {v:20,estimateLayout:getEstimateLayout(),calendarEventId:activeScheduleId||'',draftId:onlineDraftId||'',ledgerWriteback:ledgerWritebackMeta,co:currentCo,invCo:currentInvCo,companies,rows:normalizeEstimateRows(rows),rowId,invRows,invRowId,vendors,
+    costTable:window.IzumiSelfCosts.normalize(ctData),
     rate:document.getElementById('rateInput').value,
     estMemo:document.getElementById('estMemo')?.value||'',
     invMemo:document.getElementById('invMemo')?.value||'',
@@ -7016,6 +7106,12 @@ function loadAll(input){
 function loadAllFromText(text){
   try{
       const d=JSON.parse(text);
+      if(d.costTable&&typeof d.costTable==='object'&&!Array.isArray(d.costTable)){
+        ctData=window.IzumiSelfCosts.normalize(d.costTable);
+        saveCtData(false);
+      }else{
+        loadCtData();
+      }
       ledgerWritebackMeta=(d.ledgerWriteback&&typeof d.ledgerWriteback==='object'&&!Array.isArray(d.ledgerWriteback))?d.ledgerWriteback:{};
       applyEstimateLayoutMode(d.estimateLayout||'landscape',{render:false,persist:true});
       activeScheduleId=d.calendarEventId||'';
