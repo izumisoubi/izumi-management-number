@@ -69,6 +69,21 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 #sc-basic .fg>input,#sc-basic .fg>textarea,#sc-basic .fg>select{width:100%;max-width:620px;}
 #sc-basic .fg>.date-actions{width:315px;}
 #sc-basic .fg>.date-actions input{width:145px!important;}
+#ordInfoPanel{background:var(--tb);border:1px solid var(--tbr);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:11px}
+.ord-info-title{font-size:10px;font-weight:800;color:var(--tm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.ord-info-grid,.ord-info-bottom{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.ord-info-grid{margin-bottom:6px}
+.ord-info-row{display:flex;align-items:center;gap:7px;min-width:0}
+.ord-info-row>label{flex:0 0 76px;font-size:10px;color:var(--tm);font-weight:700;white-space:nowrap}
+.ord-info-row>input,.ord-info-row>textarea{flex:1;min-width:0;background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);outline:none;font-family:inherit}
+.ord-info-row>.date-actions{flex:1}
+.ord-info-row>.date-actions input{width:132px!important;flex:0 0 132px!important}
+.ord-info-wide{grid-column:1/-1}
+.ord-info-photo textarea{min-height:34px;max-height:54px;resize:vertical}
+@media(max-width:1050px){
+  .ord-info-grid,.ord-info-bottom{grid-template-columns:1fr}
+  .ord-info-wide{grid-column:auto}
+}
 .sec-div{grid-column:1/-1;font-size:10px;font-weight:800;color:var(--ta);text-transform:uppercase;letter-spacing:1px;padding-top:7px;border-top:1px solid var(--tbr);margin-top:3px;font-family:'Helvetica Neue',sans-serif;}
 .co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
 .co-card{background:var(--ti);border:1px solid var(--tbr);border-radius:9px;padding:14px;}
@@ -860,38 +875,38 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
 
       <!-- 工期・鍵情報入力欄（記憶付き・発注書明細上部） -->
-      <div id="ordInfoPanel" style="background:var(--tb);border:1px solid var(--tbr);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px">
-        <div style="font-size:10px;font-weight:800;color:var(--tm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">発注情報（注文確認書に反映）</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">工期（開始）</label>
-            <input id="ord-date-from" type="date" oninput="saveOrdInfo()" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
+      <div id="ordInfoPanel">
+        <div class="ord-info-title">発注情報（注文確認書に反映）</div>
+        <div class="ord-info-grid">
+          <div class="ord-info-row">
+            <label>工期（開始）</label>
+            <input id="ord-date-from" type="date" oninput="saveOrdInfo()">
           </div>
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">工期（終了）</label>
-            <input id="ord-date-to" type="date" oninput="saveOrdInfo()" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
+          <div class="ord-info-row">
+            <label>工期（終了）</label>
+            <input id="ord-date-to" type="date" oninput="saveOrdInfo()">
           </div>
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">鍵返却期日</label>
-            <input id="ord-key-return" type="date" oninput="saveOrdInfo()" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
+          <div class="ord-info-row">
+            <label>鍵返却期日</label>
+            <input id="ord-key-return" type="date" oninput="saveOrdInfo()">
           </div>
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">施工条件</label>
-            <input id="ord-shikobun" type="text" oninput="saveOrdInfo()" value="労災・損害等の保険は受注者加入" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
+          <div class="ord-info-row">
+            <label>施工条件</label>
+            <input id="ord-shikobun" type="text" oninput="saveOrdInfo()" value="労災・損害等の保険は受注者加入">
+          </div>
+          <div class="ord-info-row ord-info-wide">
+            <label>鍵貸出・返却方法</label>
+            <input id="ord-key-method" type="text" oninput="saveOrdInfo()" placeholder="例：オートロック※1831呼、部屋らくらくロック、作業後元の位置">
           </div>
         </div>
-        <div style="margin-bottom:6px">
-          <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">鍵貸出・返却方法</label>
-          <input id="ord-key-method" type="text" oninput="saveOrdInfo()" placeholder="例：オートロック※1831呼、部屋らくらくロック、作業後元の位置" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">写真撮り</label>
-            <textarea id="ord-photo" oninput="saveOrdInfo()" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;min-height:48px;outline:none;resize:vertical;font-family:inherit">施工前・施工中・施工後の写真を同じ画角で撮影保存送付してください。</textarea>
+        <div class="ord-info-bottom">
+          <div class="ord-info-row ord-info-photo">
+            <label>写真撮り</label>
+            <textarea id="ord-photo" oninput="saveOrdInfo()">施工前・施工中・施工後の写真を同じ画角で撮影保存送付してください。</textarea>
           </div>
-          <div>
-            <label style="font-size:10px;color:var(--tm);font-weight:700;display:block;margin-bottom:3px">特記事項</label>
-            <input id="ord-note" type="text" oninput="saveOrdInfo()" placeholder="特記事項" style="background:var(--tc);border:1px solid var(--tbr);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--tt);width:100%;outline:none">
+          <div class="ord-info-row">
+            <label>特記事項</label>
+            <input id="ord-note" type="text" oninput="saveOrdInfo()" placeholder="特記事項">
           </div>
         </div>
       </div>
