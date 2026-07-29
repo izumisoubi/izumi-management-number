@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>イズミ装美 見積/発注/原価/管理請求システム</title>
+<script>
+(()=>{const url=new URL(location.href);if(location.protocol==='file:'||['localhost','127.0.0.1'].includes(location.hostname)||url.searchParams.has('_fresh'))return;url.searchParams.set('_fresh',Date.now().toString(36));location.replace(url.href)})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260729-UX47"></script>
@@ -1248,7 +1251,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 </div>
 
 <script>
-function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
+function normalizeStablePageUrls(){const cacheKeys=['v','build','_fresh'];const current=new URL(location.href);if(cacheKeys.some(key=>current.searchParams.has(key))){cacheKeys.forEach(key=>current.searchParams.delete(key));history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!cacheKeys.some(key=>target.searchParams.has(key)))return;cacheKeys.forEach(key=>target.searchParams.delete(key));link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',normalizeStablePageUrls);else normalizeStablePageUrls();
 const FONTS={
   mincho:{label:'明朝体（標準）',css:"'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif"},
