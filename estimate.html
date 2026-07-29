@@ -1352,7 +1352,7 @@ function setupDateActions(){
     const todayButton=document.createElement('button'); todayButton.type='button'; todayButton.textContent='本日';
     const lockButton=document.createElement('button'); lockButton.type='button';
     [todayButton,lockButton].forEach(button=>button.style.cssText='border:1px solid var(--tbr);background:var(--tb);color:var(--tt);border-radius:4px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer;flex:none;');
-    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付を固定';lockButton.title='入力値はこの操作をしなくても自動保存・台帳転記されます。これは誤変更防止だけの機能です。';};
+    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付固定';lockButton.title='入力値はこの操作をしなくても自動保存・台帳転記されます。これは誤変更防止だけの機能です。';};
     todayButton.onclick=()=>{input.value=new Date().toISOString().slice(0,10);input.dispatchEvent(new Event('input',{bubbles:true}));scheduleOnlineAutosave(250);};
     lockButton.onclick=()=>{locks[id]=!locks[id];saveDateLocks(locks);update();};
     input.addEventListener('input',()=>{if(locks[id]){locks[id]=false;saveDateLocks(locks);update();}});
