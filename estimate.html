@@ -243,37 +243,46 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-cost-panel .paste-hint{padding-top:5px;padding-bottom:5px;line-height:1.45;}
 .estimate-cost-panel #csumTop{padding-bottom:4px;border-bottom:0;}
 .estimate-cost-panel #csumProfit{padding:6px 16px 7px;}
-.estimate-summary-grid,.self-cost-grid{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;border:1px solid var(--tbr);border-radius:6px;overflow:hidden;font-family:'Helvetica Neue',sans-serif;}
-.estimate-summary-grid th,.estimate-summary-grid td,.self-cost-grid th,.self-cost-grid td{border:0;border-right:1px solid var(--tbr);border-bottom:1px solid var(--tbr);padding:0;}
-.estimate-summary-grid tr>*:last-child,.self-cost-grid tr>*:last-child{border-right:0;}
-.estimate-summary-grid tbody tr:last-child>*,.self-cost-grid tbody tr:last-child>*{border-bottom:0;}
-.estimate-summary-grid thead th,.self-cost-grid thead th{height:19px;background:rgba(40,96,208,.055);color:var(--tm);font-size:9px;font-weight:800;text-align:center;letter-spacing:.02em;}
-.estimate-summary-grid tbody th{width:15%;padding:5px 8px;background:rgba(40,96,208,.035);color:var(--tt);font-size:10.5px;font-weight:800;text-align:left;}
-.estimate-summary-grid tbody td{padding:4px 8px;color:var(--tt);font-size:13px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
-.estimate-summary-grid tbody tr:last-child td:last-child{color:var(--ta);}
-.self-cost-slots-panel{padding:4px 16px 7px;font-family:'Helvetica Neue',sans-serif;}
-.self-cost-section-head{display:flex;align-items:baseline;gap:10px;margin:0 0 5px;}
+.profit-flow-wrap{padding:3px 0 7px;font-family:'Helvetica Neue',sans-serif;}
+.profit-flow-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px;}
+.profit-flow-head strong{color:var(--tt);font-size:11.5px;font-weight:850;}
+.profit-flow-head span{color:var(--tm);font-size:9px;}
+.profit-flow{display:grid;grid-template-columns:minmax(122px,1.1fr) 18px minmax(112px,1fr) 18px minmax(112px,1fr) 18px minmax(112px,1fr) 18px minmax(140px,1.15fr);align-items:stretch;gap:4px;}
+.profit-flow-card{display:flex;flex-direction:column;justify-content:center;min-width:0;min-height:62px;padding:7px 9px;border:1px solid var(--tbr);border-radius:8px;background:var(--tc);box-shadow:0 1px 0 rgba(15,23,42,.025);}
+.profit-flow-card.is-sales{border-color:rgba(37,99,235,.28);background:rgba(37,99,235,.045);}
+.profit-flow-card.is-result{border-width:1.5px;}
+.profit-flow-card.is-result.is-positive{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.055);}
+.profit-flow-card.is-result.is-negative{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.045);}
+.profit-flow-card.is-result.is-neutral{background:rgba(100,116,139,.045);}
+.profit-flow-label{color:var(--tm);font-size:9px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profit-flow-value{margin-top:2px;color:var(--tt);font-size:18px;font-weight:900;line-height:1.1;letter-spacing:-.035em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.profit-flow-card.is-sales .profit-flow-value{color:var(--ta);}
+.profit-flow-card.is-result.is-positive .profit-flow-value{color:var(--tg);}
+.profit-flow-card.is-result.is-negative .profit-flow-value{color:var(--tr);}
+.profit-flow-card.is-result.is-neutral .profit-flow-value{color:var(--tm);}
+.profit-flow-meta{display:flex;justify-content:space-between;gap:5px;margin-top:4px;color:var(--tm);font-size:8px;white-space:nowrap;}
+.profit-flow-op{display:flex;align-items:center;justify-content:center;color:var(--tm);font-size:18px;font-weight:500;}
+.self-cost-slots-panel{padding:3px 16px 8px;font-family:'Helvetica Neue',sans-serif;}
+.self-cost-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 5px;}
 .self-cost-section-head h3{margin:0;color:var(--tt);font-size:11.5px;font-weight:850;white-space:nowrap;}
-.self-cost-section-head p{margin:0;color:var(--tm);font-size:9.5px;line-height:1.35;}
-.self-cost-grid-shell{overflow-x:auto;border:1px solid var(--tbr);border-radius:7px;background:var(--tc);}
-.self-cost-grid{min-width:1020px;border:0;border-radius:0;font-size:9px;}
-.self-cost-grid .col-kind{width:90px;}
-.self-cost-grid .col-money{width:80px;}
-.self-cost-grid .col-name{width:120px;}
-.self-cost-grid .col-total{width:92px;}
-.self-cost-grid thead tr:first-child th{height:20px;color:var(--tt);font-size:9.5px;}
-.self-cost-grid thead tr:last-child th{height:18px;font-size:8.5px;font-weight:750;}
-.self-cost-grid thead .slot-group{background:rgba(40,96,208,.075);letter-spacing:.05em;}
-.self-cost-grid .slot-start{border-left:2px solid rgba(40,96,208,.22);}
-.self-cost-grid .self-cost-kind{padding:0 8px;background:rgba(40,96,208,.04);color:var(--tt);font-size:10px;font-weight:850;text-align:left;white-space:nowrap;}
-.self-cost-grid .self-cost-total{padding:0 8px;background:rgba(40,96,208,.025);color:var(--tt);font-size:11px;font-weight:850;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
-.self-cost-grid td{background:var(--ti);transition:background .12s,box-shadow .12s;}
-.self-cost-grid td:hover{background:rgba(79,142,247,.055);}
-.self-cost-grid td:focus-within{background:rgba(79,142,247,.085);box-shadow:inset 0 0 0 1.5px var(--ta);position:relative;z-index:1;}
-.self-cost-slot-input{width:100%;min-width:0;height:27px;background:transparent;border:0;border-radius:0;padding:3px 7px;color:var(--tt);font-size:10.5px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.self-cost-section-head p{margin:0;color:var(--tm);font-size:9px;line-height:1.35;text-align:right;}
+.self-cost-category-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.self-cost-category{min-width:0;overflow:hidden;border:1px solid var(--tbr);border-radius:8px;background:rgba(100,116,139,.018);}
+.self-cost-category-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;border-bottom:1px solid var(--tbr);background:rgba(40,96,208,.035);}
+.self-cost-category-head strong{color:var(--tt);font-size:10.5px;}
+.self-cost-category-head span{color:var(--tm);font-size:9px;white-space:nowrap;}
+.self-cost-category-head b{margin-left:4px;color:var(--tt);font-size:11px;font-variant-numeric:tabular-nums;}
+.self-cost-entry-list{display:grid;gap:0;}
+.self-cost-entry{display:grid;grid-template-columns:20px minmax(88px,1fr) minmax(76px,.76fr) minmax(76px,.76fr);align-items:end;gap:5px;padding:5px 7px;border-bottom:1px solid rgba(100,120,160,.18);}
+.self-cost-entry:last-child{border-bottom:0;}
+.self-cost-entry-index{display:flex;align-items:center;justify-content:center;align-self:center;width:18px;height:18px;border-radius:999px;background:rgba(40,96,208,.09);color:var(--ta);font-size:8.5px;font-weight:850;}
+.self-cost-field{display:grid;gap:2px;min-width:0;}
+.self-cost-field span{color:var(--tm);font-size:7.5px;font-weight:700;line-height:1;}
+.self-cost-slot-input{width:100%;min-width:0;height:25px;background:var(--ti);border:1px solid var(--tbr);border-radius:5px;padding:3px 6px;color:var(--tt);font-size:10px;text-align:right;font-family:'Helvetica Neue',sans-serif;outline:none;transition:border-color .12s,box-shadow .12s,background .12s;}
 .self-cost-slot-name{text-align:left;}
-.self-cost-slot-input::placeholder{color:var(--tm);opacity:.58;font-size:9px;}
-.self-cost-slot-input:focus{background:transparent;box-shadow:none;}
+.self-cost-slot-input::placeholder{color:var(--tm);opacity:.58;font-size:8.5px;}
+.self-cost-slot-input:hover{border-color:rgba(40,96,208,.42);}
+.self-cost-slot-input:focus{border-color:var(--ta);background:var(--tc);box-shadow:0 0 0 2px rgba(40,96,208,.10);}
 .estimate-profit-strip{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--tbr);border-bottom:1px solid var(--tbr);}
 .estimate-profit-item{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:5px 0;}
 .estimate-profit-item:first-child{padding-right:16px;border-right:1px solid var(--tbr);}
@@ -297,7 +306,15 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-referral-fields .estimate-referral-percent{text-align:center;color:var(--tm);font-size:10px;}
 @media(max-width:1050px){
   .estimate-referral-grid{grid-template-columns:1fr;}
+  .profit-flow{grid-template-columns:minmax(110px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(125px,1fr);}
   .self-cost-section-head{align-items:flex-start;flex-direction:column;gap:1px;}
+  .self-cost-section-head p{text-align:left;}
+}
+@media(max-width:760px){
+  .profit-flow{grid-template-columns:1fr 1fr;gap:5px;}
+  .profit-flow-op{display:none;}
+  .profit-flow-card.is-result{grid-column:1/-1;}
+  .self-cost-category-grid{grid-template-columns:1fr;}
 }
 .invoice-summary-panel .cost-head,#invSettingsPanel .cost-head{padding:7px 14px}
 .invoice-summary-panel .csum{padding:8px 16px}
@@ -849,38 +866,29 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       <div class="csum" id="csumTop"></div>
       <section id="selfCostSlotsPanel" class="self-cost-slots-panel" aria-labelledby="selfCostTitle">
         <div class="self-cost-section-head">
-          <h3 id="selfCostTitle">自社人工・自社資材</h3>
-          <p>自社人工・自社資材は原価・粗利益の計算に含まれます。各3件まで登録／税抜・税込は双方向計算／見積書の明細には表示されません</p>
+          <h3 id="selfCostTitle">自社原価の内訳</h3>
+          <p>自社人工・自社資材は原価・粗利益の計算に含まれます。税抜・税込はどちらからでも入力／見積書の明細には表示されません</p>
         </div>
-        <div class="self-cost-grid-shell">
-          <table class="self-cost-grid" aria-label="自社人工・自社資材">
-            <colgroup>
-              <col class="col-kind"><col class="col-money"><col class="col-money"><col class="col-name"><col class="col-money"><col class="col-money"><col class="col-name"><col class="col-money"><col class="col-money"><col class="col-name"><col class="col-total">
-            </colgroup>
-            <thead>
-              <tr><th class="self-cost-kind" rowspan="2">区分</th><th class="slot-group slot-start" colspan="3">内訳 1</th><th class="slot-group slot-start" colspan="3">内訳 2</th><th class="slot-group slot-start" colspan="3">内訳 3</th><th rowspan="2">税抜合計</th></tr>
-              <tr><th class="slot-start">税抜</th><th>税込</th><th>名前・用途</th><th class="slot-start">税抜</th><th>税込</th><th>名前・用途</th><th class="slot-start">税抜</th><th>税込</th><th>名前・用途</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th class="self-cost-kind">自社人工</th>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" placeholder="氏名・用途" aria-label="自社人工の名前1"></td>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" placeholder="氏名・用途" aria-label="自社人工の名前2"></td>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" placeholder="氏名・用途" aria-label="自社人工の名前3"></td>
-                <td class="self-cost-total" id="selfLaborSlotsTotal">¥0</td>
-              </tr>
-              <tr>
-                <th class="self-cost-kind">自社資材</th>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" placeholder="品名・用途" aria-label="自社資材の名前1"></td>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" placeholder="品名・用途" aria-label="自社資材の名前2"></td>
-                <td class="slot-start"><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税抜"></td><td><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税込"></td><td><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" placeholder="品名・用途" aria-label="自社資材の名前3"></td>
-                <td class="self-cost-total" id="selfMaterialSlotsTotal">¥0</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="self-cost-category-grid">
+          <section class="self-cost-category" aria-label="自社人工">
+            <div class="self-cost-category-head"><strong>自社人工</strong><span>税抜合計 <b id="selfLaborSlotsTotal">¥0</b></span></div>
+            <div class="self-cost-entry-list">
+              <div class="self-cost-entry"><span class="self-cost-entry-index">1</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" placeholder="氏名・作業内容" aria-label="自社人工の名前1"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税込"></label></div>
+              <div class="self-cost-entry"><span class="self-cost-entry-index">2</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" placeholder="氏名・作業内容" aria-label="自社人工の名前2"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税込"></label></div>
+              <div class="self-cost-entry"><span class="self-cost-entry-index">3</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" placeholder="氏名・作業内容" aria-label="自社人工の名前3"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税込"></label></div>
+            </div>
+          </section>
+          <section class="self-cost-category" aria-label="自社資材">
+            <div class="self-cost-category-head"><strong>自社資材</strong><span>税抜合計 <b id="selfMaterialSlotsTotal">¥0</b></span></div>
+            <div class="self-cost-entry-list">
+              <div class="self-cost-entry"><span class="self-cost-entry-index">1</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" placeholder="品名・用途" aria-label="自社資材の名前1"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税込"></label></div>
+              <div class="self-cost-entry"><span class="self-cost-entry-index">2</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" placeholder="品名・用途" aria-label="自社資材の名前2"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税込"></label></div>
+              <div class="self-cost-entry"><span class="self-cost-entry-index">3</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" placeholder="品名・用途" aria-label="自社資材の名前3"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税込"></label></div>
+            </div>
+          </section>
         </div>
       </section>
-      <div class="csum" id="csumProfit"></div>
+      <div class="csum" id="csumProfit" hidden></div>
       <!-- 紹介料：静的HTML（従来位置・内容を保持） -->
       <div id="shokaiPanelStatic" class="estimate-referral-panel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
         <div class="estimate-referral-head"><strong>紹介料（任意）</strong><span>入力すると「紹介料差引後」の粗利益へ反映します</span></div>
@@ -2386,7 +2394,8 @@ function getInternalCost(){
     return parse(costData.jisha_jin)+parse(costData.jisha_mat);
   }catch(e){return 0;}
 }
-function totCost(){return rows.reduce((s,r)=>r.type==='section'?s:s+(rCost(r)??0),0)+getInternalCost();}
+function totLineCost(){return rows.reduce((s,r)=>r.type==='section'?s:s+(rCost(r)??0),0);}
+function totCost(){return totLineCost()+getInternalCost();}
 function recalc(){const c=companies[currentCo];if(c)c.rate=getRate();rows.forEach(syncBurdenForSellChange);renderAll();}
 
 let basicUndoStack=[],basicRedoStack=[];
@@ -2936,9 +2945,12 @@ function _updatePageHeaders(){
 
 function renderTotals(){
   const sub=totSell(),tax=Math.round(sub*.1),tot=sub+tax;
-  const cost=totCost(),profit=sub-cost;
   let estimateCostData={};try{estimateCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
   renderSelfCostSlots(estimateCostData);
+  const lineCost=totLineCost();
+  const selfLabor=window.IzumiSelfCosts.slotTotal(estimateCostData,'jisha_jin');
+  const selfMaterials=window.IzumiSelfCosts.slotTotal(estimateCostData,'jisha_mat');
+  const cost=lineCost+selfLabor+selfMaterials,profit=sub-cost;
   const pRate=sub>0?parseFloat((profit/sub*100).toFixed(1)):0;
   st('e-sub',yen(sub));st('e-tax',yen(tax));st('e-total',yen(tot));
   // ptfootはrenderPrintで管理するため、ここでは更新しない
@@ -2963,7 +2975,6 @@ function renderTotals(){
   const finalTaxIncPRateLabel=tot>0?`${finalTaxIncPRate}%`:'—';
   const stateOf=value=>value<0?'is-negative':value>0?'is-positive':'is-neutral';
   const profitState=stateOf(profit);
-  const taxIncProfitState=stateOf(taxIncProfit);
   const finalTaxExcState=stateOf(finalTaxExcProfit);
   const finalTaxIncState=stateOf(finalTaxIncProfit);
   // %spanを更新
@@ -2971,18 +2982,21 @@ function renderTotals(){
   setPct('shokai_pct_disp',s1exc,sub);setPct('shokai_pct_inc_disp',s1inc,tot);
   setPct('shokai_pct2_disp',s2exc,sub);setPct('shokai_pct2_inc_disp',s2inc,tot);
   if(csumTop)csumTop.innerHTML=`
-    <table class="estimate-summary-grid" aria-label="原価・売上集計">
-      <thead><tr><th>区分</th><th>税抜</th><th>消費税（10%）</th><th>税込</th></tr></thead>
-      <tbody>
-        <tr><th>原価</th><td>${yen(cost)}</td><td>${yen(Math.round(cost*.1))}</td><td>${yen(Math.round(cost*1.1))}</td></tr>
-        <tr><th>売上</th><td>${yen(sub)}</td><td>${yen(tax)}</td><td>${yen(tot)}</td></tr>
-      </tbody>
-    </table>`;
-  if(csumProfit)csumProfit.innerHTML=`
-    <div class="estimate-profit-strip">
-      <div class="estimate-profit-item ${profitState}"><span class="estimate-profit-label">税抜粗利益 <span class="estimate-profit-stage">紹介料差引前</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(profit)}</span><span class="estimate-profit-rate">利益率 ${pRateLabel}</span></span></div>
-      <div class="estimate-profit-item ${taxIncProfitState}"><span class="estimate-profit-label">税込粗利益 <span class="estimate-profit-stage">紹介料差引前</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(taxIncProfit)}</span><span class="estimate-profit-rate">利益率 ${taxIncPRateLabel}</span></span></div>
+    <div class="profit-flow-wrap">
+      <div class="profit-flow-head"><strong>利益の構成</strong><span>売上から、明細原価・自社人工・自社資材を差し引きます</span></div>
+      <div class="profit-flow" aria-label="売上から粗利益までの計算">
+        <div class="profit-flow-card is-sales"><span class="profit-flow-label">売上（税抜）</span><strong class="profit-flow-value">${yen(sub)}</strong><span class="profit-flow-meta"><span>税込</span><span>${yen(tot)}</span></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-meta"><span>見積明細</span><span>税抜</span></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-meta"><span>社内原価</span><span>税抜</span></span></div>
+        <div class="profit-flow-op" aria-hidden="true">−</div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社資材</span><strong class="profit-flow-value">${yen(selfMaterials)}</strong><span class="profit-flow-meta"><span>社内原価</span><span>税抜</span></span></div>
+        <div class="profit-flow-op" aria-hidden="true">＝</div>
+        <div class="profit-flow-card is-result ${profitState}"><span class="profit-flow-label">粗利益（紹介料差引前）</span><strong class="profit-flow-value">${profitYen(profit)}</strong><span class="profit-flow-meta"><span>利益率 ${pRateLabel}</span><span>税込 ${profitYen(taxIncProfit)}</span></span></div>
+      </div>
     </div>`;
+  if(csumProfit)csumProfit.innerHTML='';
   const invFinal=document.getElementById('invCsumFinal');
   if(invFinal)invFinal.innerHTML=`
     <div class="estimate-profit-strip">
