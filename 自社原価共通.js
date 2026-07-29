@@ -3,7 +3,7 @@
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.IzumiSelfCosts=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
-  const SLOT_COUNT=3;
+  const SLOT_COUNT=2;
   function numberValue(value){
     const parsed=parseFloat(String(value??'').replace(/,/g,''));
     return Number.isFinite(parsed)?parsed:0;
@@ -21,6 +21,9 @@
   function normalize(data){
     const next={...(data&&typeof data==='object'&&!Array.isArray(data)?data:{})};
     ['jisha_jin','jisha_mat'].forEach(prefix=>{
+      delete next[slotKey(prefix,3)];
+      delete next[grossKey(prefix,3)];
+      delete next[`${prefix}_name_3`];
       if(!hasSlotValue(next,prefix)&&numberValue(next[prefix])!==0)next[slotKey(prefix,1)]=String(numberValue(next[prefix]));
       for(let index=1;index<=SLOT_COUNT;index++){
         const netKey=slotKey(prefix,index);
@@ -35,7 +38,7 @@
     return next;
   }
   function setSlot(data,key,value){
-    const match=/^(jisha_jin|jisha_mat)_([1-3])$/.exec(String(key||''));
+    const match=/^(jisha_jin|jisha_mat)_([1-2])$/.exec(String(key||''));
     if(!match)return normalize(data);
     const next=normalize(data);
     next[key]=value===''?'':String(numberValue(value));
@@ -44,7 +47,7 @@
     return next;
   }
   function setGross(data,key,value){
-    const match=/^(jisha_jin|jisha_mat)_inc_([1-3])$/.exec(String(key||''));
+    const match=/^(jisha_jin|jisha_mat)_inc_([1-2])$/.exec(String(key||''));
     if(!match)return normalize(data);
     const next=normalize(data);
     const netKey=slotKey(match[1],Number(match[2]));

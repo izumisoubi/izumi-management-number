@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260729-UX47"></script>
-<script src="自社原価共通.js?v=20260729-UX48"></script>
+<script src="自社原価共通.js?v=20260729-UX49"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -255,16 +255,22 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .profit-flow-card.is-result.is-negative{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.045);}
 .profit-flow-card.is-result.is-neutral{background:rgba(100,116,139,.045);}
 .profit-flow-label{color:var(--tm);font-size:9px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profit-flow-main{display:flex;align-items:baseline;justify-content:flex-end;gap:5px;min-width:0;}
 .profit-flow-value{margin-top:2px;color:var(--tt);font-size:18px;font-weight:900;line-height:1.1;letter-spacing:-.035em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.profit-flow-share{flex:0 0 auto;color:var(--tm);font-size:8.5px;font-weight:800;white-space:nowrap;}
 .profit-flow-card.is-sales .profit-flow-value{color:var(--ta);}
 .profit-flow-card.is-result.is-positive .profit-flow-value{color:var(--tg);}
 .profit-flow-card.is-result.is-negative .profit-flow-value{color:var(--tr);}
 .profit-flow-card.is-result.is-neutral .profit-flow-value{color:var(--tm);}
-.profit-flow-meta{display:flex;justify-content:space-between;gap:5px;margin-top:4px;color:var(--tm);font-size:8px;white-space:nowrap;}
+.profit-flow-meta{display:flex;align-items:baseline;justify-content:space-between;gap:5px;margin-top:5px;color:var(--tm);font-size:8px;white-space:nowrap;}
+.profit-flow-meta strong{color:var(--tt);font-size:10.5px;font-weight:800;font-variant-numeric:tabular-nums;}
+.profit-flow-card.is-result.is-positive .profit-flow-meta strong{color:var(--tg);}
+.profit-flow-card.is-result.is-negative .profit-flow-meta strong{color:var(--tr);}
 .profit-flow-op{display:flex;align-items:center;justify-content:center;color:var(--tm);font-size:18px;font-weight:500;}
 .self-cost-slots-panel{padding:3px 16px 8px;font-family:'Helvetica Neue',sans-serif;}
 .self-cost-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 5px;}
 .self-cost-section-head h3{margin:0;color:var(--tt);font-size:11.5px;font-weight:850;white-space:nowrap;}
+.self-cost-section-head .self-cost-optional{color:var(--tm);font-size:9px;font-weight:700;}
 .self-cost-section-head p{margin:0;color:var(--tm);font-size:9px;line-height:1.35;text-align:right;}
 .self-cost-category-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .self-cost-category{min-width:0;overflow:hidden;border:1px solid var(--tbr);border-radius:8px;background:rgba(100,116,139,.018);}
@@ -272,8 +278,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .self-cost-category-head strong{color:var(--tt);font-size:10.5px;}
 .self-cost-category-head span{color:var(--tm);font-size:9px;white-space:nowrap;}
 .self-cost-category-head b{margin-left:4px;color:var(--tt);font-size:11px;font-variant-numeric:tabular-nums;}
-.self-cost-entry-list{display:grid;gap:0;}
-.self-cost-entry{display:grid;grid-template-columns:20px minmax(88px,1fr) minmax(76px,.76fr) minmax(76px,.76fr);align-items:end;gap:5px;padding:5px 7px;border-bottom:1px solid rgba(100,120,160,.18);}
+.self-cost-entry-list{display:grid;min-width:0;}
+.self-cost-entry{display:grid;grid-template-columns:20px minmax(88px,1fr) minmax(76px,.76fr) minmax(76px,.76fr);align-items:end;gap:5px;min-width:0;padding:5px 7px;border-bottom:1px solid rgba(100,120,160,.18);}
 .self-cost-entry:last-child{border-bottom:0;}
 .self-cost-entry-index{display:flex;align-items:center;justify-content:center;align-self:center;width:18px;height:18px;border-radius:999px;background:rgba(40,96,208,.09);color:var(--ta);font-size:8.5px;font-weight:850;}
 .self-cost-field{display:grid;gap:2px;min-width:0;}
@@ -304,6 +310,19 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .estimate-referral-fields input{width:100%!important;min-width:0;}
 .estimate-referral-fields input:focus{outline:none;border-color:var(--ta)!important;box-shadow:0 0 0 2px rgba(40,96,208,.10);}
 .estimate-referral-fields .estimate-referral-percent{text-align:center;color:var(--tm);font-size:10px;}
+.after-referral-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:'Helvetica Neue',sans-serif;}
+.after-referral-card{min-width:0;border:1px solid var(--tbr);border-radius:7px;background:rgba(100,116,139,.02);padding:6px 9px;}
+.after-referral-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.after-referral-card-head strong{color:var(--tt);font-size:10px;}
+.after-referral-card-head span{padding:1px 5px;border-radius:999px;background:rgba(40,96,208,.07);color:var(--tm);font-size:8px;font-weight:750;}
+.after-referral-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:2px 0;color:var(--tm);font-size:9px;}
+.after-referral-row b{color:var(--ta);font-size:14px;font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.after-referral-row.is-profit{margin-top:3px;padding-top:4px;border-top:1px solid var(--tbr);color:var(--tt);font-weight:800;}
+.after-referral-row.is-profit b{font-size:17px;}
+.after-referral-row.is-profit.is-positive b{color:var(--tg);}
+.after-referral-row.is-profit.is-negative b{color:var(--tr);}
+.after-referral-row.is-profit.is-neutral b{color:var(--tm);}
+.after-referral-rate{margin-left:5px;color:var(--tm);font-size:8px;font-weight:750;}
 @media(max-width:1050px){
   .estimate-referral-grid{grid-template-columns:1fr;}
   .profit-flow{grid-template-columns:minmax(110px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(100px,1fr) 15px minmax(125px,1fr);}
@@ -315,6 +334,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   .profit-flow-op{display:none;}
   .profit-flow-card.is-result{grid-column:1/-1;}
   .self-cost-category-grid{grid-template-columns:1fr;}
+  .after-referral-grid{grid-template-columns:1fr;}
 }
 .invoice-summary-panel .cost-head,#invSettingsPanel .cost-head{padding:7px 14px}
 .invoice-summary-panel .csum{padding:8px 16px}
@@ -866,7 +886,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       <div class="csum" id="csumTop"></div>
       <section id="selfCostSlotsPanel" class="self-cost-slots-panel" aria-labelledby="selfCostTitle">
         <div class="self-cost-section-head">
-          <h3 id="selfCostTitle">自社原価の内訳</h3>
+          <h3 id="selfCostTitle">自社原価の内訳 <span class="self-cost-optional">（任意）</span></h3>
           <p>自社人工・自社資材は原価・粗利益の計算に含まれます。税抜・税込はどちらからでも入力／見積書の明細には表示されません</p>
         </div>
         <div class="self-cost-category-grid">
@@ -875,7 +895,6 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
             <div class="self-cost-entry-list">
               <div class="self-cost-entry"><span class="self-cost-entry-index">1</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_1" placeholder="氏名・作業内容" aria-label="自社人工の名前1"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_1" inputmode="decimal" placeholder="0" aria-label="自社人工1税込"></label></div>
               <div class="self-cost-entry"><span class="self-cost-entry-index">2</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_2" placeholder="氏名・作業内容" aria-label="自社人工の名前2"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_2" inputmode="decimal" placeholder="0" aria-label="自社人工2税込"></label></div>
-              <div class="self-cost-entry"><span class="self-cost-entry-index">3</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_jin_name_3" placeholder="氏名・作業内容" aria-label="自社人工の名前3"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_jin_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_jin_inc_3" inputmode="decimal" placeholder="0" aria-label="自社人工3税込"></label></div>
             </div>
           </section>
           <section class="self-cost-category" aria-label="自社資材">
@@ -883,7 +902,6 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
             <div class="self-cost-entry-list">
               <div class="self-cost-entry"><span class="self-cost-entry-index">1</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_1" placeholder="品名・用途" aria-label="自社資材の名前1"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_1" inputmode="decimal" placeholder="0" aria-label="自社資材1税込"></label></div>
               <div class="self-cost-entry"><span class="self-cost-entry-index">2</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_2" placeholder="品名・用途" aria-label="自社資材の名前2"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_2" inputmode="decimal" placeholder="0" aria-label="自社資材2税込"></label></div>
-              <div class="self-cost-entry"><span class="self-cost-entry-index">3</span><label class="self-cost-field"><span>名前・用途</span><input class="self-cost-slot-input self-cost-slot-name" data-self-cost-name="jisha_mat_name_3" placeholder="品名・用途" aria-label="自社資材の名前3"></label><label class="self-cost-field"><span>税抜</span><input class="self-cost-slot-input" data-self-cost-slot="jisha_mat_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税抜"></label><label class="self-cost-field"><span>税込</span><input class="self-cost-slot-input" data-self-cost-gross="jisha_mat_inc_3" inputmode="decimal" placeholder="0" aria-label="自社資材3税込"></label></div>
             </div>
           </section>
         </div>
@@ -1197,6 +1215,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       <div class="csum" id="invCsum" style="border-bottom:none;"></div>
       <!-- 請求書紹介料 -->
       <div id="invShokaiPanel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
+        <div class="estimate-referral-head"><strong>紹介料（任意）</strong><span>入力すると「紹介料差引後」の粗利益へ反映します</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
           <div>
             <div style="color:var(--tm);font-size:10px;font-weight:700;margin-bottom:4px">紹介料1</div>
@@ -2943,6 +2962,22 @@ function _updatePageHeaders(){
   document.querySelectorAll('.p-duration-row').forEach(tr=>tr.style.display=vv('b-duration')?'':'none');
 }
 
+function afterReferralSummaryHtml(profitExTax,profitTaxIn,profitRateExTax,profitRateTaxIn){
+  const stateOf=value=>value<0?'is-negative':value>0?'is-positive':'is-neutral';
+  const rateLabel=value=>Number.isFinite(value)?`${value}%`:'—';
+  return `
+    <div class="after-referral-grid">
+      <section class="after-referral-card">
+        <div class="after-referral-card-head"><strong>紹介料差引後の粗利益</strong><span>税抜</span></div>
+        <div class="after-referral-row is-profit ${stateOf(profitExTax)}"><span>粗利益</span><span><b>${profitYen(profitExTax)}</b><small class="after-referral-rate">利益率 ${rateLabel(profitRateExTax)}</small></span></div>
+      </section>
+      <section class="after-referral-card">
+        <div class="after-referral-card-head"><strong>紹介料差引後の粗利益</strong><span>税込</span></div>
+        <div class="after-referral-row is-profit ${stateOf(profitTaxIn)}"><span>粗利益</span><span><b>${profitYen(profitTaxIn)}</b><small class="after-referral-rate">利益率 ${rateLabel(profitRateTaxIn)}</small></span></div>
+      </section>
+    </div>`;
+}
+
 function renderTotals(){
   const sub=totSell(),tax=Math.round(sub*.1),tot=sub+tax;
   let estimateCostData={};try{estimateCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
@@ -2964,19 +2999,14 @@ function renderTotals(){
   const totalShokaiExc=s1exc+s2exc;
   const totalShokaiInc=s1inc+s2inc;
   const taxIncProfit=tot-Math.round(cost*1.1);
-  const taxIncPRate=tot>0?parseFloat((taxIncProfit/tot*100).toFixed(1)):0;
   const finalTaxExcProfit=profit-totalShokaiExc;
   const finalTaxIncProfit=taxIncProfit-totalShokaiInc;
-  const finalTaxExcPRate=sub>0?parseFloat((finalTaxExcProfit/sub*100).toFixed(1)):0;
-  const finalTaxIncPRate=tot>0?parseFloat((finalTaxIncProfit/tot*100).toFixed(1)):0;
+  const finalTaxExcPRate=sub>0?parseFloat((finalTaxExcProfit/sub*100).toFixed(1)):NaN;
+  const finalTaxIncPRate=tot>0?parseFloat((finalTaxIncProfit/tot*100).toFixed(1)):NaN;
   const pRateLabel=sub>0?`${pRate}%`:'—';
-  const taxIncPRateLabel=tot>0?`${taxIncPRate}%`:'—';
-  const finalTaxExcPRateLabel=sub>0?`${finalTaxExcPRate}%`:'—';
-  const finalTaxIncPRateLabel=tot>0?`${finalTaxIncPRate}%`:'—';
+  const shareOfSales=value=>sub>0?`${parseFloat((value/sub*100).toFixed(1))}%`:'—';
   const stateOf=value=>value<0?'is-negative':value>0?'is-positive':'is-neutral';
   const profitState=stateOf(profit);
-  const finalTaxExcState=stateOf(finalTaxExcProfit);
-  const finalTaxIncState=stateOf(finalTaxIncProfit);
   // %spanを更新
   const setPct=(id,val,base)=>{const el=document.getElementById(id);if(el)el.textContent=base>0&&val?'('+Math.round(val/base*100)+'%)':'%';}
   setPct('shokai_pct_disp',s1exc,sub);setPct('shokai_pct_inc_disp',s1inc,tot);
@@ -2985,33 +3015,23 @@ function renderTotals(){
     <div class="profit-flow-wrap">
       <div class="profit-flow-head"><strong>利益の構成</strong><span>売上から、明細原価・自社人工・自社資材を差し引きます</span></div>
       <div class="profit-flow" aria-label="売上から粗利益までの計算">
-        <div class="profit-flow-card is-sales"><span class="profit-flow-label">売上（税抜）</span><strong class="profit-flow-value">${yen(sub)}</strong><span class="profit-flow-meta"><span>税込</span><span>${yen(tot)}</span></span></div>
+        <div class="profit-flow-card is-sales"><span class="profit-flow-label">売上（税抜）</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(sub)}</strong></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(tot)}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-meta"><span>見積明細</span><span>税抜</span></span></div>
+        <div class="profit-flow-card"><span class="profit-flow-label">明細原価</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(lineCost)}</strong><span class="profit-flow-share">${shareOfSales(lineCost)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(lineCost*1.1))}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-meta"><span>社内原価</span><span>税抜</span></span></div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社人工</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfLabor)}</strong><span class="profit-flow-share">${shareOfSales(selfLabor)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfLabor*1.1))}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">−</div>
-        <div class="profit-flow-card"><span class="profit-flow-label">自社資材</span><strong class="profit-flow-value">${yen(selfMaterials)}</strong><span class="profit-flow-meta"><span>社内原価</span><span>税抜</span></span></div>
+        <div class="profit-flow-card"><span class="profit-flow-label">自社資材</span><div class="profit-flow-main"><strong class="profit-flow-value">${yen(selfMaterials)}</strong><span class="profit-flow-share">${shareOfSales(selfMaterials)}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${yen(Math.round(selfMaterials*1.1))}</strong></span></div>
         <div class="profit-flow-op" aria-hidden="true">＝</div>
-        <div class="profit-flow-card is-result ${profitState}"><span class="profit-flow-label">粗利益（紹介料差引前）</span><strong class="profit-flow-value">${profitYen(profit)}</strong><span class="profit-flow-meta"><span>利益率 ${pRateLabel}</span><span>税込 ${profitYen(taxIncProfit)}</span></span></div>
+        <div class="profit-flow-card is-result ${profitState}"><span class="profit-flow-label">粗利益（紹介料差引前）</span><div class="profit-flow-main"><strong class="profit-flow-value">${profitYen(profit)}</strong><span class="profit-flow-share">${pRateLabel}</span></div><span class="profit-flow-meta"><span>税込</span><strong>${profitYen(taxIncProfit)}</strong></span></div>
       </div>
     </div>`;
   if(csumProfit)csumProfit.innerHTML='';
   const invFinal=document.getElementById('invCsumFinal');
-  if(invFinal)invFinal.innerHTML=`
-    <div class="estimate-profit-strip">
-      <div class="estimate-profit-item ${finalTaxExcState}"><span class="estimate-profit-label">最終税抜粗利益 <span class="estimate-profit-stage">紹介料差引後</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(finalTaxExcProfit)}</span><span class="estimate-profit-rate">利益率 ${finalTaxExcPRateLabel}</span></span></div>
-      <div class="estimate-profit-item ${finalTaxIncState}"><span class="estimate-profit-label">最終税込粗利益 <span class="estimate-profit-stage">紹介料差引後</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(finalTaxIncProfit)}</span><span class="estimate-profit-rate">利益率 ${finalTaxIncPRateLabel}</span></span></div>
-    </div>`;
+  if(invFinal)invFinal.innerHTML=afterReferralSummaryHtml(finalTaxExcProfit,finalTaxIncProfit,finalTaxExcPRate,finalTaxIncPRate);
   // 紹介料パネルは静的HTML配置済みのためDOM操作不要
   const finalDiv=document.getElementById('csumFinal');
-  if(finalDiv){
-    finalDiv.innerHTML=`
-      <div class="estimate-profit-strip">
-        <div class="estimate-profit-item ${finalTaxExcState}"><span class="estimate-profit-label">最終税抜粗利益 <span class="estimate-profit-stage">紹介料差引後</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(finalTaxExcProfit)}</span><span class="estimate-profit-rate">利益率 ${finalTaxExcPRateLabel}</span></span></div>
-        <div class="estimate-profit-item ${finalTaxIncState}"><span class="estimate-profit-label">最終税込粗利益 <span class="estimate-profit-stage">紹介料差引後</span></span><span class="estimate-profit-figure"><span class="estimate-profit-value">${profitYen(finalTaxIncProfit)}</span><span class="estimate-profit-rate">利益率 ${finalTaxIncPRateLabel}</span></span></div>
-      </div>`;
-  }
+  if(finalDiv)finalDiv.innerHTML=afterReferralSummaryHtml(finalTaxExcProfit,finalTaxIncProfit,finalTaxExcPRate,finalTaxIncPRate);
 }
 
 // ===== 見積書紹介料（1と2は完全独立） =====
@@ -3151,9 +3171,8 @@ function renderInvCsumFromDOM(){
   const taxIncProfit=invTot-costTot;
   const finalTaxExcProfit=profit-totalShokai;
   const finalTaxIncProfit=taxIncProfit-totalShokaiInc;
-  const finalTaxExcPRate=invSub>0?parseFloat((finalTaxExcProfit/invSub*100).toFixed(1)):0;
-  const finalTaxIncPRate=invTot>0?parseFloat((finalTaxIncProfit/invTot*100).toFixed(1)):0;
-  const finalColor=finalTaxExcProfit>=0?'var(--tg)':'var(--tr)';
+  const finalTaxExcPRate=invSub>0?parseFloat((finalTaxExcProfit/invSub*100).toFixed(1)):NaN;
+  const finalTaxIncPRate=invTot>0?parseFloat((finalTaxIncProfit/invTot*100).toFixed(1)):NaN;
   // %spanを更新
   const setP=(id,val,base)=>{const el=document.getElementById(id);if(el)el.textContent=base>0&&val?'('+Math.round(val/base*100)+'%)':'%';}
   setP('inv_shokai_pct_disp',s1,invSub);setP('inv_shokai_pct_inc_disp',s1inc,invTot);
@@ -3181,12 +3200,7 @@ function renderInvCsumFromDOM(){
     </div>
     <div class="pbar" style="margin-top:6px"><div class="pfill" style="width:${pct}%"></div></div>`;
   const invFinal=document.getElementById('invCsumFinal');
-  if(invFinal)invFinal.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;">
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>最終税抜粗利益</span><span class="cv" style="color:${finalColor}">${yen(finalTaxExcProfit)}&ensp;<span style="font-size:12px">(${finalTaxExcPRate}%)</span></span></div>
-      <div class="cs profit" style="margin:0;padding:0;border:none;"><span>最終税込粗利益</span><span class="cv" style="color:${finalColor}">${yen(finalTaxIncProfit)}&ensp;<span style="font-size:12px">(${finalTaxIncPRate}%)</span></span></div>
-    </div>
-    <div style="font-size:10px;color:var(--tm);margin-top:4px">利益率 ＝ （粗利 − 紹介料） ÷ 請求額</div>`;
+  if(invFinal)invFinal.innerHTML=afterReferralSummaryHtml(finalTaxExcProfit,finalTaxIncProfit,finalTaxExcPRate,finalTaxIncPRate);
 }
 
 let _lastFileHandle=null;
@@ -4209,7 +4223,7 @@ function saveCtData(autosave=true){
   if(autosave&&typeof scheduleOnlineAutosave==='function')scheduleOnlineAutosave(250);
 }
 function selfCostNames(prefix,data=ctData){
-  return [1,2,3].map(index=>String(data[`${prefix}_name_${index}`]||'').trim()).filter(Boolean);
+  return [1,2].map(index=>String(data[`${prefix}_name_${index}`]||'').trim()).filter(Boolean);
 }
 function renderSelfCostSlots(data=ctData){
   const normalized=window.IzumiSelfCosts.normalize(data);
@@ -6038,7 +6052,7 @@ function onlineProjectSummary(data,orderLines){
     external_cost_ex_tax:costExTax,
     fee_amount:feeAmount,
     gross_profit_ex_tax:grossProfit,
-    gross_profit_rate:postedInvoiceExTax?Number((grossProfit/postedInvoiceExTax*100).toFixed(2)):0,
+    gross_profit_rate:postedInvoiceExTax>0?Number((grossProfit/postedInvoiceExTax*100).toFixed(2)):0,
     scheduled_completion_date:data.basic?.kanko_date||'',
     completed_on:data.basic?.completedOn||vv('r-completed-in')||'',
     invoice_date:data.invOv?.date||'',
