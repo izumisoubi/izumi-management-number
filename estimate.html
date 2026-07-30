@@ -7455,7 +7455,9 @@ function updateOrderProjectContext(){
   const kanri=vv('b-kanri').trim();
   const property=vv('b-property').trim();
   const room=vv('b-room').trim();
-  const work=vv('b-kojiname').trim()||vv('b-summary').trim();
+  // 工事名称は「物件名＋部屋番号＋工事概要」から自動生成されるため、
+  // 対象案件の帯では重複しない工事概要を優先して表示する。
+  const work=vv('b-summary').trim()||vv('b-kojiname').trim();
   const client=vv('b-client').trim();
   const propertyText=[property,room].filter(Boolean).join(' ');
   const title=[kanri,propertyText,work].filter(Boolean).join('｜');
