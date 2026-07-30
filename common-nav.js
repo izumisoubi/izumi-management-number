@@ -1,27 +1,17 @@
-/* 業務画面共通：一覧メニューへの戻り導線と、上部メニューの呼び方を統一する。 */
+/* Shared navigation: one clear return path and consistent labels. */
 (() => {
   const page = decodeURIComponent(location.pathname.split('/').pop() || '');
   const menuPage = '工事リスト.html';
-
   const labels = new Map([
-    ['index.html', '管理番号取得'],
-    ['calendar.html', 'カレンダー'],
-    ['estimate.html', '見積・発注'],
-    ['管理番号台帳.html', '台帳'],
-    ['工事リスト・原価.html', '原価'],
-    ['工事リスト・未発注.html', '未発注'],
-    ['請求.html', '請求']
+    ['index.html', '管理番号取得'], ['calendar.html', 'カレンダー'],
+    ['estimate.html', '見積・発注'], ['管理番号台帳.html', '台帳'],
+    ['工事リスト・原価.html', '原価'], ['工事リスト・未発注.html', '未発注'], ['請求.html', '請求']
   ]);
-
   document.querySelectorAll('header a[href]').forEach(link => {
     const target = decodeURIComponent((link.getAttribute('href') || '').split('?')[0].split('#')[0]);
-    if (target === menuPage) {
-      link.remove();
-      return;
-    }
+    if (target === menuPage) { link.remove(); return; }
     if (labels.has(target)) link.textContent = labels.get(target);
   });
-
   if (page === menuPage || document.getElementById('menuShortcut')) return;
   const style = document.createElement('style');
   style.textContent = `
@@ -32,10 +22,7 @@
   `;
   document.head.append(style);
   const shortcut = document.createElement('a');
-  shortcut.id = 'menuShortcut';
-  shortcut.href = menuPage;
-  shortcut.textContent = '一覧';
-  shortcut.title = '一覧メニューへ戻る';
-  shortcut.setAttribute('aria-label', '一覧メニューへ戻る');
+  shortcut.id = 'menuShortcut'; shortcut.href = menuPage; shortcut.textContent = '一覧';
+  shortcut.title = '一覧メニューへ戻る'; shortcut.setAttribute('aria-label', '一覧メニューへ戻る');
   document.body.append(shortcut);
 })();
