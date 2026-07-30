@@ -1599,6 +1599,13 @@ function init(){
     setTimeout(()=>loadOnlineDraftById(requestedDraftId),500);
   }else if(requestedScheduleId){
     setTimeout(()=>loadCalendarEventById(requestedScheduleId),500);
+  }else{
+    // 上部メニューの「見積を開く」には案件指定がない。直前に扱った正本を
+    // クラウドから再開し、基本情報だけ残って明細が空になる状態を防ぐ。
+    const lastManagementNumber=getLastOpenedManagementNumber();
+    if(lastManagementNumber){
+      setTimeout(()=>loadOnlineProjectByNumber(lastManagementNumber,{silentWhenMissing:true,showToast:false}),500);
+    }
   }
 }
 
@@ -5671,6 +5678,15 @@ let onlineProjectId=null;
 let onlineProjectIdManagementNumber='';
 let onlinePurchaseOrderSignature='';
 let onlineLedgerRefreshInFlight=false;
+const LS_LAST_OPENED_MANAGEMENT_NUMBER='izumi_last_opened_management_number_v1';
+function rememberLastOpenedManagementNumber(managementNumber){
+  const value=String(managementNumber||'').trim();
+  if(!value)return;
+  try{localStorage.setItem(LS_LAST_OPENED_MANAGEMENT_NUMBER,value);}catch(_error){}
+}
+function getLastOpenedManagementNumber(){
+  try{return String(localStorage.getItem(LS_LAST_OPENED_MANAGEMENT_NUMBER)||'').trim();}catch(_error){return '';}
+}
 // 台帳からの簡易入力が正本へ反映された印。通常の元データ編集時には消す。
 let ledgerWritebackMeta={};
 
@@ -6358,6 +6374,7 @@ function loadOnlineProject(index){
   onlineProjectRevision=item.revision??null;
   onlineProjectId=item.id||null;
   onlineProjectIdManagementNumber=item.management_number||'';
+  rememberLastOpenedManagementNumber(item.management_number);
   onlinePurchaseOrderSignature=JSON.stringify(onlineOrderLines());
   onlineDraftId='';
   onlineDraftRevision=null;
@@ -6367,25 +6384,30 @@ function loadOnlineProject(index){
   showToastMsg('☁ クラウド案件を読み込みました：'+item.management_number);
 }
 
-async function loadOnlineProjectByNumber(managementNumber){
+async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=false,showToast=true}={}){
   cancelOnlineAutosave();
   pendingOnlineManagementNumber=managementNumber;
   const session=await getOnlineSession();if(!session)return;
   pendingOnlineManagementNumber='';
   const {data,error}=await managementDb.from('estimate_projects').select('management_number,payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();
-  if(error){showToastMsg('クラウド案件の読込に失敗しました：'+error.message);return;}
+  if(error){if(!silentWhenMissing)showToastMsg('クラウド案件の読込に失敗しました：'+error.message);return false;}
   if(!data?.payload){
+    if(silentWhenMissing){
+      try{localStorage.removeItem(LS_LAST_OPENED_MANAGEMENT_NUMBER);}catch(_error){}
+      return false;
+    }
     showToastMsg('管理番号 '+managementNumber+' の見積はまだ保存されていません。台帳情報だけを取り込みます。');
     await loadMasterList();
     const index=managementMasterItems.findIndex(item=>item.management_number===managementNumber);
     if(index>=0)pickManagementMasterItem(index);
-    return;
+    return false;
   }
   loadAllFromText(JSON.stringify(data.payload));
   activeScheduleId=data.payload.calendarEventId||'';
   onlineProjectRevision=data.revision??null;
   onlineProjectId=null;
   onlineProjectIdManagementNumber='';
+  rememberLastOpenedManagementNumber(managementNumber);
   onlinePurchaseOrderSignature=JSON.stringify(onlineOrderLines());
   onlineDraftId='';
   onlineDraftRevision=null;
@@ -6393,7 +6415,8 @@ async function loadOnlineProjectByNumber(managementNumber){
   // 既存案件でも、基本情報の派生列（完工予定日・完工日など）を台帳へ自動整合する。
   // 日付の固定や「今すぐ保存」は不要で、正本を読み込んだ後にだけ安全な保存RPCを通す。
   scheduleOnlineAutosave(350);
-  showToastMsg('☁ クラウド案件を読み込みました：'+managementNumber);
+  if(showToast)showToastMsg('☁ クラウド案件を読み込みました：'+managementNumber);
+  return true;
 }
 
 async function loadOnlineDraftById(draftId){
