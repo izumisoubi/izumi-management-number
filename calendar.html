@@ -11,6 +11,12 @@
     :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
     *{box-sizing:border-box}html,body{min-height:100%}html{scroll-snap-type:y mandatory;scroll-padding-top:8px}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}body>header{scroll-snap-align:start;scroll-snap-stop:always}
     button,input,select,textarea{font:inherit}button{border:0;border-radius:7px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{border:1px solid #c9d5e6;background:#fff;color:#27466f}.danger{background:#fff;color:var(--red);border:1px solid #edb5bc}.hidden{display:none!important}
+    body[data-auth-view="app"] #loginCard,
+    body[data-auth-view="login"] #app,
+    body[data-auth-view="login"] #userBox,
+    body[data-auth-view="loading"] #loginCard,
+    body[data-auth-view="loading"] #app,
+    body[data-auth-view="loading"] #userBox{display:none!important}
     header{background:linear-gradient(115deg,#15345f,#1f4d83);color:#fff;box-shadow:0 3px 14px #17345f2a}.header-inner{max-width:1600px;min-height:68px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px}h1{font-size:19px;margin:0}.sub{font-size:10px;opacity:.78;margin-top:4px}.user,.nav{display:flex;align-items:center;gap:7px;white-space:nowrap}.nav a{padding:6px 8px;border-radius:6px;color:#fff;text-decoration:none;font-size:11px;font-weight:800}.nav a:hover,.nav a.current{background:#ffffff20}.logout{padding:6px 9px;background:#ffffff12;border:1px solid #ffffff66;color:#fff}
     .login{max-width:430px;margin:64px auto;background:#fff;border:1px solid var(--line2);border-radius:14px;padding:24px;box-shadow:0 14px 40px #1932581a}.login h2{margin:0 0 8px}.login label,.form label{display:block;margin:12px 0 5px;font-size:11px;font-weight:800;color:#425675}.login input{width:100%;padding:9px;border:1px solid var(--line2);border-radius:7px}
     main{width:100%;max-width:none;margin:15px auto 35px;padding:0 12px}.panel{background:#fff;border:1px solid var(--line2);border-radius:13px;box-shadow:0 7px 22px #17345f0d}.toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:8px;padding:12px}.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:10px;font-weight:800;color:#536887}.field select{height:35px;min-width:130px;padding:0 9px;border:1px solid var(--line2);border-radius:7px;background:#fff}.month-title{min-width:145px;text-align:center;font-size:18px;font-weight:900;padding-bottom:5px}.spacer{flex:1}.stats{display:flex;gap:7px;padding:0 12px 12px;overflow:auto}.stat{min-width:116px;padding:7px 10px;border:1px solid #dce5f1;border-radius:8px;background:#f8fbff}.stat b{display:block;margin-top:2px;font-size:16px}.stat span{font-size:9px;color:var(--muted)}.status{font-size:10px;color:#526783;padding:0 12px 10px}.status.error{color:var(--red)}
@@ -242,7 +248,7 @@
   const DEFAULT_STAFF=['大島','林','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
   const COLOR_PALETTE={blue:{line:'#2563eb',bg:'#eef5ff'},purple:{line:'#7c3aed',bg:'#f5f0ff'},green:{line:'#15805d',bg:'#edf9f3'},cyan:{line:'#0891b2',bg:'#ebfbff'},yellow:{line:'#d59b12',bg:'#fff8d7'},orange:{line:'#e46c1a',bg:'#fff1e6'},red:{line:'#c94352',bg:'#fff0f2'},gray:{line:'#64748b',bg:'#f1f5f9'}};
   const AUTO_COLORS={'現地調査':'purple','見積訪問':'purple','工事':'green','完工確認':'cyan','休み':'gray','その他':'yellow','退去立会':'blue'};
-  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:''};
+  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:''},authFlowId=0;
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const isoDate=date=>{const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`};
   const estimateDocumentUrl=()=>new URL('estimate.html',location.href);
@@ -280,15 +286,26 @@
   function readDayRows(){try{return JSON.parse(localStorage.getItem('izumiCalendarDayRowsV2')||'{}')||{}}catch(_error){return{}}}
   function rowsForDate(dateKey){return Math.max(1,Math.min(20,Number(dayRows[dateKey])||5))}
   function status(text,error=false){$('calendarStatus').textContent=text;$('calendarStatus').className='status'+(error?' error':'')}
-  function revealLogin(){
-    const card=$('loginCard');
-    if(card)card.classList.remove('hidden');
+  function setAuthView(view){
+    document.body.dataset.authView=view;
+    const authenticated=view==='app';
+    $('loginCard')?.classList.toggle('hidden',authenticated);
+    $('app')?.classList.toggle('hidden',!authenticated);
+    $('userBox')?.classList.toggle('hidden',!authenticated);
   }
-  async function showApp(){
+  function revealLogin(){
+    authFlowId+=1;
+    currentUser=null;
+    currentProfile=null;
+    setAuthView('login');
+  }
+  async function showApp(sessionOverride=null){
+    const flowId=++authFlowId;
     // getSession() is local (no network round trip); the RPC calls below
     // already verify the session server-side, so a separate getUser()
     // network call isn't needed just to confirm the session exists.
-    const {data:{session}}=await db.auth.getSession();
+    const session=sessionOverride??(await db.auth.getSession()).data.session;
+    if(flowId!==authFlowId)return;
     const user=session?.user;
     if(!user){revealLogin();return}
     // Run the two independent checks in parallel instead of sequentially —
@@ -297,6 +314,7 @@
       db.rpc('is_current_app_user_enabled'),
       db.rpc('get_my_app_profile')
     ]);
+    if(flowId!==authFlowId)return;
     if(error||enabled!==true){
       await db.auth.signOut();
       $('loginStatus').textContent=error?'利用者設定を確認できません。管理者へ連絡してください。':'このアカウントは利用停止中です。';
@@ -305,10 +323,8 @@
     }
     currentUser=user;
     currentProfile=profiles?.[0]||{display_name:user.user_metadata?.display_name||user.email?.split('@')[0]||'',email:user.email||''};
-    $('loginCard').classList.add('hidden');
-    $('app').classList.remove('hidden');
-    $('userBox').classList.remove('hidden');
     $('userEmail').textContent=user.email;
+    setAuthView('app');
     await loadEmployees();
     await loadEvents();
   }
@@ -599,8 +615,15 @@
     scheduleWrap.classList.toggle('is-scrolled',scheduleWrap.scrollTop>2);
     scheduleWrap.classList.toggle('is-x-scrolled',scheduleWrap.scrollLeft>2);
   },{passive:true});
-  $('login').onclick=async()=>{const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else await showApp()};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;$('closeLeavePicker').onclick=closeLeavePicker;$('leavePickerBack').addEventListener('click',event=>{if(event.target===$('leavePickerBack'))closeLeavePicker()});document.querySelectorAll('.leave-option').forEach(button=>button.onclick=()=>saveLeavePeriod(button.dataset.period,button));
-  db.auth.onAuthStateChange((_event,session)=>{if(session)showApp();else revealLogin()});db.auth.getSession().then(({data:{session}})=>{if(session)showApp();else revealLogin()});
+  $('login').onclick=async()=>{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else if(data.session)await showApp(data.session)};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;$('closeLeavePicker').onclick=closeLeavePicker;$('leavePickerBack').addEventListener('click',event=>{if(event.target===$('leavePickerBack'))closeLeavePicker()});document.querySelectorAll('.leave-option').forEach(button=>button.onclick=()=>saveLeavePeriod(button.dataset.period,button));
+  setAuthView('loading');
+  db.auth.onAuthStateChange((event,session)=>{
+    if(event==='INITIAL_SESSION')return;
+    if(event==='SIGNED_OUT'||!session){revealLogin();return}
+    if(currentUser?.id===session.user?.id&&!$('app').classList.contains('hidden')){setAuthView('app');return}
+    void showApp(session);
+  });
+  db.auth.getSession().then(({data:{session},error})=>{if(error||!session)revealLogin();else void showApp(session)});
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
 </body>
