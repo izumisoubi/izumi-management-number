@@ -510,6 +510,16 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   align-self:flex-start;
 }
 .ord-right .cost-panel{max-width:none;}
+.ord-project-context{
+  display:flex;align-items:center;gap:8px;min-width:0;flex:1;
+  margin:0 14px 0 10px;padding:5px 9px;border:1px solid var(--tbr);
+  border-radius:6px;background:color-mix(in srgb,var(--ta) 6%,var(--tc));
+}
+.ord-project-context-label{flex:none;font-size:10px;font-weight:800;color:var(--tm);white-space:nowrap;}
+.ord-project-context-main{min-width:0;font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ord-project-context-meta{flex:none;font-size:10px;color:var(--tm);white-space:nowrap;}
+.ord-project-context.is-empty{background:var(--tc);}
+@media(max-width:900px){.ord-project-context{order:3;flex-basis:100%;margin:4px 0 0}.cost-head{flex-wrap:wrap;}}
 /* KPIバー */
 .ord-kpi-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
 .ord-kpi{background:var(--tc);border:1px solid var(--tbr);border-radius:8px;padding:10px 12px;}
@@ -1018,6 +1028,11 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <div class="cost-panel">
       <div class="cost-head">
         <span class="cost-title">発注管理（業者割当・発注単価設定）</span>
+        <div class="ord-project-context is-empty" id="ordProjectContext" title="現在、発注の仕分けをしている案件です">
+          <span class="ord-project-context-label">対象案件</span>
+          <span class="ord-project-context-main" id="ordProjectContextMain">管理番号を選択してください</span>
+          <span class="ord-project-context-meta" id="ordProjectContextMeta"></span>
+        </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:10px;color:var(--tm)">業者マスタ：</span>
           <select class="cosel" id="vendorMasterSel" style="min-width:100px" onchange="addVendorFromSel()">
@@ -2226,6 +2241,7 @@ function syncEst(){
   if(dU) dU.textContent=fmtD(vv('b-uketsuke'));
   var dK=document.getElementById('ct-kanko-disp');
   if(dK) dK.textContent=fmtD(vv('b-kanko-date'));
+  if(typeof updateOrderProjectContext==='function')updateOrderProjectContext();
   if(typeof updateConflictDraftButton==='function')updateConflictDraftButton();
 }
 function getClientBillingInfo(){
@@ -7382,9 +7398,30 @@ function getOrderUnit(r){
 function rOrderAmt(r){ const q=parseFloat(r.qty); if(isNaN(q)) return 0; return Math.round(q*getOrderUnit(r)); }
 // 発注書タブに切り替えたとき再描画
 function renderOrder(){
+  updateOrderProjectContext();
   loadVendors();
   renderOrdTable();
   renderOrdLeft();
+}
+
+// 発注タブで「どの案件を仕分け中か」を常時表示する。
+// 基本情報の編集途中にも追随し、案件を切り替えた直後に誤った案件へ発注しないための識別表示。
+function updateOrderProjectContext(){
+  const box=document.getElementById('ordProjectContext');
+  const main=document.getElementById('ordProjectContextMain');
+  const meta=document.getElementById('ordProjectContextMeta');
+  if(!box||!main||!meta)return;
+  const kanri=vv('b-kanri').trim();
+  const property=vv('b-property').trim();
+  const room=vv('b-room').trim();
+  const work=vv('b-kojiname').trim()||vv('b-summary').trim();
+  const client=vv('b-client').trim();
+  const propertyText=[property,room].filter(Boolean).join(' ');
+  const title=[kanri,propertyText,work].filter(Boolean).join('｜');
+  main.textContent=title||'管理番号を選択してください';
+  meta.textContent=client ? `客先：${client}` : '';
+  box.classList.toggle('is-empty',!title);
+  box.title=title ? `現在、発注の仕分けをしている案件：${title}${client?'（客先：'+client+'）':''}` : '基本情報で管理番号・物件名を入力すると、ここに対象案件を表示します';
 }
 
 // ===== 右パネル：明細テーブル =====
