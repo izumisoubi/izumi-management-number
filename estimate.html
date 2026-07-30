@@ -510,16 +510,16 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   align-self:flex-start;
 }
 .ord-right .cost-panel{max-width:none;}
-.ord-project-context{
+.project-context{
   display:flex;align-items:center;gap:8px;min-width:0;flex:1;
   margin:0 14px 0 10px;padding:5px 9px;border:1px solid var(--tbr);
   border-radius:6px;background:color-mix(in srgb,var(--ta) 6%,var(--tc));
 }
-.ord-project-context-label{flex:none;font-size:10px;font-weight:800;color:var(--tm);white-space:nowrap;}
-.ord-project-context-main{min-width:0;font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ord-project-context-meta{flex:none;font-size:10px;color:var(--tm);white-space:nowrap;}
-.ord-project-context.is-empty{background:var(--tc);}
-@media(max-width:900px){.ord-project-context{order:3;flex-basis:100%;margin:4px 0 0}.cost-head{flex-wrap:wrap;}}
+.project-context-label{flex:none;font-size:10px;font-weight:800;color:var(--tm);white-space:nowrap;}
+.project-context-main{min-width:0;font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.project-context-meta{flex:none;font-size:10px;color:var(--tm);white-space:nowrap;}
+.project-context.is-empty{background:var(--tc);}
+@media(max-width:900px){.project-context{order:3;flex-basis:100%;margin:4px 0 0}.cost-head{flex-wrap:wrap;}}
 /* KPIバー */
 .ord-kpi-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
 .ord-kpi{background:var(--tc);border:1px solid var(--tbr);border-radius:8px;padding:10px 12px;}
@@ -754,8 +754,13 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <div class="screen" id="sc-costtable">
 <div class="ui-wrap wide">
   <div class="ui-card" style="padding:0">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--tbr)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--tbr)">
       <span style="font-size:14px;font-weight:800;color:var(--tt)">売上原価管理表</span>
+      <div class="project-context is-empty" title="現在表示している案件です">
+        <span class="project-context-label">対象案件</span>
+        <span class="project-context-main">管理番号を選択してください</span>
+        <span class="project-context-meta"></span>
+      </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:10px;color:var(--tm)">Ctrl+Z=戻す　Ctrl+Y=やり直し　Delete=選択削除</span>
         <button class="ubtn" onclick="ctUndo()" title="元に戻す（Ctrl+Z）" style="font-size:11px">↩ 戻す</button>
@@ -887,6 +892,11 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <div class="cost-panel estimate-cost-panel">
       <div class="cost-head">
         <span class="cost-title">原価入力（社内用・印刷されません）</span>
+        <div class="project-context is-empty" title="現在作成している見積案件です">
+          <span class="project-context-label">対象案件</span>
+          <span class="project-context-main">管理番号を選択してください</span>
+          <span class="project-context-meta"></span>
+        </div>
         <div class="rate-row">
           <label for="rateInput">目標利益率</label>
           <input type="number" class="rate-num" id="rateInput" value="25" min="0" max="99" oninput="recalc()">
@@ -1028,10 +1038,10 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <div class="cost-panel">
       <div class="cost-head">
         <span class="cost-title">発注管理（業者割当・発注単価設定）</span>
-        <div class="ord-project-context is-empty" id="ordProjectContext" title="現在、発注の仕分けをしている案件です">
-          <span class="ord-project-context-label">対象案件</span>
-          <span class="ord-project-context-main" id="ordProjectContextMain">管理番号を選択してください</span>
-          <span class="ord-project-context-meta" id="ordProjectContextMeta"></span>
+        <div class="project-context is-empty" title="現在、発注の仕分けをしている案件です">
+          <span class="project-context-label">対象案件</span>
+          <span class="project-context-main">管理番号を選択してください</span>
+          <span class="project-context-meta"></span>
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:10px;color:var(--tm)">業者マスタ：</span>
@@ -1239,7 +1249,13 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="inv-right" id="invRight">
     <!-- 粗利サマリーを最上部に -->
     <div class="cost-panel invoice-summary-panel" style="margin-bottom:8px;">
-      <div class="cost-head"><span class="cost-title">📊 請求・粗利サマリー</span></div>
+      <div class="cost-head"><span class="cost-title">📊 請求・粗利サマリー</span>
+        <div class="project-context is-empty" title="現在作成している請求案件です">
+          <span class="project-context-label">対象案件</span>
+          <span class="project-context-main">管理番号を選択してください</span>
+          <span class="project-context-meta"></span>
+        </div>
+      </div>
       <div class="csum" id="invCsum" style="border-bottom:none;"></div>
       <!-- 請求書紹介料 -->
       <div id="invShokaiPanel" style="padding:10px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;">
@@ -1393,7 +1409,13 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="inv-divider" id="reportDiv"></div>
   <div class="inv-right" id="reportRight">
     <div class="cost-panel">
-      <div class="cost-head"><span class="cost-title">完了報告書設定</span></div>
+      <div class="cost-head"><span class="cost-title">完了報告書設定</span>
+        <div class="project-context is-empty" title="現在作成している完了報告書の案件です">
+          <span class="project-context-label">対象案件</span>
+          <span class="project-context-main">管理番号を選択してください</span>
+          <span class="project-context-meta"></span>
+        </div>
+      </div>
       <div style="padding:12px 15px;display:grid;gap:9px;">
         <div class="inv-link-box" style="margin:0;">基本情報の客先名・物件名・工事名称・工事場所・部屋番号・完工予定日を自動反映します。</div>
         <label>発行会社</label>
@@ -7404,13 +7426,9 @@ function renderOrder(){
   renderOrdLeft();
 }
 
-// 発注タブで「どの案件を仕分け中か」を常時表示する。
-// 基本情報の編集途中にも追随し、案件を切り替えた直後に誤った案件へ発注しないための識別表示。
+// 各業務タブで「どの案件を扱っているか」を常時表示する。
+// 基本情報の編集途中にも追随し、案件を切り替えた直後の取り違えを防ぐ識別表示。
 function updateOrderProjectContext(){
-  const box=document.getElementById('ordProjectContext');
-  const main=document.getElementById('ordProjectContextMain');
-  const meta=document.getElementById('ordProjectContextMeta');
-  if(!box||!main||!meta)return;
   const kanri=vv('b-kanri').trim();
   const property=vv('b-property').trim();
   const room=vv('b-room').trim();
@@ -7418,10 +7436,14 @@ function updateOrderProjectContext(){
   const client=vv('b-client').trim();
   const propertyText=[property,room].filter(Boolean).join(' ');
   const title=[kanri,propertyText,work].filter(Boolean).join('｜');
-  main.textContent=title||'管理番号を選択してください';
-  meta.textContent=client ? `客先：${client}` : '';
-  box.classList.toggle('is-empty',!title);
-  box.title=title ? `現在、発注の仕分けをしている案件：${title}${client?'（客先：'+client+'）':''}` : '基本情報で管理番号・物件名を入力すると、ここに対象案件を表示します';
+  document.querySelectorAll('.project-context').forEach(box=>{
+    const main=box.querySelector('.project-context-main');
+    const meta=box.querySelector('.project-context-meta');
+    if(main)main.textContent=title||'管理番号を選択してください';
+    if(meta)meta.textContent=client ? `客先：${client}` : '';
+    box.classList.toggle('is-empty',!title);
+    box.title=title ? `現在の対象案件：${title}${client?'（客先：'+client+'）':''}` : '基本情報で管理番号・物件名を入力すると、ここに対象案件を表示します';
+  });
 }
 
 // ===== 右パネル：明細テーブル =====
