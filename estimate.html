@@ -5616,23 +5616,17 @@ function filterMasterList(){
 
 async function pickManagementMasterItem(index){
   const item=managementMasterItems[index];if(!item)return;
-  // すでに保存済みの案件は、台帳の抜粋で画面を上書きしない。
-  // payload全体を正本として読み直すことで、前案件の入力残りや台帳との不整合を防ぐ。
+  // 台帳の「見積を開く」と同じ正本読込を必ず先に通す。
+  // ここだけ別の事前照会をしていたため、取得タイミングや重複レコードの扱い次第で
+  // 基本情報だけになり、見積明細が空になることがあった。
   if(managementDb&&item.management_number){
-    try{
-      const {data,error}=await managementDb.from('estimate_projects').select('id').eq('management_number',item.management_number).is('deleted_at',null).maybeSingle();
-      if(error)throw error;
-      if(data?.id){
-        closeMasterModal();
-        await loadOnlineProjectByNumber(item.management_number);
-        // 読込後のpayloadを安全な保存RPCへ一度通し、基本情報と台帳の派生列を整合させる。
-        // 先に完全読込しているため、前案件の値を混ぜて保存することはない。
-        scheduleOnlineAutosave(250);
-        showToastMsg('☁ 保存済み案件を正本から読み込み、台帳と自動同期します：'+item.management_number);
-        return;
-      }
-    }catch(error){
-      showToastMsg('保存済み案件の確認に失敗しました。台帳の基本情報を読み込みます。');
+    closeMasterModal();
+    const restored=await loadOnlineProjectByNumber(item.management_number,{silentWhenMissing:true,showToast:false});
+    if(restored){
+      // 読込後のpayloadを安全な保存RPCへ一度通し、基本情報と台帳の派生列を整合させる。
+      scheduleOnlineAutosave(250);
+      showToastMsg('☁ 保存済み案件を正本から読み込み、台帳と自動同期します：'+item.management_number);
+      return;
     }
   }
   // Switching the master selection to a different case must not leave the
