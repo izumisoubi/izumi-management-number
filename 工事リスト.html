@@ -95,5 +95,7 @@
     db.auth.getSession().then(({data:{session}})=>updateAccess(session));
     db.auth.onAuthStateChange((_event,session)=>updateAccess(session));
   </script>
+<link rel="stylesheet" href="mobile-ui.css?v=20260801-MOBILE1" media="screen and (max-width: 767px)">
+<script src="mobile-ui.js?v=20260801-MOBILE1"></script>
 </body>
 </html>
