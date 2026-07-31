@@ -7,11 +7,16 @@
     ['estimate.html', '見積・発注'], ['管理番号台帳.html', '台帳'],
     ['工事リスト・原価.html', '原価'], ['工事リスト・未発注.html', '未発注'], ['請求.html', '請求']
   ]);
-  document.querySelectorAll('header a[href]').forEach(link => {
+  const headerLinks = [...document.querySelectorAll('header a[href]')];
+  let menuLink = null;
+  let calendarLink = null;
+  headerLinks.forEach(link => {
     const target = decodeURIComponent((link.getAttribute('href') || '').split('?')[0].split('#')[0]);
-    if (target === menuPage) { link.remove(); return; }
+    if (target === menuPage) { link.textContent = '一覧メニュー'; menuLink = link; return; }
+    if (target === 'calendar.html') calendarLink = link;
     if (labels.has(target)) link.textContent = labels.get(target);
   });
+  if (menuLink && calendarLink) calendarLink.parentNode.insertBefore(menuLink, calendarLink);
   if (page === menuPage || document.getElementById('menuShortcut')) return;
   const style = document.createElement('style');
   style.textContent = `
