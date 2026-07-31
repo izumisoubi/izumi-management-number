@@ -2256,6 +2256,38 @@ async function lookupPostalAddress(value){
     showToastMsg('住所を自動取得できませんでした。住所は手入力できます');
   }
 }
+function normalizeAddressForPostal(value){
+  return String(value||'').replace(/[\s　]/g,'').replace(/[０-９]/g,char=>String.fromCharCode(char.charCodeAt(0)-0xFEE0)).replace(/[－ー−]/g,'-');
+}
+async function lookupPostalCodeFromAddress(addressId,postalId){
+  const address=document.getElementById(addressId);
+  const postal=document.getElementById(postalId);
+  if(!address||!postal||postal.value.trim())return;
+  const value=address.value.trim();
+  if(value.length<5)return;
+  try{
+    const response=await fetch('https://postcode.teraren.com/postcodes.json?s='+encodeURIComponent(value)+'&per=10');
+    if(!response.ok)throw new Error('postal reverse lookup failed');
+    const candidates=await response.json();
+    const normalized=normalizeAddressForPostal(value);
+    const selected=(Array.isArray(candidates)?candidates:[]).find(item=>{
+      const area=normalizeAddressForPostal([item.prefecture,item.city,item.suburb].filter(Boolean).join(''));
+      return area&&normalized.includes(area);
+    }) || (Array.isArray(candidates)&&candidates.length===1?candidates[0]:null);
+    if(!selected?.new)return;
+    postal.value=String(selected.new).replace(/(\d{3})(\d{4})/,'$1-$2');
+    postal.dispatchEvent(new Event('input',{bubbles:true}));
+    showToastMsg('住所から郵便番号を補完しました：〒'+postal.value);
+  }catch(_error){
+    // 外部検索が使えない時も、住所入力・保存を妨げない。
+  }
+}
+function attachPostalCodeFromAddress(addressId,postalId){
+  const address=document.getElementById(addressId);
+  if(!address||address.dataset.postalAutofillBound)return;
+  address.dataset.postalAutofillBound='1';
+  address.addEventListener('blur',()=>lookupPostalCodeFromAddress(addressId,postalId));
+}
 function syncEst(){
   st('e-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));st('e-kojiname',vv('b-kojiname'));
   st('e-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));st('e-summary',vv('b-summary'));
@@ -8917,7 +8949,7 @@ function openClientModal(idx){
     mf('部署名','cm-dept','営業部・管理部など',undefined,c.dept||'')+'</div>'+
     mrow('1fr','2fr')+
     mf('郵便番号','cm-zip','000-0000',undefined,c.zip)+
-    mf('住所','cm-addr','東京都…',undefined,c.addr)+'</div>'+
+    mf('住所（入力後に郵便番号を補完）','cm-addr','東京都…',undefined,c.addr)+'</div>'+
     mrow('1fr','1fr')+
     mf('電話','cm-tel','03-xxxx-xxxx',undefined,c.tel)+
     mf('FAX','cm-fax','03-xxxx-xxxx',undefined,c.fax)+'</div>'+
@@ -8939,7 +8971,7 @@ function openClientModal(idx){
     '<div></div></div>'+ 
     mrow('1fr','2fr')+
     mf('請求先郵便番号','cm-billing-zip','000-0000',undefined,c.billingZip||'')+
-    mf('請求先住所','cm-billing-addr','東京都…',undefined,c.billingAddr||'')+'</div>'+
+    mf('請求先住所（入力後に郵便番号を補完）','cm-billing-addr','東京都…',undefined,c.billingAddr||'')+'</div>'+
     mfa('備考','cm-note','',c.note||'');
   openMasterModal(isNew?'取引先追加':'取引先編集',body,
     async ()=>{
@@ -8951,6 +8983,8 @@ function openClientModal(idx){
     },
     isNew||!sharedMasterAdmin?null:async ()=>{const deleted=await deleteSharedMasterRecord('client',clientList2[idx]);if(deleted.error){alert(deleted.error.message);return;}await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();}
   );
+  attachPostalCodeFromAddress('cm-addr','cm-zip');
+  attachPostalCodeFromAddress('cm-billing-addr','cm-billing-zip');
 }
 function addClient(){ openClientModal(-1); }
 function loadClients2(){ /* loadAllMasters uses clientList2 */ }
