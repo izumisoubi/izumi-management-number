@@ -84,6 +84,6 @@
     $('fileInput').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)parseFile(file).catch(error=>setStatus('importStatus',`ファイルを読み込めません: ${error.message}`,'error'))});$('importPrefix').addEventListener('change',renderPreview);$('importButton').addEventListener('click',runImport);$('exportButton').addEventListener('click',runExport);requireSession();
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260730-UX58"></script>
+<script src="common-nav.js?v=20260801-MOBILE1"></script>
 </body>
 </html>
