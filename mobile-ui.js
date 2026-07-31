@@ -40,8 +40,12 @@
   }
 
   function addScrollHints() {
+    ['ctbl', 'ordtbl', 'invCtbl'].forEach(id => {
+      const table = document.getElementById(id);
+      if (table?.parentElement) table.parentElement.setAttribute('data-mobile-scroll', '');
+    });
     const selectors = ['.table-wrap', '.sheet-wrap', '.ctbl-wrap', '.cost-table-wrap', '.order-table-wrap', '.cost-panel'];
-    const candidates = [...document.querySelectorAll(selectors.join(','))];
+    const candidates = [...document.querySelectorAll(`${selectors.join(',')},[data-mobile-scroll]`)];
     candidates.forEach(container => {
       if (container.dataset.mobileHintReady) return;
       const show = () => {

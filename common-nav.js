@@ -2,11 +2,11 @@
 (() => {
   const mobileStyles = document.createElement('link');
   mobileStyles.rel = 'stylesheet';
-  mobileStyles.href = 'mobile-ui.css?v=20260801-MOBILE1';
+  mobileStyles.href = 'mobile-ui.css?v=20260801-MOBILE3';
   mobileStyles.media = 'screen and (max-width: 767px)';
   document.head.append(mobileStyles);
   const mobileScript = document.createElement('script');
-  mobileScript.src = 'mobile-ui.js?v=20260801-MOBILE1';
+  mobileScript.src = 'mobile-ui.js?v=20260801-MOBILE3';
   mobileScript.defer = true;
   document.head.append(mobileScript);
   const page = decodeURIComponent(location.pathname.split('/').pop() || '');

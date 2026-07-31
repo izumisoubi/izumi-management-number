@@ -2,6 +2,12 @@
  * Izumi mobile UI layer
  * Desktop is intentionally untouched: every visual rule is limited to phone width.
  */
+.mobile-bottom-nav,
+.mobile-scroll-hint,
+.mobile-preview-toggle {
+  display: none;
+}
+
 @media screen and (max-width: 767px) {
   html.mobile-ui {
     --mobile-navy: #102f54;
