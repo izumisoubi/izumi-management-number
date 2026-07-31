@@ -28,4 +28,4 @@ async function addMeetingViewer(){const email=$('meetingEmail').value.trim().toL
 async function toggleMeetingViewer(index){const viewer=meetingViewers[index];if(!viewer)return;const next=!viewer.active;if(!confirm(`${viewer.display_name||viewer.email} を${next?'経営会議の閲覧者として再開':'経営会議の閲覧対象から外す'}しますか？`))return;const {error}=await db.from('meeting_access_members').update({active:next}).eq('email',viewer.email);if(error)return status('meetingStatus','閲覧者設定を変更できませんでした。',true);await loadMeetingViewers()}
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
 (async()=>{if(await requireAdmin())await Promise.all([loadUsers(),loadMeetingViewers()])})();
-</script><script src="common-nav.js?v=20260801-MOBILE3"></script></body></html>
+</script><script src="common-nav.js?v=20260801-MOBILE4"></script></body></html>

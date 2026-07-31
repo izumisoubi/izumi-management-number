@@ -3,7 +3,7 @@
   const mobileStyles = document.createElement('link');
   mobileStyles.rel = 'stylesheet';
   mobileStyles.href = 'mobile-ui.css?v=20260801-MOBILE3';
-  mobileStyles.media = 'screen and (max-width: 767px)';
+  mobileStyles.media = 'all';
   document.head.append(mobileStyles);
   const mobileScript = document.createElement('script');
   mobileScript.src = 'mobile-ui.js?v=20260801-MOBILE3';
