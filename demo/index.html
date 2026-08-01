@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#102f54">
   <title>業務管理システム デモ</title>
-  <link rel="stylesheet" href="demo.css?v=1">
+  <link rel="stylesheet" href="demo.css?v=3">
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -23,19 +23,43 @@
 
   <div id="application" class="hidden">
     <div class="demo-ribbon">DEMO ONLY</div>
-    <header class="topbar">
-      <div class="top-inner">
-        <div class="brand">業務管理システム<small>案件受付から入金までを一元管理</small></div>
-        <nav class="top-nav" aria-label="デモメニュー">
-          <button class="nav-button active" type="button">案件一覧</button>
-          <button class="nav-button" type="button" data-locked>カレンダー</button>
-          <button class="nav-button" type="button" data-locked>経営会議</button>
+    <header class="system-header">
+      <div class="system-header-inner">
+        <div><h1>サンプル装美　工事・経営管理 <span class="system-version">販売デモ</span></h1><div class="system-sub">案件の受付から見積・発注・請求・入金まで、業務の順番に整理しています</div></div>
+        <nav class="system-header-actions" aria-label="デモメニュー">
+          <button class="system-header-link active" type="button" data-view="menu">一覧メニュー</button>
+          <button class="system-header-link" type="button" data-view="projects">管理番号台帳</button>
+          <a class="system-header-link" href="estimate/">見積・発注</a>
+          <button class="system-header-link" type="button" data-locked>カレンダー</button>
+          <button id="logoutButton" class="system-header-link" type="button">終了</button>
         </nav>
-        <div class="top-actions"><span class="account-chip">販売先デモ</span><button class="button locked" type="button" data-locked>管理者設定 🔒</button><button id="logoutButton" class="button" type="button">終了</button></div>
       </div>
     </header>
 
-    <main class="page">
+    <main class="page system-wrap">
+      <section id="menuView" class="menu-view">
+        <div class="system-intro"><div><h2>一覧メニュー</h2><p>目的の台帳を選択してください。青い「操作できます」の項目は、実際に入力して確認できます。</p></div><div class="system-session">販売先デモ　／　本番データとは完全分離</div></div>
+        <div class="system-grid">
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">予定</span><span><b>予定カレンダー</b><span>電話・メールで受けた予定、退去立会、現地調査、工事予定を社員別に登録します。</span><em>デモでは登録を停止 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">番号</span><span><b>管理番号取得</b><span>新しい案件を始めるときに管理番号を取得し、見積・台帳・請求を同じ番号で結びます。</span><em>デモでは新規取得を停止 🔒</em></span></button>
+          <button class="system-card demo-active-card" type="button" data-view="projects"><span class="system-icon">台帳</span><span><b>管理番号台帳</b><span>20件の架空案件で、管理番号、担当、物件、売上、請求、入金、計上月を確認できます。</span><em>操作できます　案件全体を見る →</em></span></button>
+          <a class="system-card demo-active-card" href="estimate/"><span class="system-icon">見積</span><span><b>見積・発注・原価・請求</b><span>現行版と同じ画面で、見積明細、利益計算、発注、原価、請求、完了報告を操作できます。</span><em>操作できます　見積を開く →</em></span></a>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">未発注</span><span><b>工事リスト・未発注</b><span>未割当、業者未設定、注文確認書が未発行の明細を確認する画面です。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">原価</span><span><b>工事リスト・原価</b><span>発注済み明細の外注請求額、差異、支払状況を確認する画面です。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">請求</span><span><b>請求管理</b><span>客先への請求・入金と、業者への外注費支払を案件単位で確認します。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">未入金</span><span><b>未入金リスト</b><span>未入金額が残っている請求と、請求後3か月以上経過した案件を確認します。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">入金</span><span><b>銀行入金照合</b><span>銀行CSVを取り込み、候補の管理番号を確認して台帳へ入金反映します。</span><em>最高権限者限定 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">支払</span><span><b>支払通知書</b><span>業者別の発注実績から支払額をまとめ、確認と経理確定の証跡を管理します。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">変更</span><span><b>変更注文・締め管理</b><span>追加工事の変更注文を申請・承認し、未承認の変更注文を確認します。</span><em>販売デモでは表示のみ 🔒</em></span></button>
+          <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">設定</span><span><b>マスタ管理</b><span>自社・社員・印鑑、業者、取引先、物件、単価を一か所で管理します。</span><em>管理者設定を停止 🔒</em></span></button>
+          <details class="system-more-menu"><summary>その他・管理・ヘルプを開く</summary><div class="system-more-grid">
+            <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">流れ</span><span><b>受注から入金まで</b><span>業務全体の流れを確認します。</span></span></button>
+            <button class="system-card demo-locked-card" type="button" data-locked><span class="system-icon">履歴</span><span><b>操作履歴</b><span>保存・変更・削除の履歴を確認します。</span></span></button>
+          </div></details>
+        </div>
+      </section>
+
+      <div id="projectView" class="hidden">
       <section class="hero">
         <div class="hero-row"><div><h1>案件・収支一覧</h1><p>20件の架空案件で、見積・発注・原価・請求・完了まで確認できます。</p></div><div class="hero-badge">本番と完全分離済み　／　帳票にはDEMO透かし</div></div>
         <div class="stats">
@@ -61,12 +85,13 @@
         </table>
         <div id="emptyState" class="empty hidden">条件に合う案件はありません。</div>
       </section>
+      </div>
     </main>
   </div>
 
   <div id="detailBackdrop" class="detail-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailHeading">
     <section class="detail">
-      <header class="detail-head"><div class="detail-title"><h2 id="detailHeading"></h2><p id="detailSubheading"></p></div><div class="detail-actions"><button id="printEstimate" class="button primary" type="button">見積書 PDF</button><button id="printInvoice" class="button" type="button">請求書 PDF</button><button id="printCompletion" class="button" type="button">完了報告書 PDF</button></div><button id="closeDetail" class="close-button" type="button" aria-label="閉じる">×</button></header>
+      <header class="detail-head"><div class="detail-title"><h2 id="detailHeading"></h2><p id="detailSubheading"></p></div><div class="detail-actions"><a id="openFullEstimate" class="button primary" href="estimate/">見積システムで開く</a><button id="printEstimate" class="button" type="button">見積書 PDF</button><button id="printInvoice" class="button" type="button">請求書 PDF</button><button id="printCompletion" class="button" type="button">完了報告書 PDF</button></div><button id="closeDetail" class="close-button" type="button" aria-label="閉じる">×</button></header>
       <nav id="detailTabs" class="tabs" aria-label="案件詳細"></nav>
       <div id="detailBody" class="detail-body"></div>
     </section>
@@ -78,6 +103,6 @@
   </div>
 
   <script src="demo-data.js?v=1"></script>
-  <script src="demo.js?v=1"></script>
+  <script src="demo.js?v=3"></script>
 </body>
 </html>

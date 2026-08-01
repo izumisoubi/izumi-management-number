@@ -4,7 +4,7 @@
   const DEMO_EMAIL='demo@izumi-system.jp';
   const DEMO_PASSWORD_HASH='afb6e2833e720bc80bb5a91e2900f33a871502ad6b6432f68a600bb418f1dfd5';
   const SESSION_KEY='izumi_sales_demo_session';
-  const DATA_KEY='izumi_sales_demo_projects_v1';
+  const DATA_KEY='izumi_sales_demo_projects_v2';
   const seed=globalThis.IZUMI_DEMO_DATA;
   const $=id=>document.getElementById(id);
   const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
@@ -37,7 +37,23 @@
     $('application').classList.remove('hidden');
     populateFilters();
     render();
+    const requestedView=new URLSearchParams(location.search).get('view');
+    setView(requestedView==='projects'?'projects':'menu');
   }
+
+  function setView(view){
+    const projectsVisible=view==='projects';
+    $('menuView').classList.toggle('hidden',projectsVisible);
+    $('projectView').classList.toggle('hidden',!projectsVisible);
+    document.querySelectorAll('[data-view]').forEach(control=>control.classList.toggle('active',control.dataset.view===view));
+    if(projectsVisible)render();
+    scrollTo({top:0,behavior:'smooth'});
+  }
+
+  document.querySelectorAll('[data-view]').forEach(control=>control.addEventListener('click',event=>{
+    event.preventDefault();
+    setView(control.dataset.view);
+  }));
 
   function showLogin(){
     $('application').classList.add('hidden');
@@ -114,7 +130,7 @@
       <td class="money cost">${yen(project.costEx+project.selfLabor+project.selfMaterial)}</td>
       <td class="money profit">${yen(project.grossProfit)}<span class="subtext">${project.margin}%</span></td>
       <td><span class="status ${project.paymentStatus==='入金済'?'paid':'invoice'}">${esc(project.paymentStatus)}</span></td>
-      <td><button class="button small" type="button" data-open="${esc(project.id)}">詳細</button></td>
+      <td><span class="row-actions"><button class="button small" type="button" data-open="${esc(project.id)}">詳細</button><a class="button small primary" href="estimate/?managementNo=${encodeURIComponent(project.managementNo)}">見積を開く</a></span></td>
     </tr>`).join('');
     $('emptyState').classList.toggle('hidden',rows.length>0);
   }
@@ -145,6 +161,7 @@
     activeTab='summary';
     $('detailHeading').textContent=`${activeProject.managementNo}｜${activeProject.property} ${activeProject.room}`;
     $('detailSubheading').textContent=`${activeProject.customer}　／　${activeProject.work}　／　担当 ${activeProject.staff}`;
+    $('openFullEstimate').href=`estimate/?managementNo=${encodeURIComponent(activeProject.managementNo)}`;
     $('detailBackdrop').classList.remove('hidden');
     document.body.style.overflow='hidden';
     renderDetail();

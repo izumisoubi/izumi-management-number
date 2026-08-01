@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="デモ会社印">
+  <rect width="160" height="160" fill="white"/>
+  <rect x="8" y="8" width="144" height="144" rx="5" fill="none" stroke="#d22f3d" stroke-width="7"/>
+  <text x="80" y="72" text-anchor="middle" font-family="serif" font-size="39" font-weight="700" fill="#d22f3d">見本</text>
+  <text x="80" y="119" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="800" letter-spacing="5" fill="#d22f3d">DEMO</text>
+</svg>
