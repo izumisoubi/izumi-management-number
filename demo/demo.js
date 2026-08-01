@@ -4,7 +4,7 @@
   const DEMO_EMAIL='demo@izumi-system.jp';
   const DEMO_PASSWORD_HASH='afb6e2833e720bc80bb5a91e2900f33a871502ad6b6432f68a600bb418f1dfd5';
   const SESSION_KEY='izumi_sales_demo_session';
-  const DATA_KEY='izumi_sales_demo_projects_v2';
+  const DATA_KEY='izumi_sales_demo_projects_v3';
   const seed=globalThis.IZUMI_DEMO_DATA;
   const $=id=>document.getElementById(id);
   const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
@@ -19,7 +19,7 @@
   function loadProjects(){
     try{
       const stored=JSON.parse(localStorage.getItem(DATA_KEY)||'null');
-      if(Array.isArray(stored)&&stored.length===20)return stored;
+      if(Array.isArray(stored)&&stored.length>=20)return stored;
     }catch(_error){}
     return clone(seed.projects);
   }
@@ -43,8 +43,9 @@
 
   function setView(view){
     const projectsVisible=view==='projects';
-    $('menuView').classList.toggle('hidden',projectsVisible);
+    $('menuView').classList.toggle('hidden',view!=='menu');
     $('projectView').classList.toggle('hidden',!projectsVisible);
+    $('moduleView')?.classList.add('hidden');
     document.querySelectorAll('[data-view]').forEach(control=>control.classList.toggle('active',control.dataset.view===view));
     if(projectsVisible)render();
     scrollTo({top:0,behavior:'smooth'});
@@ -143,14 +144,13 @@
     openDetail(button.dataset.open);
   });
 
-  document.querySelectorAll('[data-locked]').forEach(button=>button.addEventListener('click',()=>alert('デモ環境ではこの機能をロックしています。管理者設定・新規登録は本番環境だけで利用できます。')));
-
   $('resetButton').addEventListener('click',()=>{
     if(!confirm('デモで変更した内容を消し、20件の初期データへ戻しますか？'))return;
     projects=clone(seed.projects);
     saveProjects();
     populateFilters();
     render();
+    dispatchEvent(new CustomEvent('izumi-demo-reset'));
   });
 
   const tabs=[['summary','基本情報'],['estimate','見積'],['order','発注'],['cost','原価'],['invoice','請求・入金'],['completion','完了報告']];
@@ -251,6 +251,45 @@
   $('printEstimate').addEventListener('click',()=>activeProject&&printDocument('estimate',activeProject));
   $('printInvoice').addEventListener('click',()=>activeProject&&printDocument('invoice',activeProject));
   $('printCompletion').addEventListener('click',()=>activeProject&&printDocument('completion',activeProject));
+
+  globalThis.IZUMI_DEMO_APP={
+    dataKey:DATA_KEY,
+    seed,
+    getProjects:()=>projects,
+    replaceProjects(next){
+      if(!Array.isArray(next))return;
+      projects=next;
+      saveProjects();
+      populateFilters();
+      render();
+    },
+    updateProject(id,changes){
+      const project=projects.find(row=>row.id===id||row.managementNo===id);
+      if(!project)return null;
+      Object.assign(project,changes||{});
+      saveProjects();
+      populateFilters();
+      render();
+      return project;
+    },
+    addProject(project){
+      projects.unshift(project);
+      saveProjects();
+      populateFilters();
+      render();
+      return project;
+    },
+    resetProjects(){
+      projects=clone(seed.projects);
+      saveProjects();
+      populateFilters();
+      render();
+    },
+    refresh:render,
+    openMenu:()=>setView('menu'),
+    openProjects:()=>setView('projects'),
+    yen,esc,clone,isoLabel
+  };
 
   $('loginEmail').value=DEMO_EMAIL;
   if(sessionStorage.getItem(SESSION_KEY)==='active')showApp();else showLogin();

@@ -2,10 +2,16 @@
   'use strict';
 
   const DATA=globalThis.IZUMI_DEMO_DATA;
-  const PROJECT_KEY='izumi_sales_demo_estimate_project_v2_';
-  const SELECTED_KEY='izumi_sales_demo_estimate_selected_v2';
-  const LOCKED_TABS=new Set(['companies','vendormaster','clientmaster','propertymaster']);
-  const projects=Array.isArray(DATA?.projects)?DATA.projects:[];
+  const PROJECT_KEY='izumi_sales_demo_estimate_project_v3_';
+  const SELECTED_KEY='izumi_sales_demo_estimate_selected_v3';
+  const SHARED_PROJECTS_KEY='izumi_sales_demo_projects_v3';
+  const SHARED_MASTERS_KEY='izumi_sales_demo_masters_v1';
+  const HISTORY_KEY='izumi_sales_demo_history_v1';
+  function loadSharedProjects(){
+    try{const stored=JSON.parse(localStorage.getItem(SHARED_PROJECTS_KEY)||'null');if(Array.isArray(stored)&&stored.length>=20)return stored;}catch(_error){}
+    return Array.isArray(DATA?.projects)?JSON.parse(JSON.stringify(DATA.projects)):[];
+  }
+  let projects=loadSharedProjects();
   let activeManagementNo='';
   let projectSaveTimer=null;
   let loadingProject=false;
@@ -40,6 +46,15 @@
         vendors.push({name:line.vendor,category:'外注',zip:'',addr:'',tel:'03-5550-2000',fax:'',contact:'デモ担当',note:'架空のサンプル業者'});
       });
     });
+    try{
+      const shared=JSON.parse(localStorage.getItem(SHARED_MASTERS_KEY)||'null');
+      if(shared){
+        (shared.clients||[]).forEach(name=>{if(!seenClients.has(name)){seenClients.add(name);clients.push({name,zip:'',addr:'',tel:'',fax:''});}});
+        (shared.vendors||[]).forEach(name=>{if(!seenVendors.has(name)){seenVendors.add(name);vendors.push({name,category:'外注',zip:'',addr:'',tel:'',fax:'',contact:'',note:'デモで追加'});}});
+        (shared.staff||[]).forEach(name=>{if(!seenEmployees.has(name)){seenEmployees.add(name);employees.push({name,title:'営業',email:'',access:'従業員権限',isBoss:false,stamp:'assets/stamps/demo-person.svg'});}});
+        (shared.properties||[]).forEach(name=>{if(!seenProperties.has(name)){seenProperties.add(name);properties.push({name,mgmt:'',key:'',car:'',zip:'',addr:'',person:'',client:''});}});
+      }
+    }catch(_error){}
     return {clients,vendors,employees,properties};
   }
 
@@ -126,6 +141,7 @@
       const data=window.buildSaveData();
       data.demoProject={managementNo:activeManagementNo,savedAt:new Date().toISOString()};
       localStorage.setItem(storageKey(activeManagementNo),JSON.stringify(data));
+      syncSharedProject(data);
       if(showStatus&&typeof window.setOnlineSaveStatus==='function'){
         const time=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
         window.setOnlineSaveStatus('デモ端末内へ保存済 '+time,'saved');
@@ -135,6 +151,54 @@
       console.error('demo project save failed',error);
       return false;
     }
+  }
+
+  function statusFromBasic(value,current){
+    return ({'見積中':'見積作成','受注':'見積承認','完工':'工事完了','請求済':'請求済','入金済':'入金済'})[value]||current||'見積作成';
+  }
+
+  function syncSharedProject(data){
+    const project=projectByNo(activeManagementNo);
+    if(!project||!data)return;
+    const basic=data.basic||{},rows=Array.isArray(data.rows)?data.rows:[];
+    const meaningful=rows.filter(row=>row&&(row.name||row.spec||Number(row.qty)||Number(row.cost)||Number(row.sellOverride)));
+    if(meaningful.length){
+      project.lines=meaningful.map((row,index)=>{
+        const quantity=Number(row.qty)||1;
+        const costUnit=Number(row.orderCost||row.cost)||0;
+        const saleUnit=Number(row.sellOverride)||0;
+        return {no:index+1,name:row.name||'',spec:row.spec||'',quantity,unit:row.unit||'式',customerAmount:Math.round(saleUnit*quantity),costAmount:Math.round(costUnit*quantity),vendor:row.vendor||'未割当',ordered:row.vendor&&row.vendor!=='未割当'?'発注済':'未発注',note:row.note||''};
+      });
+    }
+    project.staff=basic.staff||project.staff;project.customer=basic.client||project.customer;project.customerContact=basic.clientContact||project.customerContact;
+    project.property=basic.property||project.property;project.room=basic.room||project.room;project.work=basic.summary||project.work;project.address=basic.place||project.address;
+    project.receptionDate=cleanDate(basic.uketsuke)||project.receptionDate;project.endDate=cleanDate(basic.kanko_date)||project.endDate;
+    project.completedDate=cleanDate(basic.completedOn)||project.completedDate;project.accountingMonth=basic.keijo||project.accountingMonth;
+    project.status=statusFromBasic(basic.status,project.status);project.estimateDate=cleanDate(basic.date)||project.estimateDate;
+    project.estimateValidity=basic.expire?`見積日より${basic.expire}`:project.estimateValidity;project.paymentTerms=basic.payment||project.paymentTerms;
+    project.constructionCondition=basic.cond||project.constructionCondition;project.note=basic.invNote||project.note;
+    const cost=data.costTable||{};
+    project.selfLabor=Math.round(Number(cost.jisha_jin)||Number(cost.jisha_jin_1||0)+Number(cost.jisha_jin_2||0));
+    project.selfMaterial=Math.round(Number(cost.jisha_mat)||Number(cost.jisha_mat_1||0)+Number(cost.jisha_mat_2||0));
+    const referral=data.referralFees||{};project.referralFee=Math.round(Number(referral.shokai_yen||0)+Number(referral.shokai_yen2||0));
+    project.salesEx=(project.lines||[]).reduce((sum,line)=>sum+Number(line.customerAmount||0),0);
+    project.costEx=(project.lines||[]).reduce((sum,line)=>sum+Number(line.costAmount||0),0);
+    project.tax=Math.round(project.salesEx*.1);project.salesIn=project.salesEx+project.tax;
+    project.grossProfit=project.salesEx-project.costEx-project.selfLabor-project.selfMaterial-project.referralFee;
+    project.margin=project.salesEx?Math.round(project.grossProfit/project.salesEx*1000)/10:0;
+    const invoiceDate=cleanDate(data.invOv?.date||data.ledger?.invoiceDate);
+    if(invoiceDate){project.invoiceDate=invoiceDate;project.invoiceNo=project.invoiceNo==='未発行'?`INV-${project.managementNo}`:project.invoiceNo;if(project.status!=='入金済')project.status='請求済';}
+    project.dueDate=data.invOv?.due||basic.invDue||project.dueDate;
+    const vendors=[...new Set((project.lines||[]).map(line=>line.vendor).filter(value=>value&&value!=='自社'&&value!=='未割当'))];
+    project.vendor=vendors[0]||'未割当';
+    project.orderStatus=project.lines.some(line=>line.ordered==='発注済')?'発注済':'未発注';
+    if(project.orderStatus==='発注済'&&project.orderNo==='未発行')project.orderNo=`PO-${project.managementNo.replace('DM-','D')}`;
+    localStorage.setItem(SHARED_PROJECTS_KEY,JSON.stringify(projects));
+    try{
+      const history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+      const last=history[0];
+      if(!last||last.action!=='見積システム保存'||last.detail!==project.managementNo){history.unshift({id:`H-${Date.now()}`,at:new Date().toISOString(),action:'見積システム保存',detail:project.managementNo});localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,200)));}
+    }catch(_error){}
   }
 
   function scheduleProjectSave(delay=650){
@@ -200,24 +264,6 @@
     document.body.appendChild(watermark);
   }
 
-  function lockMasterTabs(){
-    document.querySelectorAll('.tab[onclick*="showTab("]').forEach(tab=>{
-      const match=String(tab.getAttribute('onclick')||'').match(/showTab\('([^']+)'/);
-      const id=match?.[1];
-      if(!LOCKED_TABS.has(id))return;
-      tab.classList.add('demo-locked-tab');
-      tab.textContent='🔒 '+tab.textContent;
-      tab.title='販売先デモではマスタ変更を無効にしています';
-    });
-    document.addEventListener('click',event=>{
-      const tab=event.target.closest('.demo-locked-tab');
-      if(!tab)return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      alert('販売先デモではマスタ変更を無効にしています。見積・発注・原価・請求・完了報告は操作できます。');
-    },true);
-  }
-
   function addStyles(){
     const style=document.createElement('style');
     style.textContent=`
@@ -228,7 +274,7 @@
       .demo-project-toolbar button.secondary{background:#fff;color:#2768c9}.demo-menu-link{background:#173b67;border-color:#173b67}
       .demo-project-badge{grid-column:1/5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:800;color:#173b67}.demo-project-toolbar small{font-size:10px;color:#687a91;text-align:right}
       .demo-screen-ribbon{position:fixed;right:-39px;top:96px;z-index:120;transform:rotate(45deg);width:150px;text-align:center;padding:5px;background:#c55316;color:#fff;font:900 11px/1 'Helvetica Neue',sans-serif;letter-spacing:2px;box-shadow:0 2px 9px rgba(0,0,0,.18);pointer-events:none}
-      .demo-locked-tab{opacity:.58;cursor:not-allowed!important}.demo-print-watermark{display:none}
+      .demo-print-watermark{display:none}
       @media(max-width:980px){.demo-project-toolbar{grid-template-columns:1fr auto;top:0}.demo-toolbar-heading{grid-column:1/3}.demo-project-toolbar select{grid-column:1/3}.demo-menu-link{grid-column:1/3}.demo-project-badge{grid-column:1/3}.demo-project-toolbar small{grid-column:1/3;text-align:left}}
       @media print{.demo-project-toolbar,.demo-screen-ribbon{display:none!important}.demo-print-watermark{display:flex!important;position:fixed;inset:0;z-index:2147483647;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;transform:rotate(-27deg);color:rgba(180,20,20,.17);font-family:'Helvetica Neue',sans-serif;text-align:center}.demo-print-watermark strong{font-size:110px;letter-spacing:18px;line-height:1}.demo-print-watermark span{margin-top:14px;font-size:30px;font-weight:900;letter-spacing:8px}.a4{outline:3px double rgba(185,28,28,.25)!important;outline-offset:-9px}}
     `;
@@ -249,7 +295,6 @@
     };
     addStyles();
     addDemoUi();
-    lockMasterTabs();
 
     const originalSchedule=window.scheduleOnlineAutosave;
     window.scheduleOnlineAutosave=function(delay=700){
