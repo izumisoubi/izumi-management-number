@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#102f54">
+  <title>業務管理システム デモ</title>
+  <link rel="stylesheet" href="demo.css?v=1">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <form id="loginForm" class="login-card" autocomplete="off">
+      <span class="login-mark">SALES DEMONSTRATION</span>
+      <h1>業務管理システム デモ</h1>
+      <p>架空の会社・取引先・案件だけを収録した販売先向け環境です。本番環境やイズミ装美のデータには接続していません。</p>
+      <label class="login-field"><span>デモ用メールアドレス</span><input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label class="login-field"><span>パスワード</span><input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button class="button primary login-submit" type="submit">デモを開く</button>
+      <div id="loginError" class="login-error" role="alert"></div>
+      <p class="login-help">デモ用のログイン情報は販売担当者からお受け取りください。入力内容はこの端末内だけに保存され、初期状態へ戻せます。</p>
+    </form>
+  </section>
+
+  <div id="application" class="hidden">
+    <div class="demo-ribbon">DEMO ONLY</div>
+    <header class="topbar">
+      <div class="top-inner">
+        <div class="brand">業務管理システム<small>案件受付から入金までを一元管理</small></div>
+        <nav class="top-nav" aria-label="デモメニュー">
+          <button class="nav-button active" type="button">案件一覧</button>
+          <button class="nav-button" type="button" data-locked>カレンダー</button>
+          <button class="nav-button" type="button" data-locked>経営会議</button>
+        </nav>
+        <div class="top-actions"><span class="account-chip">販売先デモ</span><button class="button locked" type="button" data-locked>管理者設定 🔒</button><button id="logoutButton" class="button" type="button">終了</button></div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <div class="hero-row"><div><h1>案件・収支一覧</h1><p>20件の架空案件で、見積・発注・原価・請求・完了まで確認できます。</p></div><div class="hero-badge">本番と完全分離済み　／　帳票にはDEMO透かし</div></div>
+        <div class="stats">
+          <div class="stat"><span>案件数</span><strong id="statCount">0件</strong></div>
+          <div class="stat"><span>売上見積（税抜）</span><strong id="statSales">¥0</strong></div>
+          <div class="stat orange"><span>明細・自社原価</span><strong id="statCost">¥0</strong></div>
+          <div class="stat green"><span>粗利益</span><strong id="statProfit">¥0</strong></div>
+          <div class="stat red"><span>未入金</span><strong id="statUnpaid">0件</strong></div>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="絞り込み">
+        <div class="control"><label for="searchInput">検索</label><input id="searchInput" placeholder="管理番号・物件・取引先・担当者"></div>
+        <div class="control"><label for="statusFilter">進捗</label><select id="statusFilter"><option value="">すべて</option></select></div>
+        <div class="control"><label for="staffFilter">担当者</label><select id="staffFilter"><option value="">全担当者</option></select></div>
+        <div class="toolbar-actions"><button id="resetButton" class="button danger" type="button">初期状態へ戻す</button><button class="button locked" type="button" data-locked>新規案件 🔒</button></div>
+      </section>
+
+      <section class="table-shell">
+        <table class="project-table">
+          <thead><tr><th>管理番号</th><th>受付日</th><th>担当</th><th>物件・部屋</th><th>作業件名</th><th>進捗</th><th>取引先</th><th>売上見積</th><th>原価</th><th>粗利益</th><th>入金</th><th></th></tr></thead>
+          <tbody id="projectRows"></tbody>
+        </table>
+        <div id="emptyState" class="empty hidden">条件に合う案件はありません。</div>
+      </section>
+    </main>
+  </div>
+
+  <div id="detailBackdrop" class="detail-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailHeading">
+    <section class="detail">
+      <header class="detail-head"><div class="detail-title"><h2 id="detailHeading"></h2><p id="detailSubheading"></p></div><div class="detail-actions"><button id="printEstimate" class="button primary" type="button">見積書 PDF</button><button id="printInvoice" class="button" type="button">請求書 PDF</button><button id="printCompletion" class="button" type="button">完了報告書 PDF</button></div><button id="closeDetail" class="close-button" type="button" aria-label="閉じる">×</button></header>
+      <nav id="detailTabs" class="tabs" aria-label="案件詳細"></nav>
+      <div id="detailBody" class="detail-body"></div>
+    </section>
+  </div>
+
+  <div id="printPreview" class="print-preview hidden" role="dialog" aria-modal="true" aria-labelledby="printPreviewHeading">
+    <header class="print-preview-toolbar"><strong id="printPreviewHeading">デモ印刷プレビュー</strong><div><button id="executePrint" class="button primary" type="button">印刷 / PDF保存</button><button id="closePrintPreview" class="button" type="button">閉じる</button></div></header>
+    <main id="printRoot" class="print-root"></main>
+  </div>
+
+  <script src="demo-data.js?v=1"></script>
+  <script src="demo.js?v=1"></script>
+</body>
+</html>
