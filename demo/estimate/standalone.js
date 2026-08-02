@@ -230,7 +230,7 @@
   function addStandaloneNotice(){
     const notice=document.createElement('div');
     notice.id='standaloneNotice';
-    notice.textContent='💾 単体版：Supabase・管理台帳・既存のイズミ装美システムには接続していません。入力内容はブラウザ内とJSONファイルだけに保存されます。';
+    notice.textContent='💾 単体版：Supabase・管理台帳・既存のサンプル装美システムには接続していません。入力内容はブラウザ内とJSONファイルだけに保存されます。';
     notice.style.cssText='padding:8px 16px;background:#fff7d6;border-bottom:1px solid #ead27a;color:#6f5515;font-size:11px;font-weight:700;text-align:center;';
     document.querySelector('.tabbar')?.insertAdjacentElement('afterend',notice);
   }

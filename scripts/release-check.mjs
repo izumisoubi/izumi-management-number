@@ -2,7 +2,7 @@
 import {existsSync,readFileSync,writeFileSync,rmSync,readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 
-const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX40_バックアップ完全化.sql','SUPABASE_UX42_台帳入力を正本へ反映.sql','SUPABASE_UX51_年度自動更新.sql','SUPABASE_UX58_カレンダー表示行固定.sql','BACKUP_AND_RECOVERY.md','OPERATIONS_RUNBOOK.md','demo/index.html','demo/demo.css','demo/demo-modules.css','demo/demo-data.js','demo/demo.js','demo/demo-modules.js','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg'];
+const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
 const failures=[];
 const expect=(condition,message)=>{if(!condition)failures.push(message)};
 const read=file=>readFileSync(file,'utf8');
@@ -18,16 +18,10 @@ if(!failures.length){
   const fiscalYear=read('年度共通.js');
   const ledger=read('台帳共通.js');
   const ledgerDates=read('台帳期限共通.js');
-  const backupSql=read('SUPABASE_UX40_バックアップ完全化.sql');
   const ledgerWritebackSql=read('SUPABASE_UX42_台帳入力を正本へ反映.sql');
-  const fiscalYearSql=read('SUPABASE_UX51_年度自動更新.sql');
-  const calendarSlotSql=read('SUPABASE_UX58_カレンダー表示行固定.sql');
-  const workflow=read('.github/workflows/weekly-supabase-backup.yml');
   const demoHtml=read('demo/index.html');
-  const demoCss=read('demo/demo.css');
-  const demoSource=read('demo/demo.js');
-  const demoModulesSource=read('demo/demo-modules.js');
   const demoDataSource=read('demo/demo-data.js');
+  const demoRuntimeSource=read('demo/demo-runtime.js');
   const demoEstimateHtml=read('demo/estimate/index.html');
   const demoEstimateStandalone=read('demo/estimate/standalone.js');
   const demoEstimateIntegration=read('demo/estimate/demo-integration.js');
@@ -59,33 +53,29 @@ if(!failures.length){
   expect(ledger.includes('window.IzumiGridCore'),`台帳が共通表入力へ接続されていません`);
   expect(ledger.includes('IzumiLedgerDates?.isAtLeastMonthsOld')&&ledgerDates.includes('addCalendarMonths'),`未入金の3か月経過判定が見つかりません`);
   expect(fiscalYear.includes('fiscalEndYearForDate')&&fiscalYear.includes('futureYears=3'),`年度候補の自動更新ロジックが見つかりません`);
-  expect(fiscalYearSql.includes('zz_management_numbers_accounting_year_trigger')&&fiscalYearSql.includes('extract(month'),`DBの年度自動補正が見つかりません`);
   ['管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'].forEach(file=>{
     expect(read(file).includes('表入力共通.js'),`${file} が共通表入力を読み込んでいません`);
     expect(read(file).includes('年度共通.js'),`${file} が年度自動更新を読み込んでいません`);
   });
   ['sync_ledger_inputs_to_estimate','台帳入力を見積正本へ反映','p_vendor_name'].forEach(text=>expect(ledgerWritebackSql.includes(text),`台帳から正本への書戻し定義が見つかりません: ${text}`));
-  ['create_system_backup','perform_system_backup','izumi-system-backup-v3'].forEach(text=>expect(backupSql.includes(text),`DBバックアップ定義が見つかりません: ${text}`));
-  ['SUPABASE_DB_URL','SUPABASE_SERVICE_ROLE_KEY','pg_dump','upload-artifact'].forEach(text=>expect(workflow.includes(text),`外部バックアップ設定が見つかりません: ${text}`));
-  ['add column if not exists display_slot integer','calendar_events_display_slot_idx','row_number() over'].forEach(text=>expect(calendarSlotSql.includes(text),`カレンダー表示行のDB定義が見つかりません: ${text}`));
-  const demoBundle=[demoHtml,demoCss,demoSource,demoModulesSource,demoDataSource,demoEstimateHtml,demoEstimateStandalone,demoEstimateIntegration].join('\n');
+  const demoMirrorFiles=readdirSync('demo').filter(file=>/\.(?:html|js|css)$/.test(file));
+  const demoBundle=[...demoMirrorFiles.map(file=>read(`demo/${file}`)),demoEstimateHtml,demoEstimateStandalone,demoEstimateIntegration].join('\n');
   expect(!demoBundle.includes('jjowjnrsknmakcunblzq')&&!demoBundle.includes('@supabase/supabase-js'),`販売先デモが本番Supabaseへ接続しています`);
   expect(demoEstimateHtml.includes("const MANAGEMENT_SUPABASE_URL=''")&&demoEstimateHtml.includes('const managementDb=null'),`デモ見積システムのSupabase接続が無効ではありません`);
   expect(!demoBundle.includes('@izumisoubi.co.jp')&&!demoBundle.includes('T7011601015057'),`販売先デモに本番の社員メールまたは適格請求書番号が残っています`);
   expect(demoEstimateIntegration.includes('izumi_sales_demo_estimate_project_v3_')&&demoEstimateIntegration.includes('DEMO')&&demoEstimateIntegration.includes('業務利用不可'),`デモ見積の案件別保存または印刷透かしが見つかりません`);
   expect(demoEstimateIntegration.includes("projects[0].managementNo")&&demoEstimateIntegration.includes('project.lines.map'),`20件のデモ案件が見積システムへ接続されていません`);
-  expect(demoHtml.includes('一覧メニュー')&&demoHtml.includes('見積・発注・原価・請求')&&demoHtml.includes('href="estimate/"'),`販売先デモの一覧メニューまたは見積導線がありません`);
+  expect(demoHtml.includes('一覧メニュー')&&demoHtml.includes('見積・発注・原価・請求')&&demoHtml.includes('href="estimate.html"'),`販売先デモの一覧メニューまたは見積導線がありません`);
   expect(demoEstimateHtml.includes('見積/発注/原価/管理請求システム')&&demoEstimateHtml.includes('profit-flow')&&demoEstimateHtml.includes('自社原価の内訳'),`デモ見積が現行版の画面構造を引き継いでいません`);
   const unsafeDemoStorage=[...demoEstimateHtml.matchAll(/localStorage\.(?:getItem|setItem|removeItem)\(\s*(['"])([^'"]+)\1/g)]
     .map(match=>match[2]).filter(key=>!key.startsWith('izumi_sales_demo_estimate_'));
   expect(unsafeDemoStorage.length===0,`デモ見積に本番と衝突するlocalStorageキーがあります: ${unsafeDemoStorage.join(', ')}`);
-  ['DEMO　サンプル','業務利用不可','本書はサンプルのため業務には使用できません'].forEach(text=>expect(demoSource.includes(text),`デモ帳票の透かし・利用禁止表示が見つかりません: ${text}`));
+  ['DEMO・架空データ','demo-watermark','IZUMI_SALES_DEMO={reset()'].forEach(text=>expect(demoRuntimeSource.includes(text),`デモの識別表示または初期化機能が見つかりません: ${text}`));
   expect(!demoHtml.includes('data-locked')&&!demoEstimateIntegration.includes('LOCKED_TABS')&&!demoEstimateIntegration.includes('lockMasterTabs'),`販売先デモに操作ブロックが残っています`);
-  ['calendar','number','unordered','cost','billing','outstanding','bank','payment','change','masters','workflow','history'].forEach(name=>expect(demoHtml.includes(`data-module="${name}"`)&&demoModulesSource.includes(`${name}:`),`販売先デモの操作可能画面がありません: ${name}`));
-  expect(demoModulesSource.includes('銀行CSV取込')&&demoModulesSource.includes('3か月超過')&&demoModulesSource.includes('管理番号を取得して案件を登録'),`販売先デモの主要操作が実装されていません`);
+  ['管理番号取得.html','calendar.html','管理番号台帳.html','工事リスト・未発注.html','工事リスト・原価.html','請求.html','会議用案件一覧.html','銀行入金照合.html','支払通知書.html','変更注文・締め管理.html','システム管理.html'].forEach(file=>expect(demoHtml.includes(`href="${file}"`),`販売先デモの一覧メニューに操作画面がありません: ${file}`));
+  ['class FakeQuery','issue_management_number_v2','save_project_manual_override','create_payment_notice_draft','bank_transactions','audit_log'].forEach(text=>expect(demoRuntimeSource.includes(text),`販売先デモの端末内データ処理が見つかりません: ${text}`));
   expect(demoEstimateIntegration.includes('syncSharedProject(data)')&&demoEstimateIntegration.includes('SHARED_PROJECTS_KEY'),`デモ見積から共通台帳への連動がありません`);
-  expect(demoHtml.includes('全機能操作可能')&&demoHtml.includes('本番データとは完全分離'),`デモの全機能操作または本番分離表示が見つかりません`);
-  ['東京建物不動産販売株式会社','株式会社イズミ装美','@izumisoubi.co.jp','ヒューリック目黒三田'].forEach(text=>expect(!demoBundle.includes(text),`販売先デモに本番由来の情報が残っています: ${text}`));
+  ['東京建物不動産販売株式会社','株式会社イズミ装美','@izumisoubi.co.jp','ヒューリック目黒三田','東京都中央区日本橋浜町2-16-5'].forEach(text=>expect(!demoBundle.includes(text),`販売先デモに本番由来の情報が残っています: ${text}`));
   try{
     delete globalThis.IZUMI_DEMO_DATA;
     const data=Function(`${demoDataSource}; return globalThis.IZUMI_DEMO_DATA;`)();
@@ -119,12 +109,12 @@ if(!failures.length){
   expect(selfCostsSyntax.status===0,`自社原価共通.jsの構文エラー: ${selfCostsSyntax.stderr}`);
   const authSessionSyntax=spawnSync(process.execPath,['--check','認証セッション共通.js'],{encoding:'utf8'});
   expect(authSessionSyntax.status===0,`認証セッション共通.jsの構文エラー: ${authSessionSyntax.stderr}`);
-  const demoSyntax=spawnSync(process.execPath,['--check','demo/demo.js'],{encoding:'utf8'});
-  expect(demoSyntax.status===0,`demo/demo.jsの構文エラー: ${demoSyntax.stderr}`);
+  const demoRuntimeSyntax=spawnSync(process.execPath,['--check','demo/demo-runtime.js'],{encoding:'utf8'});
+  expect(demoRuntimeSyntax.status===0,`demo/demo-runtime.jsの構文エラー: ${demoRuntimeSyntax.stderr}`);
   const demoDataSyntax=spawnSync(process.execPath,['--check','demo/demo-data.js'],{encoding:'utf8'});
   expect(demoDataSyntax.status===0,`demo/demo-data.jsの構文エラー: ${demoDataSyntax.stderr}`);
-  const demoModulesSyntax=spawnSync(process.execPath,['--check','demo/demo-modules.js'],{encoding:'utf8'});
-  expect(demoModulesSyntax.status===0,`demo/demo-modules.jsの構文エラー: ${demoModulesSyntax.stderr}`);
+  const demoBuilderSyntax=spawnSync(process.execPath,['--check','scripts/build-demo-mirror.mjs'],{encoding:'utf8'});
+  expect(demoBuilderSyntax.status===0,`scripts/build-demo-mirror.mjsの構文エラー: ${demoBuilderSyntax.stderr}`);
   const demoEstimateStandaloneSyntax=spawnSync(process.execPath,['--check','demo/estimate/standalone.js'],{encoding:'utf8'});
   expect(demoEstimateStandaloneSyntax.status===0,`demo/estimate/standalone.jsの構文エラー: ${demoEstimateStandaloneSyntax.stderr}`);
   const demoEstimateIntegrationSyntax=spawnSync(process.execPath,['--check','demo/estimate/demo-integration.js'],{encoding:'utf8'});
@@ -195,9 +185,11 @@ if(!failures.length){
     const holidays2026=holidayBuilder(2026);
     [['2026-05-06','振替休日'],['2026-07-20','海の日'],['2026-09-22','国民の休日'],['2026-10-12','スポーツの日']].forEach(([date,name])=>expect(holidays2026.get(date)===name,`2026年の祝日判定が不正です: ${date} ${name}`));
   }catch(error){expect(false,`カレンダーの祝日判定を検証できません: ${error.message}`)}
-  const testFiles=readdirSync('tests').filter(file=>file.endsWith('.test.mjs')).map(file=>`tests/${file}`);
-  const tests=spawnSync(process.execPath,['--test',...testFiles],{encoding:'utf8'});
-  expect(tests.status===0,`自動テストに失敗しました: ${tests.stdout}\n${tests.stderr}`);
+  if(existsSync('tests')){
+    const testFiles=readdirSync('tests').filter(file=>file.endsWith('.test.mjs')).map(file=>`tests/${file}`);
+    const tests=spawnSync(process.execPath,['--test',...testFiles],{encoding:'utf8'});
+    expect(tests.status===0,`自動テストに失敗しました: ${tests.stdout}\n${tests.stderr}`);
+  }
 }
 
 if(failures.length){

@@ -777,7 +777,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <div class="screen" id="sc-companies">
 <div class="ui-wrap wide">
   <div class="ui-card">
-    <div class="ui-h">自社情報（イズミ装美）</div>
+    <div class="ui-h">自社情報（サンプル装美）</div>
     <div class="co-grid" id="coGrid"></div>
   </div>
   <div class="ui-card" style="margin-top:14px">
@@ -1454,7 +1454,7 @@ function saveMaster(){
 }
 function loadMaster(){
   try{
-    // izumi以外を削除（イズミ装美専用）
+    // izumi以外を削除（サンプル装美専用）
     Object.keys(companies).forEach(k=>{ if(k!=='izumi') delete companies[k]; });
     // localStorageからizumiの設定のみ復元
     let s=localStorage.getItem(LS_MASTER);
@@ -1561,7 +1561,7 @@ function init(){
   const uketsukeEl=document.getElementById('b-uketsuke');
   if(!uketsukeEl.value){ uketsukeEl.value=today; }
   rebuildSels();renderCoGrid();
-  // 実施会社をデフォルトでイズミ装美に設定（未保存の場合のみ）
+  // 実施会社をデフォルトでサンプル装美に設定（未保存の場合のみ）
   const coSelEl=document.getElementById('coSel');
   const implEl=document.getElementById('b-impl-co');
   if(coSelEl&&!coSelEl.value&&companies.izumi){
@@ -9116,7 +9116,7 @@ function buildOrderStampHtml(size){
   const px=parseInt(size)||52;
   const radius=issuer.stampShape==='square'?'4px':'50%';
   if(stamp)return `<img src="${stamp}" alt="自社印" style="width:${px}px;height:${px}px;object-fit:contain;mix-blend-mode:multiply">`;
-  const name=String(issuer.name||'イズミ装美').replace(/株式会社|有限会社|合同会社/g,'').trim();
+  const name=String(issuer.name||'サンプル装美').replace(/株式会社|有限会社|合同会社/g,'').trim();
   const shortName=name.length>6?name.slice(0,6):name;
   const color=issuer.red?'#8b0000':'#b42318';
   return `<div style="display:inline-flex;width:${px}px;height:${px}px;border:2px solid ${color};border-radius:${radius};color:${color};align-items:center;justify-content:center;text-align:center;font-size:${Math.max(8,Math.floor(px/6))}px;font-weight:700;line-height:1.15;box-sizing:border-box;">${esc(shortName)}</div>`;
@@ -10458,7 +10458,7 @@ applyEstimateLayoutMode('landscape',{render:false,persist:false});
 
 </script>
 <script src="standalone.js"></script>
-<script src="../demo-data.js"></script>
-<script src="demo-integration.js"></script>
+<script src="../demo-data.js?v=4"></script>
+<script src="demo-integration.js?v=4"></script>
 </body>
 </html>

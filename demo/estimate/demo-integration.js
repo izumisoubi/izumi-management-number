@@ -8,8 +8,14 @@
   const SHARED_MASTERS_KEY='izumi_sales_demo_masters_v1';
   const HISTORY_KEY='izumi_sales_demo_history_v1';
   function loadSharedProjects(){
-    try{const stored=JSON.parse(localStorage.getItem(SHARED_PROJECTS_KEY)||'null');if(Array.isArray(stored)&&stored.length>=20)return stored;}catch(_error){}
-    return Array.isArray(DATA?.projects)?JSON.parse(JSON.stringify(DATA.projects)):[];
+    const seeded=Array.isArray(DATA?.projects)?JSON.parse(JSON.stringify(DATA.projects)):[];
+    const seededNumbers=new Set(seeded.map(project=>project.managementNo));
+    try{
+      const stored=JSON.parse(localStorage.getItem(SHARED_PROJECTS_KEY)||'null');
+      if(Array.isArray(stored)&&stored.length>=20&&stored.some(project=>seededNumbers.has(project.managementNo)))return stored;
+    }catch(_error){}
+    localStorage.setItem(SHARED_PROJECTS_KEY,JSON.stringify(seeded));
+    return seeded;
   }
   let projects=loadSharedProjects();
   let activeManagementNo='';
