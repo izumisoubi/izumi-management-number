@@ -1,11 +1,15 @@
 (function(root,factory){
-  const api=factory();
+  const api=factory(root.IzumiEstimateMath);
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.IzumiSelfCosts=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+})(typeof globalThis!=='undefined'?globalThis:this,function(estimateMath){
   const SLOT_COUNT=2;
   function numberValue(value){
-    const parsed=parseFloat(String(value??'').replace(/,/g,''));
+    if(estimateMath?.numberOrNull){
+      const calculated=estimateMath.numberOrNull(value);
+      return calculated===null?0:calculated;
+    }
+    const parsed=Number(String(value??'').normalize('NFKC').replace(/[,，¥￥\s]/g,''));
     return Number.isFinite(parsed)?parsed:0;
   }
   function slotKey(prefix,index){return `${prefix}_${index}`;}

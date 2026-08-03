@@ -5,9 +5,100 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
+  function normalizeNumericText(value){
+    return String(value??'')
+      .normalize('NFKC')
+      .replace(/[\u2212‐-―]/g,'-')
+      .replace(/[×✕✖]/g,'*')
+      .replace(/[÷]/g,'/')
+      .replace(/[，．]/g,char=>char==='，'?',':'.')
+      .replace(/[,￥¥\s]/g,'');
+  }
+
+  // 見積セル用の計算式。eval / Function は使わず、
+  // 数値・四則演算・括弧以外を受け付けない。
+  function evaluateArithmeticExpression(value){
+    const source=normalizeNumericText(value);
+    if(!source.startsWith('=')||source.length>200)return null;
+    const text=source.slice(1);
+    if(!text||!/^[0-9.+\-*/()]+$/.test(text))return null;
+    let index=0;
+
+    function skip(){while(text[index]===' ')index++;}
+    function number(){
+      skip();
+      const start=index;
+      let dots=0;
+      while(index<text.length&&/[0-9.]/.test(text[index])){
+        if(text[index]==='.'&&++dots>1)return null;
+        index++;
+      }
+      if(start===index)return null;
+      const parsed=Number(text.slice(start,index));
+      return Number.isFinite(parsed)?parsed:null;
+    }
+    function primary(){
+      skip();
+      if(text[index]==='('){
+        index++;
+        const result=expression();
+        skip();
+        if(result===null||text[index]!==')')return null;
+        index++;
+        return result;
+      }
+      return number();
+    }
+    function unary(){
+      skip();
+      if(text[index]==='+'||text[index]==='-'){
+        const sign=text[index++]==='-'?-1:1;
+        const result=unary();
+        return result===null?null:sign*result;
+      }
+      return primary();
+    }
+    function term(){
+      let result=unary();
+      if(result===null)return null;
+      while(true){
+        skip();
+        const operator=text[index];
+        if(operator!=='*'&&operator!=='/')break;
+        index++;
+        const right=unary();
+        if(right===null||(operator==='/'&&right===0))return null;
+        result=operator==='*'?result*right:result/right;
+        if(!Number.isFinite(result))return null;
+      }
+      return result;
+    }
+    function expression(){
+      let result=term();
+      if(result===null)return null;
+      while(true){
+        skip();
+        const operator=text[index];
+        if(operator!=='+'&&operator!=='-')break;
+        index++;
+        const right=term();
+        if(right===null)return null;
+        result=operator==='+'?result+right:result-right;
+        if(!Number.isFinite(result))return null;
+      }
+      return result;
+    }
+
+    const result=expression();
+    skip();
+    return result!==null&&index===text.length&&Number.isFinite(result)?result:null;
+  }
+
   function numberOrNull(value){
     if(value===''||value===null||value===undefined)return null;
-    const number=Number(String(value).replace(/[,，¥￥\s]/g,''));
+    const normalized=normalizeNumericText(value);
+    if(normalized.startsWith('='))return evaluateArithmeticExpression(normalized);
+    const number=Number(normalized);
     return Number.isFinite(number)?number:null;
   }
 
@@ -52,7 +143,9 @@
   }
 
   return Object.freeze({
-    version:'1.0.0',
+    version:'1.1.0',
+    normalizeNumericText,
+    evaluateArithmeticExpression,
     numberOrNull,
     unitFromMargin,
     costAmount,

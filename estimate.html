@@ -10,8 +10,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
 <script src="年度共通.js?v=20260729-UX51"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
-<script src="見積計算共通.js?v=20260729-UX47"></script>
-<script src="自社原価共通.js?v=20260729-UX49"></script>
+<script src="見積計算共通.js?v=20260803-IME61"></script>
+<script src="自社原価共通.js?v=20260803-IME61"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--to:#f0a33a;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -181,6 +181,13 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .ptbl .ci{padding:2px 4px;white-space:nowrap;min-height:18px;font-size:10.5px;display:flex;align-items:center;}
 .ptbl td:nth-child(2) .ci{white-space:pre-wrap;word-break:break-all;}
 .ptbl td:nth-child(3) .ci,.ptbl td:nth-child(8) .ci{white-space:pre-wrap;word-break:break-all;font-size:9.2px;line-height:1.35;}
+.ptbl td:nth-child(6) .ci,.ptbl td:nth-child(7) .ci{
+  white-space:nowrap!important;word-break:keep-all!important;overflow:visible;
+  font-variant-numeric:tabular-nums;letter-spacing:-.12px;
+}
+.ptbl tfoot td:nth-child(7),.ptbl tfoot td:nth-child(7) .ci{
+  white-space:nowrap!important;word-break:keep-all!important;overflow:visible;
+}
 .ptbl .estimate-print-text{
   white-space:nowrap;
   word-break:normal;
@@ -967,7 +974,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
       <div id="csumFinal" style="padding:8px 16px 12px;border-top:1px solid var(--tbr);font-family:'Helvetica Neue',sans-serif;"></div>
-      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）</div>
+      <div class="paste-hint" id="estimatePasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。数値セルは <strong>=5*10+4</strong> のような計算式にも対応。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）</div>
       <div style="overflow-x:auto;">
         <table class="sync-tbl ctbl" id="ctbl" style="table-layout:fixed;width:1555px;min-width:1555px">
           <colgroup>
@@ -1345,7 +1352,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
             <option value="custom">直接入力</option>
           </select>
           <label>金額（上書き）</label>
-          <input type="text" inputmode="decimal" id="invAmtOverride" placeholder="空白なら見積合計" oninput="syncInv()" onblur="var _v=this.value.replace(/,/g,'');var _n=parseFloat(_v);if(!isNaN(_n)&&_v!=='')this.value=_n.toLocaleString('ja-JP');" onfocus="this.value=this.value.replace(/,/g,'');">
+          <input type="text" inputmode="decimal" id="invAmtOverride" placeholder="空白なら見積合計" oninput="syncInv()" onblur="formatNumericControl(this)">
           </div>
         </div>
       </div>
@@ -2599,8 +2606,8 @@ function applyEstimateLayoutMode(value,{render=false,persist=true}={}){
   screen?.classList.toggle('estimate-layout-portrait',!detailed);
   const hint=document.getElementById('estimatePasteHint');
   if(hint)hint.innerHTML=detailed
-    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）'
-    :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
+    ?'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。数値セルは <strong>=5*10+4</strong> のような計算式にも対応。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価　貸主割合　借主割合　貸主負担額　借主負担額</strong>（割合・負担額はどちらから入力しても、反対側と税込・税抜を自動計算）'
+    :'💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。数値セルは <strong>=5*10+4</strong> のような計算式にも対応。列順：<strong>名称　仕様　数量　単位　原価単価　備考　客先単価</strong>（縦型では貸主・借主の負担内訳を表示・印刷しません）';
   document.querySelectorAll('#ctbody tr.sec-r td[colspan]').forEach(td=>td.colSpan=detailed?15:9);
   // ブラウザへの保存はしない（横見積を常に既定にするため。案件ごとの保存はJSONペイロード側で行う）
   if(render){
@@ -2671,17 +2678,17 @@ function renderCost(){
           <td><button type="button" class="row-number-toggle" onclick="toggleEstimateRowNumber(${r.id})" title="クリックで見積書の番号を表示／非表示"></button></td>
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'estimate',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
-          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)"></td>
+          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
           <td><select data-f="unit" onchange="sf(${r.id},'unit',this.value)">${uopts('')}</select></td>
           <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
           <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':'var(--ta)'};font-weight:700;" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
           <td class="ca csa" style="white-space:nowrap"></td>
-          <td><input type="text" inputmode="decimal" data-f="landlordRate" placeholder="貸主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordRate',this)"></td>
-          <td><input type="text" inputmode="decimal" data-f="tenantRate" placeholder="借主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantRate',this)"></td>
-          <td><input type="text" inputmode="decimal" data-f="landlordTaxIn" placeholder="貸主税込" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordTaxIn',this)"></td>
-          <td><input type="text" inputmode="decimal" data-f="tenantTaxIn" placeholder="借主税込" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantTaxIn',this)"></td>
+          <td><input type="text" inputmode="decimal" data-f="landlordRate" placeholder="貸主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordRate',this)" onblur="syncEstimateFieldDisplay(${r.id},'landlordRate')"></td>
+          <td><input type="text" inputmode="decimal" data-f="tenantRate" placeholder="借主％" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantRate',this)" onblur="syncEstimateFieldDisplay(${r.id},'tenantRate')"></td>
+          <td><input type="text" inputmode="decimal" data-f="landlordTaxIn" placeholder="貸主税込" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'landlordTaxIn',this)" onblur="syncEstimateFieldDisplay(${r.id},'landlordTaxIn')"></td>
+          <td><input type="text" inputmode="decimal" data-f="tenantTaxIn" placeholder="借主税込" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'tenantTaxIn',this)" onblur="syncEstimateFieldDisplay(${r.id},'tenantTaxIn')"></td>
           <td class="ca landlord-net burden-net" style="white-space:nowrap"></td>
           <td class="ca tenant-net burden-net" style="white-space:nowrap"></td>
           <td class="cdel" onclick="delRow(${r.id})">✕</td>`;
@@ -2772,6 +2779,10 @@ function renderPrint(){
   const dynamicSpecWidth=Math.round(42+(specWanted-42)*extraScale);
   const dynamicNoteWidth=Math.round(42+(noteWanted-42)*extraScale);
   const dynamicNameWidth=textPool-dynamicSpecWidth-dynamicNoteWidth;
+  // 縦見積は金額を最優先で1行表示する。備考が短い案件では、
+  // 余っている備考幅を金額列へ自動的に譲る（合計幅168pxは維持）。
+  const portraitNoteWidth=Math.round(Math.min(80,Math.max(60,44+longestTextUnits('note')*4)));
+  const portraitAmountWidth=168-portraitNoteWidth;
 
   // 最小文字サイズでも各セルに収まらない行だけ2行扱いにする。
   // 3項目の合計文字数だけで判定すると、実際は1行に収まる行まで
@@ -2887,8 +2898,8 @@ function renderPrint(){
     if(pi===0)cg.id='ptblCols';
     cg.dataset.ptblCg='1';
     const printWidths=detailedEstimate
-      ?{no:22,name:dynamicNameWidth,spec:dynamicSpecWidth,qty:25,unit:25,price:45,amt:50,note:dynamicNoteWidth,landlordRate:34,tenantRate:34,landlordGross:50,tenantGross:50}
-      :{no:24,name:142,spec:108,qty:30,unit:30,price:58,amt:64,note:104};
+      ?{no:22,name:dynamicNameWidth,spec:dynamicSpecWidth,qty:25,unit:25,price:45,amt:72,note:dynamicNoteWidth,landlordRate:34,tenantRate:34,landlordGross:50,tenantGross:50}
+      :{no:24,name:142,spec:108,qty:30,unit:30,price:58,amt:portraitAmountWidth,note:portraitNoteWidth};
     const printColumns=detailedEstimate
       ?['no','name','spec','qty','unit','price','amt','note','landlordRate','tenantRate','landlordGross','tenantGross']
       :['no','name','spec','qty','unit','price','amt','note'];
@@ -3262,8 +3273,8 @@ function renderInvCsumFromDOM(){
   const totalShokaiInc=s1inc+s2inc;
   const linked=document.getElementById('invLink')?.checked;
   const sub=totSell();
-  const amtOv=parseFloat(vv('invAmtOverride'));
-  const invSub=linked?(isNaN(amtOv)?sub:amtOv):invRows.reduce((s,r)=>{const q=parseFloat(r.qty),a=parseFloat(r.amount);return s+(isNaN(q)||isNaN(a)?0:Math.round(q*a));},0);
+  const amtOv=numericCellValue(vv('invAmtOverride'));
+  const invSub=linked?(amtOv===null?sub:amtOv):invRows.reduce((s,r)=>{const q=numericCellValue(r.qty),a=numericCellValue(r.amount);return s+(q===null||a===null?0:Math.round(q*a));},0);
   const invTax=Math.round(invSub*.1);
   const invTot=invSub+invTax;
   let invoiceCostData={};try{invoiceCostData=window.IzumiSelfCosts.normalize(JSON.parse(localStorage.getItem('izumi_costtable_v1')||'{}'));}catch(e){}
@@ -3424,9 +3435,9 @@ function renderInvCtbl(){
       <td class="cno" style="text-align:center;color:var(--tm);font-size:10px;padding:0 2px;cursor:grab" title="ドラッグで並び替え">⠿</td>
       <td><input data-f="date" type="date" value="${dateVal}" onchange="siInvDate(${r.id},this.value)" style="width:118px;font-size:11px"></td>
       <td><input data-f="content" value="${esc(r.content)}" placeholder="内容" oninput="siInv(${r.id},'content',this.value)"></td>
-      <td><input data-f="qty" type="text" inputmode="decimal" value="${r.qty?Number(r.qty).toLocaleString('ja-JP'):''}" oninput="sinInv(${r.id},'qty',this.value)" onblur="var _v=this.value.replace(/,/g,'');var _n=parseFloat(_v);if(!isNaN(_n)&&_v!=='')this.value=_n.toLocaleString('ja-JP');" onfocus="this.value=this.value.replace(/,/g,'');" style="width:58px;text-align:right"></td>
+      <td><input data-f="qty" type="text" inputmode="decimal" value="${r.qty?Number(r.qty).toLocaleString('ja-JP'):''}" oninput="sinInv(${r.id},'qty',this.value)" onblur="syncInvoiceFieldDisplay(${r.id},'qty',this)" style="width:58px;text-align:right"></td>
       <td><select data-f="unit" onchange="siInv(${r.id},'unit',this.value)">${uopts(r.unit)}</select></td>
-      <td><input data-f="amount" type="text" inputmode="decimal" value="${amtDisp?Number(amtDisp).toLocaleString('ja-JP'):''}" placeholder="0" oninput="sinInv(${r.id},'amount',this.value)" onblur="var _v=this.value.replace(/,/g,'');var _n=parseFloat(_v);if(!isNaN(_n)&&_v!=='')this.value=_n.toLocaleString('ja-JP');" onfocus="this.value=this.value.replace(/,/g,'');" style="width:118px;text-align:right"></td>
+      <td><input data-f="amount" type="text" inputmode="decimal" value="${amtDisp?Number(amtDisp).toLocaleString('ja-JP'):''}" placeholder="0" oninput="sinInv(${r.id},'amount',this.value)" onblur="syncInvoiceFieldDisplay(${r.id},'amount',this)" style="width:118px;text-align:right"></td>
       <td class="cdel" onclick="delInvRow(${r.id})">✕</td>`;
     tbody.appendChild(tr);
   });
@@ -3448,9 +3459,14 @@ function siInv(id,f,v){
 }
 function sinInv(id,f,v){
   const r=invRows.find(r=>r.id===id);if(!r)return;pushInvUndo();
-  const n=String(v).replace(/[,¥]/g,'');
-  r[f]=n===''?'':(isNaN(parseFloat(n))?'':parseFloat(n));
+  const n=numericCellValue(v);
+  r[f]=n===null?'':n;
   renderInv();
+}
+function syncInvoiceFieldDisplay(id,f,el){
+  const row=invRows.find(item=>item.id===id);
+  if(!row||!el)return;
+  el.value=row[f]===undefined||row[f]===''?'':fmtNum(row[f]);
 }
 
 function getInvContentLabel(){
@@ -3472,8 +3488,8 @@ function renderInv(){
     const kojiname=vv('b-kojiname')||vv('b-property');
     const dt=vv('b-date');
     const label=getInvContentLabel();
-    const amtOv=parseFloat(vv('invAmtOverride'));
-    const finalAmt=isNaN(amtOv)?sub:amtOv;
+    const amtOv=numericCellValue(vv('invAmtOverride'));
+    const finalAmt=amtOv===null?sub:amtOv;
     const contentTxt=kojiname?(kojiname+(label?'　'+label:'')):(label||'');
     displayRows=[{id:'auto',date:fmtD(dt),content:contentTxt,qty:1,unit:'式',amount:finalAmt,note:''},
       ...invRows,
@@ -3512,7 +3528,7 @@ function renderInv(){
     tbody.appendChild(tr);
   });
 
-  const sub=displayRows.reduce((s,r)=>{const q=parseFloat(r.qty),a=parseFloat(r.amount);return s+(isNaN(q)||isNaN(a)?0:Math.round(q*a));},0);
+  const sub=displayRows.reduce((s,r)=>{const q=numericCellValue(r.qty),a=numericCellValue(r.amount);return s+(q===null||a===null?0:Math.round(q*a));},0);
   const tax=Math.round(sub*.1),tot=sub+tax;
   document.getElementById('invfoot').innerHTML=`
     <tr class="sub-r"><td colspan="4" style="text-align:right;padding-right:8px;font-size:10.5px">小　計</td><td class="r" style="white-space:nowrap;min-width:120px"><div class="ci" style="padding-right:6px;white-space:nowrap">${yen(sub)}</div></td></tr>
@@ -3816,6 +3832,7 @@ function ptbodyNav(e){
   // #ptbody または .a4 内の tbody tr[data-rid] を探す
   const tr=el.closest('tr[data-rid]');
   if(!tr) return;
+  if(e.shiftKey&&e.key.startsWith('Arrow'))return; // セル内の文字選択を優先
   // A4表示内かどうか
   const a4=el.closest('.a4');
   if(!a4) return;
@@ -3861,6 +3878,7 @@ function excelNav(e){
   const tbody=el.closest('#ctbody');
   if(!tbody)return;
   if(el.tagName==='TEXTAREA')return;
+  if(e.shiftKey&&e.key.startsWith('Arrow'))return; // Shift+矢印は文字選択
 
   const tr=el.closest('tr[data-rid]');
   if(!tr)return;
@@ -3908,55 +3926,19 @@ function excelNav(e){
     if(nr>=trs.length){addRow('item');setTimeout(()=>focusCell(nr,nc),50);}
     else focusCell(nr,nc);
   } else if(e.key==='ArrowDown'){
-    if(e.shiftKey){
-      e.preventDefault();
-      const trs2=getCtblTrs();
-      if(excelSel.anchor.r<0){excelSel.anchor={r:ri,c:ci};excelSel.r1=ri;excelSel.c1=ci;}
-      excelSel.r2=Math.min(trs2.length-1,(excelSel.r2>=0?excelSel.r2:ri)+1);
-      excelSel.c2=excelSel.c2>=0?excelSel.c2:ci;
-      highlightSel(trs2);
-    } else {
-      e.preventDefault();clearSel();focusCell(ri+1,ci);
-    }
+    e.preventDefault();clearSel();focusCell(ri+1,ci);
   } else if(e.key==='ArrowUp'){
-    if(e.shiftKey){
-      e.preventDefault();
-      const trs2=getCtblTrs();
-      if(excelSel.anchor.r<0){excelSel.anchor={r:ri,c:ci};excelSel.r1=ri;excelSel.c1=ci;}
-      excelSel.r2=Math.max(0,(excelSel.r2>=0?excelSel.r2:ri)-1);
-      excelSel.c2=excelSel.c2>=0?excelSel.c2:ci;
-      highlightSel(trs2);
-    } else {
-      e.preventDefault();clearSel();focusCell(ri-1,ci);
-    }
+    e.preventDefault();clearSel();focusCell(ri-1,ci);
   } else if(e.key==='ArrowRight'){
     // input: カーソルが末尾のとき / contenteditable div: 常に許可
     const atEnd=el.selectionStart===undefined ? true : el.selectionStart===el.value?.length;
     if(!atEnd) return;
-    if(e.shiftKey){
-      e.preventDefault();
-      const trs2=getCtblTrs();
-      if(excelSel.anchor.r<0){excelSel.anchor={r:ri,c:ci};excelSel.r1=ri;excelSel.c1=ci;}
-      excelSel.r2=excelSel.r2>=0?excelSel.r2:ri;
-      excelSel.c2=Math.min(EDIT_COLS.length-1,(excelSel.c2>=0?excelSel.c2:ci)+1);
-      highlightSel(trs2);
-    } else {
-      e.preventDefault();clearSel();focusCell(ri,ci+1);
-    }
+    e.preventDefault();clearSel();focusCell(ri,ci+1);
   } else if(e.key==='ArrowLeft'){
     // input: カーソルが先頭のとき / contenteditable div: 常に許可
     const atStart=el.selectionStart===undefined ? true : (el.selectionStart===0&&el.selectionEnd===0);
     if(!atStart) return;
-    if(e.shiftKey){
-      e.preventDefault();
-      const trs2=getCtblTrs();
-      if(excelSel.anchor.r<0){excelSel.anchor={r:ri,c:ci};excelSel.r1=ri;excelSel.c1=ci;}
-      excelSel.r2=excelSel.r2>=0?excelSel.r2:ri;
-      excelSel.c2=Math.max(0,(excelSel.c2>=0?excelSel.c2:ci)-1);
-      highlightSel(trs2);
-    } else {
-      e.preventDefault();clearSel();focusCell(ri,ci-1);
-    }
+    e.preventDefault();clearSel();focusCell(ri,ci-1);
   } else if(e.key==='Delete'||(e.key==='Backspace'&&excelSel.r1>=0&&excelSel.r2>=0&&!(excelSel.r1===excelSel.r2&&excelSel.c1===excelSel.c2))){
     if(excelSel.r1>=0&&excelSel.r2>=0){
       const hasMulti=!(excelSel.r1===excelSel.r2&&excelSel.c1===excelSel.c2)||e.key==='Delete';
@@ -3985,6 +3967,7 @@ function invExcelNav(e){
   if(el?.closest('#ctNavBody')) return; // 原価管理表はctNavへ
   if(!el?.closest('#invCtbody'))return;
   if(el.tagName==='TEXTAREA')return;
+  if(e.shiftKey&&e.key.startsWith('Arrow'))return; // セル内の文字選択を優先
   const tbody=document.getElementById('invCtbody');
   const tr=el.closest('tr[data-rid]');
   if(!tr)return;
@@ -4028,6 +4011,7 @@ function ordExcelNav(e){
   const el=document.activeElement;
   if(!el)return;
   if(!el.closest('#ordtbody'))return;
+  if(e.shiftKey&&e.key.startsWith('Arrow'))return; // セル内の文字選択を優先
 
   const tbody=document.getElementById('ordtbody');
   const tr=el.closest('tr[data-rid]');
@@ -4364,7 +4348,7 @@ function ctUpdateTotals(){
   // localStorageから集計値を再計算して表示のみ更新（DOM再構築なし）
   loadCtData();
   function cg(k){var v=ctData[k];return(v!==null&&v!==undefined&&v!=='')?v:'';}
-  function pn(s){return parseFloat(String(s||'').replace(/,/g,''))||0;}
+  function pn(s){return numericCellValue(s)??0;}
   function N(n){return n?Math.round(n).toLocaleString('ja-JP'):'';}
   function P(a,b){return b?((a/b)*100).toFixed(1)+'%':'';}
   var sell=(typeof totSell==='function')?totSell():0;
@@ -4510,6 +4494,7 @@ function ctNav(e){
   const el=e.target||document.activeElement;
   if(!el||!el.dataset||!el.dataset.ctid) return;
   if(el.tagName==='TEXTAREA') return;
+  if(e.shiftKey&&e.key.startsWith('Arrow'))return; // セル内の文字選択を優先
   const wrap=document.getElementById('ctPrintArea'); if(!wrap) return;
   // 全inputをフラットリストで持つ（Enter/Tab共通）
   const allInputs=Array.from(wrap.querySelectorAll('input[data-ctid]'));
@@ -4768,14 +4753,7 @@ function ctNav(e){
     document.addEventListener('keydown',function(e){
       if(!document.activeElement?.closest('#ctPrintArea')) return;
       if(e.key==='Escape') ctClearSel();
-      // Shift+矢印で選択拡張
-      if(e.shiftKey&&['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.key)){
-        var cur=document.activeElement;
-        if(!cur||!cur.dataset?.ctid) return;
-        ctSelStart=ctSelStart||cur;
-        ctSelEnd=cur;
-        ctHighlight();
-      }
+      // Shift+矢印はセル内の文字選択用。表の範囲選択はドラッグで行う。
     });
     document.addEventListener('copy',function(e){
       var active=document.activeElement;
@@ -6008,8 +5986,7 @@ function onlineProjectPatch(data){
 }
 
 function numberValue(value){
-  const number=parseFloat(String(value??'').replace(/,/g,''));
-  return Number.isFinite(number)?number:0;
+  return numericCellValue(value)??0;
 }
 
 function fiscalYearForDate(value){
@@ -6491,50 +6468,82 @@ async function loadCalendarEventById(scheduleId){
   showToastMsg('🗓 予定を基本情報へ反映しました。管理番号がある案件は自動保存されます。');
 }
 
-// ===== 数値入力の半角変換＋カンマ自動付与 =====
-function toHankaku(s){
-  return String(s).replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);})
-    .replace(/[，、,]/g,'').replace(/[¥￥]/g,'');
-}
-function fmtNumInput(el){
-  var raw=toHankaku(el.value).replace(/,/g,'');
-  var n=parseFloat(raw);
-  if(!isNaN(n)&&raw!==''){
-    var pos=el.selectionStart;
-    var fmt=n.toLocaleString('ja-JP');
-    if(el.value!==fmt){el.value=fmt;}
+// ===== IME安全化＋数値入力＋セル数式 =====
+// 日本語の変換中に input.value を書き換えると、未確定文字が
+// 二重に挿入されたりローマ字が混ざる。変換確定までは画面だけに
+// 入力させ、後段の自動計算・自動整形には渡さない。
+const estimateImeInputs=new WeakSet();
+const estimateImePendingCommit=new WeakSet();
+document.addEventListener('compositionstart',event=>{
+  if(event.target?.matches?.('input,textarea,[contenteditable="true"]'))estimateImeInputs.add(event.target);
+},true);
+document.addEventListener('compositionend',event=>{
+  const target=event.target;
+  estimateImeInputs.delete(target);
+  estimateImePendingCommit.add(target);
+  // Safari等で compositionend 後の最終 input が来ない場合の安全網。
+  setTimeout(()=>{
+    if(!estimateImePendingCommit.has(target))return;
+    estimateImePendingCommit.delete(target);
+    target.dispatchEvent(new Event('input',{bubbles:true}));
+  },0);
+},true);
+document.addEventListener('input',event=>{
+  if(event.isComposing||estimateImeInputs.has(event.target))event.stopImmediatePropagation();
+  else estimateImePendingCommit.delete(event.target);
+},true);
+
+// Excelと同じく、表セル内でShift+↑/↓を押した時は
+// 上下セルへ移動せず、そのセルの文字列を全選択する。
+document.addEventListener('keydown',event=>{
+  if(!event.shiftKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
+  const target=document.activeElement;
+  if(!target?.closest?.('#ctbody,#estPages,#invCtbody,#ordtbody,#ctPrintArea'))return;
+  if(!target.matches?.('input,textarea,[contenteditable="true"]')&&!target.isContentEditable)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if(typeof target.select==='function'){
+    target.select();
+    return;
+  }
+  const range=document.createRange();
+  range.selectNodeContents(target);
+  const selection=window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+},true);
+
+function numericCellValue(value){return window.IzumiEstimateMath.numberOrNull(value);}
+function normalizeNumericControl(el,{format=true}={}){
+  if(!el||estimateImeInputs.has(el))return;
+  const normalized=window.IzumiEstimateMath.normalizeNumericText(el.value);
+  const formula=normalized.startsWith('=');
+  const number=numericCellValue(normalized);
+  const next=formula&&!format?normalized:(number===null?normalized:number.toLocaleString('ja-JP'));
+  if(el.value===next)return;
+  const selection=el.selectionStart;
+  const oldLength=el.value.length;
+  el.value=next;
+  if(document.activeElement===el&&selection!==null){
+    const position=Math.max(0,selection+(next.length-oldLength));
+    try{el.setSelectionRange(position,position);}catch(error){}
   }
 }
+function formatNumericControl(el){normalizeNumericControl(el,{format:true});}
 // ctInput/ctSetに数値フォーマットを統合
 var _origCtSet=ctSet;
 
-// 全input: 全角→半角変換 ＋ 数値系inputのカンマ自動付与（oninput時）
+// 数値セルだけを整形。名称・仕様などの文字セルは、
+// 全角数字も含め、ユーザーの入力をそのまま保存する。
 document.addEventListener('input',function(e){
   var el=e.target;
-  if(el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA')return;
-  if(el.type==='date')return;
-  // 全角数字→半角
-  var v=el.value;
-  var h=v.replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
-  if(h!==v){var pos=el.selectionStart;el.value=h;try{el.setSelectionRange(pos,pos);}catch(ex){} v=h;}
+  if(el.tagName!=='INPUT'||el.type==='date'||e.isComposing||estimateImeInputs.has(el))return;
   // 数値系inputのカンマ自動付与（data-numfmt属性、またはinputmode="decimal"でdata-nofmt属性なし）
   if(el.type!=='text'&&el.type!=='')return;
   if(el.dataset&&el.dataset.nofmt)return; // カンマ不要な欄は data-nofmt="1" を付ける
   var isNum=(el.inputMode==='decimal'||el.dataset.numfmt==='1');
   if(!isNum)return;
-  // カーソル位置を保持しながらカンマ付与
-  var raw=el.value.replace(/[,，¥\s]/g,'');
-  var n=parseFloat(raw);
-  if(!isNaN(n)&&raw!==''){
-    var fmt=n.toLocaleString('ja-JP');
-    if(el.value!==fmt){
-      var sel=el.selectionStart;
-      var oldLen=el.value.length;
-      el.value=fmt;
-      var diff=fmt.length-oldLen;
-      try{el.setSelectionRange(Math.max(0,sel+diff),Math.max(0,sel+diff));}catch(ex){}
-    }
-  }
+  normalizeNumericControl(el,{format:false});
 });
 function showToastMsg(msg){
   let t=document.getElementById('_toast2');
@@ -6918,13 +6927,13 @@ body{background:#e8e8e8;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Minch
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function sf(id,f,v){const r=rows.find(r=>r.id===id);if(!r)return;pushUndo();r[f]=v;renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);}
-function sfn(id,f,v){const r=rows.find(r=>r.id===id);if(!r)return;pushUndo();const n=String(v).replace(/[,¥]/g,'');r[f]=n===''?'':(isNaN(parseFloat(n))?'':parseFloat(n));renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);}
+function sfn(id,f,v){const r=rows.find(r=>r.id===id);if(!r)return;pushUndo();const n=numericCellValue(v);r[f]=n===null?'':n;renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);}
 
 function sfSellOverrideCtbl(id,v){
   const r=rows.find(r=>r.id===id);if(!r)return;
-  const raw=String(v).replace(/[,，¥\s]/g,'');
-  const isEmpty=raw===''||isNaN(parseFloat(raw));
-  r.sellOverride=isEmpty?'':parseFloat(raw);
+  const number=numericCellValue(v);
+  const isEmpty=number===null;
+  r.sellOverride=isEmpty?'':number;
   // 数字を直接入力した売価は自動単価より優先する。空欄へ戻した時だけ
   // その時点の取引先別単価（無ければ原価からの自動売価）へ復帰させる。
   r._sellOverrideManual=!isEmpty;
@@ -6953,9 +6962,9 @@ function getSellUnit(r,rate){
 
 function sfSellOverride(id,el){
   const r=rows.find(r=>r.id===id);if(!r)return;
-  const raw=el.textContent.replace(/[,¥\s]/g,'');
-  const isEmpty=raw===''||isNaN(parseFloat(raw));
-  r.sellOverride=isEmpty?'':parseFloat(raw);
+  const number=numericCellValue(el.textContent);
+  const isEmpty=number===null;
+  r.sellOverride=isEmpty?'':number;
   r._sellOverrideManual=!isEmpty;
   r._clientUnitPriceAuto=false;
   if(isEmpty)setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
@@ -6977,8 +6986,8 @@ function sfFromPrint(id,f,v){
 
 function sfnFromPrint(id,f,v){
   const r=rows.find(r=>r.id===id);if(!r)return;
-  const n=String(v).replace(/[,¥,]/g,'').replace(/\s/g,'');
-  r[f]=n===''?'':(isNaN(parseFloat(n))?'':parseFloat(n));
+  const n=numericCellValue(v);
+  r[f]=n===null?'':n;
   if(f==='landlordRate')syncBurdenFromRate(r,'landlordRate');
   else if(f==='tenantRate')syncBurdenFromRate(r,'tenantRate');
   else if(f==='landlordTaxIn')syncBurdenFromGross(r,'landlordTaxIn');
@@ -7006,9 +7015,9 @@ function undoInvRows(){
 
 function sfnCalc(id,f,v,inputEl){
   const r=rows.find(r=>r.id===id);if(!r)return;
-  const raw=inputEl?String(inputEl.value).replace(/[,，¥\s]/g,''):String(v).replace(/[,，¥\s]/g,'');
-  const isEmpty=(raw===''||raw==='-'||isNaN(parseFloat(raw)));
-  r[f]=isEmpty?'':parseFloat(raw);
+  const number=numericCellValue(inputEl?inputEl.value:v);
+  const isEmpty=number===null;
+  r[f]=isEmpty?'':number;
   if(f==='cost'){
     // 数字を直接打った瞬間から手入力を最優先にする。空欄に戻したときだけ単価候補へ戻す。
     r._costManual=!isEmpty;
@@ -7033,18 +7042,7 @@ function sfnCalc(id,f,v,inputEl){
 
 // カーソル位置を保持しながらカンマフォーマット
 function _fmtInput(el){
-  const raw=el.value.replace(/[,，¥\s]/g,'');
-  const n=parseFloat(raw);
-  if(!isNaN(n)&&raw!==''){
-    const formatted=n.toLocaleString('ja-JP');
-    if(el.value!==formatted){
-      const sel=el.selectionStart;
-      const oldLen=el.value.length;
-      el.value=formatted;
-      const diff=formatted.length-oldLen;
-      try{el.setSelectionRange(sel+diff,sel+diff);}catch(e){}
-    }
-  }
+  normalizeNumericControl(el,{format:false});
 }
 function sfnCalcFmt(id,f,el){
   _fmtInput(el);
@@ -7617,9 +7615,9 @@ function renderOrdTable(){
           <td class="cno" style="text-align:center;color:var(--tm);font-size:12px;padding:0 2px;cursor:grab" title="ドラッグで並び替え">⠿</td>
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="ordSf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'order',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
-          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
+          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="syncOrderFieldDisplay(${r.id},'qty',this)"></td>
           <td><select data-f="unit" onchange="ordSf(${r.id},'unit',this.value)">${uOpts}</select></td>
-          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="this.value=this.value?fmtNum(this.value):''" onfocus="this.value=String(this.value).replace(/,/g,'')"></td>
+          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="syncOrderFieldDisplay(${r.id},'orderCost',this)"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
           <td><select class="ord-vendor-sel" data-f="vendor"
@@ -7673,14 +7671,19 @@ function ordSf(id,f,v){ const r=ordRows.find(x=>x.id===id);if(!r)return;pushOrdU
 function ordSfNum(id,f,v,el){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
   pushOrdUndo();
-  const raw=String(el?el.value:v).replace(/[,，¥ ]/g,'');
-  const empty=raw===''||raw==='-'||isNaN(parseFloat(raw));
-  r[f]=empty?'':parseFloat(raw);
+  const number=numericCellValue(el?el.value:v);
+  const empty=number===null;
+  r[f]=empty?'':number;
   if(f==='orderCost')setOrderCostManualFlag(r,r[f]);
   if(f==='qty'&&empty) r.unit='';
   const qa=document.querySelector(`#ordtbody tr[data-rid="${id}"] .oamt`);
   if(qa){const q=parseFloat(r.qty)||0,u=parseFloat(r.orderCost)||0;qa.textContent=Math.round(q*u)?yen(Math.round(q*u)):'';}
   renderOrdLeft();
+}
+function syncOrderFieldDisplay(id,f,el){
+  const row=ordRows.find(item=>item.id===id);
+  if(!row||!el)return;
+  el.value=row[f]===undefined||row[f]===''?'':fmtNum(row[f]);
 }
 // ===== 単価候補（見積・発注共通） =====
 // 単価マスタを一度だけ読み、入力中は端末内の絞り込みだけにする。
@@ -7877,8 +7880,8 @@ async function setVendor(id,v){
 function setOrderCost(id,val){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
   pushOrdUndo();
-  const raw=String(val).replace(/[,，¥\s]/g,'');
-  r.orderCost=raw===''||isNaN(parseFloat(raw))?'':parseFloat(raw);
+  const number=numericCellValue(val);
+  r.orderCost=number===null?'':number;
   setOrderCostManualFlag(r,r.orderCost);
   const orderCostInput=document.querySelector(`#ordtbody tr[data-rid="${id}"] [data-f="orderCost"]`);
   if(orderCostInput){
@@ -10446,6 +10449,8 @@ document.addEventListener('DOMContentLoaded',function(){
 
   document.addEventListener('keydown',e=>{
     const key=e.key.toLowerCase();
+    const activeControl=document.activeElement;
+    if(e.shiftKey&&e.key.startsWith('Arrow')&&activeControl?.matches?.('input,textarea,[contenteditable="true"]'))return;
     const ctActive=document.activeElement?.closest?.('#ctPrintArea input[data-ctid]');
     if(ctActive){
       if((e.ctrlKey||e.metaKey)&&key==='d'&&window.__ctExcel?.hasSelection?.()){
