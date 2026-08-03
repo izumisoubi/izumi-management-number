@@ -3571,10 +3571,9 @@ function updateAutoContent(v){
   if(ct)ct.value='custom';
 }
 function updateAutoAmt(v){
-  const n=String(v).replace(/[,¥]/g,'');
-  const parsed=parseFloat(n);
+  const parsed=numericCellValue(v);
   const el=document.getElementById('invAmtOverride');
-  if(el&&!isNaN(parsed))el.value=parsed;
+  if(el&&parsed!==null){el.value=parsed;renderInv();}
 }
 
 let dragRow={el:null,srcRows:null,srcIdx:-1,placeholder:null};
@@ -8215,6 +8214,12 @@ function openOrdPreview(vendor){
   const ordInfo=getOrdInfo();
   const issuer=getOrderIssuerCompany();
   const fmtDate=s=>{if(!s)return'';const d=new Date(s);return`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;};
+  const orderTextUnits=value=>[...String(value||'')].reduce((sum,char)=>sum+(/[\u0000-\u00ff]/.test(char)?1:2),0);
+  const longestOrderNote=rows2.reduce((max,row)=>Math.max(max,orderTextUnits(row.note)),0);
+  const orderNoteWidth=Math.round(Math.min(24,Math.max(14,12+longestOrderNote*.8)));
+  const orderSpareWidth=24-orderNoteWidth;
+  const orderPriceWidth=11+Math.floor(orderSpareWidth/2);
+  const orderAmountWidth=11+Math.ceil(orderSpareWidth/2);
 
   // 印刷版と同じく、10行以下の場合だけ10行まで空行で補う。
   const MIN_ROWS=rows2.length<=10?10:rows2.length;
@@ -8229,12 +8234,12 @@ function openOrdPreview(vendor){
         <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${i+1}</td>
         <td class="oit-nw" style="border:1px solid #999;padding:2px 5px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.name)}</td>
         <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.spec||'')}</td>
-        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${r.qty||''}</td>
+        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums">${r.qty||''}</td>
         <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${r.unit||''}</td>
-        <td style="text-align:right;border:1px solid #999;padding:0 3px;font-size:10px">
-          <input style="box-sizing:border-box;width:100%;height:auto;line-height:1.2;padding:0;margin:0;text-align:right;border:none;background:transparent;font-size:10px;font-family:inherit" value="${ordU||''}" oninput="updOrdPreviewRow(${r.id},+this.value)" id="oprow${r.id}">
+        <td style="text-align:right;border:1px solid #999;padding:0 3px;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums">
+          <input inputmode="decimal" style="box-sizing:border-box;width:100%;height:auto;line-height:1.2;padding:0;margin:0;text-align:right;border:none;background:transparent;font-size:10px;font-family:inherit;white-space:nowrap" value="${ordU||''}" oninput="updOrdPreviewRow(${r.id},this.value,this)" onblur="syncOrdPreviewUnit(${r.id},this)" id="oprow${r.id}">
         </td>
-        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600" id="opamt${r.id}">${ordA?fmt(ordA):''}</td>
+        <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums" id="opamt${r.id}">${ordA?fmt(ordA):''}</td>
         <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.note||'')}</td>
       </tr>`;
     } else {
@@ -8293,7 +8298,7 @@ function openOrdPreview(vendor){
     </tr>
     <tr>
       <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">金　　額</td>
-      <td style="padding:4px 7px;border:1px solid #999;font-weight:700"><strong id="opTotal">${fmt(total)}</strong>　円（消費税別）</td>
+      <td style="padding:4px 7px;border:1px solid #999;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums"><strong id="opTotal">${fmt(total)}</strong>　円（消費税別）</td>
       <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap;width:70px">支払条件</td>
       <td style="padding:4px 7px;border:1px solid #999">規定の通り</td>
     </tr>
@@ -8334,9 +8339,9 @@ function openOrdPreview(vendor){
       <col style="width:22%">
       <col style="width:6%">
       <col style="width:6%">
-      <col style="width:11%">
-      <col style="width:11%">
-      <col style="width:24%">
+      <col style="width:${orderPriceWidth}%">
+      <col style="width:${orderAmountWidth}%">
+      <col style="width:${orderNoteWidth}%">
     </colgroup>
     <thead>
       <tr style="background:#f0f0f0">
@@ -8355,19 +8360,19 @@ function openOrdPreview(vendor){
       <tr style="background:#f5f5f5">
         <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700;font-size:10.5px">小　計</td>
         <td style="border:1px solid #999"></td>
-        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px" id="opSubtotal">${fmt(total)}</td>
+        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums" id="opSubtotal">${fmt(total)}</td>
         <td style="border:1px solid #999"></td>
       </tr>
       <tr style="background:#f8f8f8">
         <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-size:10.5px">消費税（10%）</td>
         <td style="border:1px solid #999"></td>
-        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-size:10.5px" id="opTax">${fmt(tax)}</td>
+        <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums" id="opTax">${fmt(tax)}</td>
         <td style="border:1px solid #999"></td>
       </tr>
       <tr style="background:#efefef;border-top:2px solid #000">
         <td colspan="5" style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;font-size:12px">合　計（税込）</td>
         <td style="border:1px solid #999"></td>
-        <td style="text-align:right;border:1px solid #999;padding:4px 5px;font-weight:700;font-size:12px" id="opTotalInc">${fmt(total+tax)}</td>
+        <td style="text-align:right;border:1px solid #999;padding:4px 5px;font-weight:700;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums" id="opTotalInc">${fmt(total+tax)}</td>
         <td style="border:1px solid #999"></td>
       </tr>
     </tfoot>
@@ -8408,17 +8413,23 @@ function fitOrdPreviewItemTables(root){
   });
 }
 
-function updOrdPreviewRow(id,newU){
+function updOrdPreviewRow(id,newU,el){
   const r=window._opRows.find(x=>x.id===id); if(!r) return;
-  r.unit=newU;
-  const amt=Math.round(r.qty*newU);
-  const el=document.getElementById('opamt'+id); if(el) el.textContent=amt?fmt(amt):'';
+  const parsed=numericCellValue(el?el.value:newU);
+  if(parsed===null)return;
+  r.unit=parsed;
+  const amt=Math.round(r.qty*parsed);
+  const amountEl=document.getElementById('opamt'+id); if(amountEl) amountEl.textContent=amt?fmt(amt):'';
   const total=window._opRows.reduce((s,x)=>s+Math.round(x.qty*x.unit),0);
   const tax=Math.round(total*0.1);
   const t=document.getElementById('opTotal'); if(t) t.textContent=fmt(total);
   const st=document.getElementById('opSubtotal'); if(st) st.textContent=fmt(total);
   const tx=document.getElementById('opTax'); if(tx) tx.textContent=fmt(tax);
   const ti=document.getElementById('opTotalInc'); if(ti) ti.textContent=fmt(total+tax);
+}
+function syncOrdPreviewUnit(id,el){
+  const r=window._opRows.find(x=>x.id===id);
+  if(r&&el)el.value=fmtNum(r.unit);
 }
 
 
@@ -9295,6 +9306,14 @@ function printOrdPreview(){
   const receiverPerson=document.getElementById('opReceiverPerson')?.value||'';
   const receiverConfirmed=!!document.getElementById('opReceiverConfirm')?.checked;
   const issuer=getOrderIssuerCompany();
+  // 備考が短い帳票では、余った幅を単価・金額へ渡す。
+  // 金額は桁数に関係なく必ず1行で表示する。
+  const orderTextUnits=value=>[...String(value||'')].reduce((sum,char)=>sum+(/[\u0000-\u00ff]/.test(char)?1:2),0);
+  const longestOrderNote=opRows.reduce((max,row)=>Math.max(max,orderTextUnits(row.note)),0);
+  const orderNoteWidth=Math.round(Math.min(24,Math.max(14,12+longestOrderNote*.8)));
+  const orderSpareWidth=24-orderNoteWidth;
+  const orderPriceWidth=11+Math.floor(orderSpareWidth/2);
+  const orderAmountWidth=11+Math.ceil(orderSpareWidth/2);
 
   // ── ヘッダーHTML（全ページ共通） ──
   function headerHtml(showAmount){
@@ -9334,7 +9353,7 @@ function printOrdPreview(){
       ${showAmount?`
       <tr>
         <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap">金　　額</td>
-        <td style="padding:4px 7px;border:1px solid #999;font-weight:700">${fmt(totalExTax)}　円（消費税別）</td>
+        <td style="padding:4px 7px;border:1px solid #999;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(totalExTax)}　円（消費税別）</td>
         <td style="padding:4px 7px;font-weight:700;border:1px solid #999;background:#f5f5f5;white-space:nowrap;width:70px">支払条件</td>
         <td style="padding:4px 7px;border:1px solid #999">規定の通り</td>
       </tr>`:''}
@@ -9372,15 +9391,15 @@ function printOrdPreview(){
       <table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px">
         <tr style="background:#f5f5f5">
           <td style="width:76%;border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700">小　計</td>
-          <td style="text-align:right;border:1px solid #999;padding:3px 8px;font-weight:700">${fmt(totalExTax)}</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 8px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(totalExTax)}</td>
         </tr>
         <tr style="background:#f8f8f8">
           <td style="border:1px solid #999;padding:3px 8px;text-align:right">消費税（10%）</td>
-          <td style="text-align:right;border:1px solid #999;padding:3px 8px">${fmt(tax)}</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 8px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(tax)}</td>
         </tr>
         <tr style="background:#efefef;border-top:2px solid #000">
           <td style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;font-size:12px">合　計（税込）</td>
-          <td style="text-align:right;border:1px solid #999;padding:4px 8px;font-weight:700;font-size:12px">${fmt(totalIncTax)}</td>
+          <td style="text-align:right;border:1px solid #999;padding:4px 8px;font-weight:700;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(totalIncTax)}</td>
         </tr>
       </table>`;
     }
@@ -9398,10 +9417,10 @@ function printOrdPreview(){
           <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${startNo+i}</td>
           <td class="oit-nw" style="border:1px solid #999;padding:2px 5px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.name||'')}</td>
           <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.spec||'')}</td>
-          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${q||''}</td>
+          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums">${q||''}</td>
           <td style="text-align:center;border:1px solid #999;padding:2px 3px;font-size:10px">${esc(r.unitLabel||'')}</td>
-          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px">${u?fmt(u):''}</td>
-          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600">${amt?fmt(amt):''}</td>
+          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums">${u?fmt(u):''}</td>
+          <td style="text-align:right;border:1px solid #999;padding:2px 3px;font-size:10px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums">${amt?fmt(amt):''}</td>
           <td class="oit-nw" style="border:1px solid #999;padding:2px 3px;font-size:10px;white-space:nowrap;overflow:hidden">${esc(r.note||'')}</td>
         </tr>`;
       } else {
@@ -9420,19 +9439,19 @@ function printOrdPreview(){
         <tr style="background:#f5f5f5">
           <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700;font-size:10.5px">小　計</td>
           <td style="border:1px solid #999"></td>
-          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px">${fmt(pageSub)}</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(pageSub)}</td>
           <td style="border:1px solid #999"></td>
         </tr>
         <tr style="background:#f8f8f8">
           <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-size:10.5px">消費税（10%）</td>
           <td style="border:1px solid #999"></td>
-          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-size:10.5px">${fmt(Math.round(totalExTax*0.1))}</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(Math.round(totalExTax*0.1))}</td>
           <td style="border:1px solid #999"></td>
         </tr>
         <tr style="background:#efefef;border-top:2px solid #000">
           <td colspan="5" style="border:1px solid #999;padding:4px 8px;text-align:right;font-weight:700;font-size:12px">合　計（税込）</td>
           <td style="border:1px solid #999"></td>
-          <td style="text-align:right;border:1px solid #999;padding:4px 5px;font-weight:700;font-size:12px">${fmt(totalExTax+Math.round(totalExTax*0.1))}</td>
+          <td style="text-align:right;border:1px solid #999;padding:4px 5px;font-weight:700;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(totalExTax+Math.round(totalExTax*0.1))}</td>
           <td style="border:1px solid #999"></td>
         </tr>`;
     } else {
@@ -9440,7 +9459,7 @@ function printOrdPreview(){
         <tr style="background:#f5f5f5">
           <td colspan="5" style="border:1px solid #999;padding:3px 8px;text-align:right;font-weight:700;font-size:10.5px">小　計（本頁）</td>
           <td style="border:1px solid #999"></td>
-          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px">${fmt(pageSub)}</td>
+          <td style="text-align:right;border:1px solid #999;padding:3px 5px;font-weight:700;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums">${fmt(pageSub)}</td>
           <td style="border:1px solid #999"></td>
         </tr>
         <tr><td colspan="8" style="border:none;padding:2px 5px;text-align:right;font-size:9.5px;color:#888">次ページへ続く →</td></tr>`;
@@ -9453,9 +9472,9 @@ function printOrdPreview(){
         <col style="width:22%">
         <col style="width:6%">
         <col style="width:6%">
-        <col style="width:11%">
-        <col style="width:11%">
-        <col style="width:24%">
+        <col style="width:${orderPriceWidth}%">
+        <col style="width:${orderAmountWidth}%">
+        <col style="width:${orderNoteWidth}%">
       </colgroup>
       <thead>
         <tr style="background:#f0f0f0">
