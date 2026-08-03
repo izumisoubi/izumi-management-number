@@ -1,5 +1,9 @@
 const FLOW_STAGES=['受注','立会','見積','発注','完工','請求','入金'];
 const normalizeNumber=value=>String(value??'').replace(/[０-９．，－]/g,ch=>({'０':0,'１':1,'２':2,'３':3,'４':4,'５':5,'６':6,'７':7,'８':8,'９':9,'．':'.','，':'','－':'-'}[ch])).replace(/,/g,'').trim();
+const isTransientNumberText=value=>{
+  const normalized=normalizeNumber(value);
+  return /^[-+]?(?:\d+)?\.$/.test(normalized)||/^[-+]?(?:\d+)?\.\d*0$/.test(normalized);
+};
 const effectiveValue=(autoValue,manualValue)=>manualValue===null||manualValue===undefined?autoValue:manualValue;
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function downloadJson(name,data){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}

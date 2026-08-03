@@ -28,7 +28,7 @@
     <table class="desktop-table"><thead><tr><th>工事項目</th><th>単位</th><th>共通単価（参考）</th><th>取引先別単価（手入力）</th><th>適用単価</th><th>保存</th></tr></thead><tbody id="clientRows"></tbody></table><div class="mobile-cards" id="clientCards"></div>
   </section>
 </main>
-<script src="業務基盤.js"></script>
+<script src="業務基盤.js?v=20260804-DEC1"></script>
 <script>
 const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
 const $=id=>document.getElementById(id),LS_VENDOR='izumi_sales_demo_mirror__vendors_v3',LS_LEGACY='izumi_sales_demo_mirror__vendor_price_drafts_v1',LS_COMMON='izumi_sales_demo_mirror__common_prices_v1',LS_OVERRIDES='izumi_sales_demo_mirror__vendor_price_overrides_v2';
@@ -79,7 +79,7 @@ function loadVendor(value){
   render();$('vendorStatus').textContent=currentVendor?`${currentVendor} の個別設定`:'業者未選択';
 }
 function render(){
-  $('rows').innerHTML=commonItems.map((item,index)=>{const override=overrideFor(item),effective=effectiveValue(item.common,override);return `<tr data-item="${item.id}"><td><input value="${escapeHtml(item.name)}" data-i="${index}" data-k="name"></td><td><input value="${escapeHtml(item.unit)}" data-i="${index}" data-k="unit"></td><td><input inputmode="numeric" value="${item.common}" data-i="${index}" data-k="common" aria-label="共通単価"></td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-i="${index}" data-k="override" aria-label="${escapeHtml(currentVendor)}の個別単価"></td><td data-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-save="${item.id}"></span></td><td><button class="btn danger" data-delete="${index}" ${cloudReady&&!isAdmin?'disabled title="削除は最高権限のみ"':''}>削除</button></td></tr>`}).join('');
+  $('rows').innerHTML=commonItems.map((item,index)=>{const override=overrideFor(item),effective=effectiveValue(item.common,override);return `<tr data-item="${item.id}"><td><input value="${escapeHtml(item.name)}" data-i="${index}" data-k="name"></td><td><input value="${escapeHtml(item.unit)}" data-i="${index}" data-k="unit"></td><td><input inputmode="decimal" value="${item.common}" data-i="${index}" data-k="common" aria-label="共通単価"></td><td><input inputmode="decimal" placeholder="空欄で共通単価" value="${override??''}" data-i="${index}" data-k="override" aria-label="${escapeHtml(currentVendor)}の個別単価"></td><td data-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-save="${item.id}"></span></td><td><button class="btn danger" data-delete="${index}" ${cloudReady&&!isAdmin?'disabled title="削除は最高権限のみ"':''}>削除</button></td></tr>`}).join('');
   $('cards').innerHTML=commonItems.map(item=>{const override=overrideFor(item);return `<div class="mobile-card"><b>${escapeHtml(item.name)}</b><p>${escapeHtml(item.unit)} ／ 適用 ¥${effectiveValue(item.common,override).toLocaleString()}</p><span class="badge">${override==null?'共通単価':'業者別単価'}</span></div>`}).join('');
 }
 function refreshEffective(item,index){
@@ -91,9 +91,10 @@ function scheduleItemSave(item,index,kind){
 }
 async function saveCommonItem(item,index){
   if(!cloudReady){saveLocal();return mark(item.id,'端末保存','saved')}
+  const wasNew=Boolean(item._new);
   mark(item.id,'保存中','saving');const result=await db.rpc('save_work_item',{p_id:item._new?null:item.id,p_expected_revision:item.revision||0,p_name:item.name,p_unit:item.unit,p_common_price:Number(item.common)||0});
   if(result.error){mark(item.id,/別の端末/.test(result.error.message||'')?'競合・再読込':'保存失敗','error');if(/別の端末/.test(result.error.message||''))$('status').textContent='別の社員が先に更新しました。画面を更新してください。';return}
-  const saved=Array.isArray(result.data)?result.data[0]:result.data;if(item._new&&saved?.id){const oldId=item.id;item.id=saved.id;delete item._new;Object.values(vendorOverrides).forEach(map=>{if(map?.[oldId]!==undefined){map[item.id]=map[oldId];delete map[oldId]}})}item.revision=Number(saved?.revision||item.revision+1);saveLocal();render();mark(item.id,'共有済','saved');
+  const saved=Array.isArray(result.data)?result.data[0]:result.data;if(item._new&&saved?.id){const oldId=item.id;item.id=saved.id;delete item._new;Object.values(vendorOverrides).forEach(map=>{if(map?.[oldId]!==undefined){map[item.id]=map[oldId];delete map[oldId]}})}item.revision=Number(saved?.revision||item.revision+1);saveLocal();if(wasNew)render();mark(item.id,'共有済','saved');
 }
 async function saveOverride(item,index){
   const value=overrideFor(item);
@@ -122,7 +123,7 @@ function renderClient(){
   const clientKnown=normalizeClientKey(currentClientName)!=='';
   $('clientRows').innerHTML=!clientKnown?'':commonItems.map(item=>{
     const override=clientOverrideFor(item),effective=effectiveValue(item.common,override);
-    return `<tr data-client-item="${item.id}"><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.unit)}</td><td>¥${Number(item.common||0).toLocaleString()}</td><td><input inputmode="numeric" placeholder="空欄で共通単価" value="${override??''}" data-ci="${item.id}" aria-label="${escapeHtml(currentClientName)}の取引先別単価"></td><td data-client-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-client-save="${item.id}"></span></td></tr>`;
+    return `<tr data-client-item="${item.id}"><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.unit)}</td><td>¥${Number(item.common||0).toLocaleString()}</td><td><input inputmode="decimal" placeholder="空欄で共通単価" value="${override??''}" data-ci="${item.id}" aria-label="${escapeHtml(currentClientName)}の取引先別単価"></td><td data-client-effective="${item.id}" class="${override==null?'price-auto':'price-manual'}">¥${effective.toLocaleString()}</td><td><span class="save-mark" data-client-save="${item.id}"></span></td></tr>`;
   }).join('');
   $('clientCards').innerHTML=!clientKnown?'':commonItems.map(item=>{
     const override=clientOverrideFor(item);
@@ -181,15 +182,27 @@ document.addEventListener('input',event=>{
 document.addEventListener('input',event=>{
   const itemId=event.target.dataset.ci;if(itemId===undefined)return;
   const item=commonItems.find(entry=>entry.id===itemId);if(!item)return;
-  const normalized=normalizeNumber(event.target.value),value=normalized===''?null:Number(normalized);
+  const normalized=normalizeNumber(event.target.value),parsedValue=normalized===''?null:Number(normalized),value=Number.isFinite(parsedValue)?parsedValue:null;
   const cacheKey=`${normalizeClientKey(currentClientName)}|${item.id}`;
   pendingClientOverrides.set(cacheKey,value);
+  if(isTransientNumberText(normalized)){
+    clearTimeout(saveTimers.get(`${item.id}|clientOverride`));
+    refreshClientEffective(item);markClient(item.id,'入力中','saving');return;
+  }
   refreshClientEffective(item);scheduleClientItemSave(item);
 });
 document.addEventListener('input',event=>{
   const index=Number(event.target.dataset.i);if(!Number.isInteger(index))return;const item=commonItems[index],key=event.target.dataset.k;if(!item)return;
-  if(key==='override'){const normalized=normalizeNumber(event.target.value),value=normalized===''?null:Number(normalized);vendorOverrides[currentVendor]??={};if(value===null)delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=value;if(cloudReady)pendingOverrides.set(`${currentVendorId}|${item.id}`,value);refreshEffective(item,index);scheduleItemSave(item,index,'override')}
-  else{item[key]=key==='common'?(Number(normalizeNumber(event.target.value))||0):event.target.value;refreshEffective(item,index);scheduleItemSave(item,index,'common')}
+  if(key==='override'){const normalized=normalizeNumber(event.target.value),parsedValue=normalized===''?null:Number(normalized),value=Number.isFinite(parsedValue)?parsedValue:null;vendorOverrides[currentVendor]??={};if(value===null)delete vendorOverrides[currentVendor][item.id];else vendorOverrides[currentVendor][item.id]=value;if(cloudReady)pendingOverrides.set(`${currentVendorId}|${item.id}`,value);refreshEffective(item,index);if(isTransientNumberText(normalized)){clearTimeout(saveTimers.get(`${item.id}|override`));mark(item.id,'入力中','saving');return}scheduleItemSave(item,index,'override')}
+  else{const normalized=key==='common'?normalizeNumber(event.target.value):'';item[key]=key==='common'?(Number(normalized)||0):event.target.value;refreshEffective(item,index);if(key==='common'&&isTransientNumberText(normalized)){clearTimeout(saveTimers.get(`${item.id}|common`));mark(item.id,'入力中','saving');return}scheduleItemSave(item,index,'common')}
+});
+// 1.0 のように末尾0で入力を終えた場合は、input中の保護を解除してblur時に確実に保存する。
+document.addEventListener('change',event=>{
+  const clientItemId=event.target.dataset.ci;
+  if(clientItemId!==undefined){const item=commonItems.find(entry=>entry.id===clientItemId);if(item)scheduleClientItemSave(item);return;}
+  const index=Number(event.target.dataset.i),key=event.target.dataset.k;
+  if(!Number.isInteger(index)||!['common','override'].includes(key))return;
+  const item=commonItems[index];if(item)scheduleItemSave(item,index,key);
 });
 document.addEventListener('click',async event=>{
   if(event.target.dataset.delete===undefined)return;const index=Number(event.target.dataset.delete),item=commonItems[index];if(!item)return;

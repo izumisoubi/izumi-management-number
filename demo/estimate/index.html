@@ -5188,7 +5188,7 @@ function renderCostTable(){
     var s=bold?'font-weight:700;':'';
     var cs=color?'color:'+color+';':'';
     return '<td style="'+S_NM+(bold?'background:'+C_GREY+';':'')+'">'
-      +'<input data-ctid="'+e2(id)+'" data-f="f'+col+'" value="'+e2(String(val||''))+'" '
+      +'<input type="text" inputmode="decimal" data-ctid="'+e2(id)+'" data-f="f'+col+'" value="'+e2(String(val||''))+'" '
       +'oninput="ctInput(this.dataset.ctid,this.value);ctUpdateTotals();" '
       +'onblur="ctSet(this.dataset.ctid,this.value)" '
       +'onkeydown="var _e=event;if(_e.key===\'Tab\'){_e.preventDefault();}else if(!_e.ctrlKey&&!_e.metaKey){_e.stopPropagation();}" '
@@ -5288,7 +5288,7 @@ function renderCostTable(){
     '<span id="ct-sell" style="display:block;text-align:right;padding:0 6px;font-size:13px;font-weight:700;color:'+C_NAVY+';">'+e2(sellTxt)+'</span></td>';
   H+='<td style="'+S_CT+'font-size:11px;">'+(sell?'100.0%':'')+'</td>';
   H+='<td style="'+S_TH+'font-weight:500;background:'+C_LLBLUE+';">紹介料（税抜）</td>';
-  H+='<td style="'+S_TD+'">'+'<input data-ctid="shokai" data-f="f4" value="'+e2(cg('shokai',shokaiTxt))+'" '+
+  H+='<td style="'+S_TD+'">'+'<input type="text" inputmode="decimal" data-ctid="shokai" data-f="f4" value="'+e2(cg('shokai',shokaiTxt))+'" '+
     'oninput="ctInput(\'shokai\',this.value.replace(/,/g,\'\'));ctUpdateTotals();" '+
     'onblur="var _v=this.value.replace(/,/g,\'\');var _n=parseFloat(_v);ctSet(\'shokai\',String(_n||0));if(!isNaN(_n)&&_v!==\'\')this.value=_n.toLocaleString(\'ja-JP\');" '+
     'onfocus="this.value=this.value.replace(/,/g,\'\');" '+
@@ -5357,7 +5357,7 @@ function renderCostTable(){
     H+='<td style="'+S_TG+'">'+e2(r.lb)+'</td>';
     H+='<td style="'+S_TD+'">'+fi('vname_'+r.no,savedVname,'left',1)+'</td>';
     H+='<td style="border:'+BD+';'+RH+'padding:0;background:#fff;vertical-align:middle;">';
-    H+='<input data-ctid="ord_'+r.no+'" data-f="f2" value="'+e2(ordV?N(ordV):'')+'" ';
+    H+='<input type="text" inputmode="decimal" data-ctid="ord_'+r.no+'" data-f="f2" value="'+e2(ordV?N(ordV):'')+'" ';
     H+='oninput="ctInput(this.dataset.ctid,this.value);ctUpdateTotals();" ';
     H+='onblur="ctSet(this.dataset.ctid,this.value)" ';
     H+='onkeydown="var _e=event;if(_e.key===\'Tab\'){_e.preventDefault();}else if(!_e.ctrlKey&&!_e.metaKey){_e.stopPropagation();}" ';
