@@ -375,7 +375,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .doc-meta-line{display:flex;align-items:flex-start;min-width:0;}
 .doc-meta-label{flex:0 0 auto;white-space:pre;}
 .doc-meta-value{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;}
-.doc-kanri{text-align:right;font-size:10px;line-height:1.2;min-height:13px;margin:0 0 2px;}
+.doc-kanri{display:flex;align-items:baseline;justify-content:flex-end;gap:24px;text-align:right;font-size:10px;line-height:1.2;min-height:13px;margin:0 0 2px;white-space:nowrap;}
 .report-a4{min-height:267mm;}
 .report-meta{display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:11px;margin:5px 0 24px;min-height:14px;}
 .report-management{font-variant-numeric:tabular-nums;}
@@ -3668,6 +3668,29 @@ function isSpreadsheetEditingControl(target=document.activeElement){
     &&target.closest?.('#ctbody,#ordtbody,#invCtbody,#ctPrintArea,#estPages'));
 }
 
+// Excelと同じく「セル選択」と「セル内文字編集」を分ける。
+// 1クリック直後はセル選択、入力・変換・ダブルクリック・F2後は文字編集。
+const spreadsheetTextEditControls=new WeakSet();
+function beginSpreadsheetTextEdit(target=document.activeElement){
+  if(isSpreadsheetEditingControl(target))spreadsheetTextEditControls.add(target);
+}
+function endSpreadsheetTextEdit(target=document.activeElement){
+  if(target)spreadsheetTextEditControls.delete(target);
+}
+function isSpreadsheetTextEditMode(target=document.activeElement){
+  return !!(isSpreadsheetEditingControl(target)&&spreadsheetTextEditControls.has(target));
+}
+document.addEventListener('beforeinput',event=>beginSpreadsheetTextEdit(event.target),true);
+document.addEventListener('dblclick',event=>beginSpreadsheetTextEdit(event.target),true);
+document.addEventListener('focusout',event=>endSpreadsheetTextEdit(event.target),true);
+document.addEventListener('mouseup',event=>{
+  const target=event.target;
+  if(!isSpreadsheetEditingControl(target))return;
+  if(target.tagName==='INPUT'||target.tagName==='TEXTAREA'){
+    if(Number.isInteger(target.selectionStart)&&Number.isInteger(target.selectionEnd)&&target.selectionStart!==target.selectionEnd)beginSpreadsheetTextEdit(target);
+  }
+},true);
+
 // セル内の文字編集で使う標準ショートカットを表操作が横取りしない。
 // 文字が選択されていない Ctrl/⌘+C などは従来どおりセルコピーとして扱う。
 document.addEventListener('keydown',event=>{
@@ -3675,11 +3698,12 @@ document.addEventListener('keydown',event=>{
   const key=String(event.key||'').toLowerCase();
   const modifier=event.ctrlKey||event.metaKey;
   const nativeEditingShortcut=modifier&&['a','z','y'].includes(key);
+  if(nativeEditingShortcut||event.key==='F2')beginSpreadsheetTextEdit(event.target);
   const nativeSelectionShortcut=hasNativeClipboardSelection(event.target)
     &&((modifier&&['c','x'].includes(key))||['delete','backspace'].includes(key));
   // セル内編集中の左右・Home・Endはキャレット移動。
   // 端に到達しても隣セルへ飛ばさない。
-  const nativeCaretNavigation=['ArrowLeft','ArrowRight','Home','End'].includes(event.key);
+  const nativeCaretNavigation=isSpreadsheetTextEditMode(event.target)&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key);
   if(nativeEditingShortcut||nativeSelectionShortcut||nativeCaretNavigation)event.stopImmediatePropagation();
 },true);
 
@@ -4781,7 +4805,7 @@ function ctNav(e){
     window._ctDragSelInit=true;
     document.addEventListener('mousedown',function(e){
       var inp=e.target.closest('#ctPrintArea input[data-ctid]');
-      if(inp){ ctSelStart=inp; ctSelEnd=inp; ctDragging=true; ctHighlight(); }
+      if(inp){ endSpreadsheetTextEdit(inp); ctSelStart=inp; ctSelEnd=inp; ctDragging=true; ctHighlight(); }
       else if(!e.target.closest('#ctPrintArea')){ ctClearSel(); }
     });
     document.addEventListener('mousemove',function(e){
@@ -4793,7 +4817,23 @@ function ctNav(e){
     document.addEventListener('keydown',function(e){
       if(!document.activeElement?.closest('#ctPrintArea')) return;
       if(e.key==='Escape') ctClearSel();
-      // Shift+矢印はセル内の文字選択用。表の範囲選択はドラッグで行う。
+      if(e.shiftKey&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&!isSpreadsheetTextEditMode(document.activeElement)&&ctSelStart){
+        var current=ctSelEnd||ctSelStart;
+        var tbody=current.closest('tbody');
+        var tr=current.closest('tr[data-crid]');
+        var cols=['f0','f1','f2','f3','f4','f5'];
+        var trs=tbody?[...tbody.querySelectorAll('tr[data-crid]')]:[];
+        var row=trs.indexOf(tr),col=cols.indexOf(current.dataset.f);
+        if(row>=0&&col>=0){
+          var next=gridCoreCT.movePoint({row:row,col:col},e.key,{rows:trs.length,cols:cols.length});
+          var target=trs[next.row]?.querySelector('[data-f="'+cols[next.col]+'"]');
+          if(target){
+            e.preventDefault();e.stopImmediatePropagation();
+            ctSelEnd=target;target.focus({preventScroll:true});ctHighlight();
+            target.scrollIntoView({block:'nearest',inline:'nearest'});
+          }
+        }
+      }
     });
     document.addEventListener('copy',function(e){
       var active=document.activeElement;
@@ -6515,7 +6555,10 @@ async function loadCalendarEventById(scheduleId){
 const estimateImeInputs=new WeakSet();
 const estimateImePendingCommit=new WeakSet();
 document.addEventListener('compositionstart',event=>{
-  if(event.target?.matches?.('input,textarea,[contenteditable="true"]'))estimateImeInputs.add(event.target);
+  if(event.target?.matches?.('input,textarea,[contenteditable="true"]')){
+    estimateImeInputs.add(event.target);
+    beginSpreadsheetTextEdit(event.target);
+  }
 },true);
 document.addEventListener('compositionend',event=>{
   const target=event.target;
@@ -6533,13 +6576,14 @@ document.addEventListener('input',event=>{
   else estimateImePendingCommit.delete(event.target);
 },true);
 
-// Excelと同じく、表セル内でShift+↑/↓を押した時は
-// 上下セルへ移動せず、そのセルの文字列を全選択する。
+// Excelと同じく、文字編集中のShift+↑/↓はセル内文字を全選択する。
+// 文字編集前のセル選択中は後段の表選択処理へ渡し、上下セルへ範囲拡張する。
 document.addEventListener('keydown',event=>{
   if(!event.shiftKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
   const target=document.activeElement;
   if(!target?.closest?.('#ctbody,#estPages,#invCtbody,#ordtbody,#ctPrintArea'))return;
   if(!target.matches?.('input,textarea,[contenteditable="true"]')&&!target.isContentEditable)return;
+  if(!isSpreadsheetTextEditMode(target))return;
   event.preventDefault();
   event.stopImmediatePropagation();
   if(typeof target.select==='function'){
@@ -10527,6 +10571,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('mousedown',e=>{
     const info=locate(e.target);
     if(!info){if(!e.target.closest?.('#ctbody,#ordtbody,#invCtbody')){selection.tbodyId='';clearHighlight();}return;}
+    endSpreadsheetTextEdit(info.control);
     selectCell(info,e.shiftKey);dragging=true;
   },true);
   document.addEventListener('mousemove',e=>{
@@ -10545,7 +10590,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('keydown',e=>{
     const key=e.key.toLowerCase();
     const activeControl=document.activeElement;
-    if(e.shiftKey&&e.key.startsWith('Arrow')&&activeControl?.matches?.('input,textarea,[contenteditable="true"]'))return;
+    if(e.shiftKey&&e.key.startsWith('Arrow')&&activeControl?.matches?.('input,textarea,[contenteditable="true"]')&&isSpreadsheetTextEditMode(activeControl))return;
     const ctActive=document.activeElement?.closest?.('#ctPrintArea input[data-ctid]');
     if(ctActive){
       if((e.ctrlKey||e.metaKey)&&key==='d'&&window.__ctExcel?.hasSelection?.()){
