@@ -109,11 +109,12 @@
     return /^[-+]?(?:\d+)?\.$/.test(normalized);
   }
 
-  // 小数点や計算式の入力途中は、再計算によって文字を消さない。
-  // 例: 「12.」「=5*」は次の1文字を待つ状態。
+  // 小数点・小数点以下の末尾0・計算式の入力途中は、再計算によって文字を消さない。
+  // 例: 「12.」「1.0」「=5*」は次の1文字を待つ状態。
   function isTransientNumericText(value){
     const normalized=normalizeNumericText(value);
     return isIncompleteNumericText(normalized)
+      ||/^[-+]?(?:\d+)?\.\d*0$/.test(normalized)
       ||(normalized.startsWith('=')&&evaluateArithmeticExpression(normalized)===null);
   }
 

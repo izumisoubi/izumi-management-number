@@ -6602,9 +6602,9 @@ function normalizeNumericControl(el,{format=true}={}){
   if(!el||estimateImeInputs.has(el))return;
   const normalized=window.IzumiEstimateMath.normalizeNumericText(el.value);
   const formula=normalized.startsWith('=');
-  const incompleteDecimal=!format&&window.IzumiEstimateMath.isIncompleteNumericText(normalized);
+  const transientNumeric=!format&&window.IzumiEstimateMath.isTransientNumericText(normalized);
   const number=numericCellValue(normalized);
-  const next=(formula&&!format)||incompleteDecimal
+  const next=(formula&&!format)||transientNumeric
     ?normalized
     :(number===null?normalized:number.toLocaleString('ja-JP',{maximumFractionDigits:12}));
   if(el.value===next)return;
