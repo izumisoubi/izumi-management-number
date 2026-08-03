@@ -102,6 +102,21 @@
     return Number.isFinite(number)?number:null;
   }
 
+  // 「12.」は12の確定値ではなく、12.8などを入力している途中。
+  // inputイベント中はこの状態を保持し、フォーカスが外れた時だけ確定する。
+  function isIncompleteNumericText(value){
+    const normalized=normalizeNumericText(value);
+    return /^[-+]?(?:\d+)?\.$/.test(normalized);
+  }
+
+  // 小数点や計算式の入力途中は、再計算によって文字を消さない。
+  // 例: 「12.」「=5*」は次の1文字を待つ状態。
+  function isTransientNumericText(value){
+    const normalized=normalizeNumericText(value);
+    return isIncompleteNumericText(normalized)
+      ||(normalized.startsWith('=')&&evaluateArithmeticExpression(normalized)===null);
+  }
+
   function unitFromMargin(cost,marginRate){
     const amount=numberOrNull(cost);
     const rate=numberOrNull(marginRate)??0;
@@ -143,8 +158,10 @@
   }
 
   return Object.freeze({
-    version:'1.1.0',
+    version:'1.2.0',
     normalizeNumericText,
+    isIncompleteNumericText,
+    isTransientNumericText,
     evaluateArithmeticExpression,
     numberOrNull,
     unitFromMargin,

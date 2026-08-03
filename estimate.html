@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
 <script src="年度共通.js?v=20260729-UX51"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
-<script src="見積計算共通.js?v=20260803-IME61"></script>
+<script src="見積計算共通.js?v=20260803-INPUT62"></script>
 <script src="自社原価共通.js?v=20260803-IME61"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -3459,6 +3459,11 @@ function siInv(id,f,v){
 }
 function sinInv(id,f,v){
   const r=invRows.find(r=>r.id===id);if(!r)return;pushInvUndo();
+  if(window.IzumiEstimateMath.isTransientNumericText(v)){
+    const partial=numericCellValue(v);
+    if(partial!==null)r[f]=partial;
+    return;
+  }
   const n=numericCellValue(v);
   r[f]=n===null?'':n;
   renderInv();
@@ -3643,6 +3648,41 @@ function startRowDrag(tr,tbody,isInv=false,isOrd=false){
 
 let dragSel={active:false,startTr:null,startTd:null,endTr:null,endTd:null};
 
+// 入力欄の文字を選択している間は、表の範囲コピーよりブラウザ標準の
+// コピー／切り取りを必ず優先する。セル選択が残っていても横取りしない。
+function hasNativeClipboardSelection(target=document.activeElement){
+  const control=target?.matches?.('input,textarea,[contenteditable="true"]')
+    ?target
+    :document.activeElement;
+  if(control?.tagName==='INPUT'||control?.tagName==='TEXTAREA'){
+    return Number.isInteger(control.selectionStart)
+      &&Number.isInteger(control.selectionEnd)
+      &&control.selectionStart!==control.selectionEnd;
+  }
+  const selection=window.getSelection?.();
+  return !!(selection&&!selection.isCollapsed&&selection.toString().length);
+}
+
+function isSpreadsheetEditingControl(target=document.activeElement){
+  return !!(target?.matches?.('input,textarea,[contenteditable="true"]')
+    &&target.closest?.('#ctbody,#ordtbody,#invCtbody,#ctPrintArea,#estPages'));
+}
+
+// セル内の文字編集で使う標準ショートカットを表操作が横取りしない。
+// 文字が選択されていない Ctrl/⌘+C などは従来どおりセルコピーとして扱う。
+document.addEventListener('keydown',event=>{
+  if(!isSpreadsheetEditingControl(event.target))return;
+  const key=String(event.key||'').toLowerCase();
+  const modifier=event.ctrlKey||event.metaKey;
+  const nativeEditingShortcut=modifier&&['a','z','y'].includes(key);
+  const nativeSelectionShortcut=hasNativeClipboardSelection(event.target)
+    &&((modifier&&['c','x'].includes(key))||['delete','backspace'].includes(key));
+  // セル内編集中の左右・Home・Endはキャレット移動。
+  // 端に到達しても隣セルへ飛ばさない。
+  const nativeCaretNavigation=['ArrowLeft','ArrowRight','Home','End'].includes(event.key);
+  if(nativeEditingShortcut||nativeSelectionShortcut||nativeCaretNavigation)event.stopImmediatePropagation();
+},true);
+
 function initDragSelect(){
   const ctbl=document.getElementById('ctbl');
   if(!ctbl)return;
@@ -3708,9 +3748,9 @@ function initDragSelect(){
   document.addEventListener('keydown',e=>{
     if(document.activeElement?.closest('#ctNavBody')) return;
     if((e.ctrlKey||e.metaKey)&&e.key==='c'){
+      if(hasNativeClipboardSelection(e.target))return;
       const sel=getSelectedCells();
-      const textSel=window.getSelection()?.toString()||'';
-      if(sel.length>0 && !textSel){
+      if(sel.length>0){
         e.preventDefault();
         const text=buildTSV(sel);
         navigator.clipboard.writeText(text).then(()=>{
@@ -4109,6 +4149,7 @@ function excelCopy(e){
     }
   }
   if(e.key==='c'){
+    if(hasNativeClipboardSelection(el))return;
     e.preventDefault();
     const r1=Math.min(excelSel.r1,excelSel.r2);
     const r2=Math.max(excelSel.r1,excelSel.r2);
@@ -6517,8 +6558,11 @@ function normalizeNumericControl(el,{format=true}={}){
   if(!el||estimateImeInputs.has(el))return;
   const normalized=window.IzumiEstimateMath.normalizeNumericText(el.value);
   const formula=normalized.startsWith('=');
+  const incompleteDecimal=!format&&window.IzumiEstimateMath.isIncompleteNumericText(normalized);
   const number=numericCellValue(normalized);
-  const next=formula&&!format?normalized:(number===null?normalized:number.toLocaleString('ja-JP'));
+  const next=(formula&&!format)||incompleteDecimal
+    ?normalized
+    :(number===null?normalized:number.toLocaleString('ja-JP',{maximumFractionDigits:12}));
   if(el.value===next)return;
   const selection=el.selectionStart;
   const oldLength=el.value.length;
@@ -6930,6 +6974,11 @@ function sfn(id,f,v){const r=rows.find(r=>r.id===id);if(!r)return;pushUndo();con
 
 function sfSellOverrideCtbl(id,v){
   const r=rows.find(r=>r.id===id);if(!r)return;
+  if(window.IzumiEstimateMath.isTransientNumericText(v)){
+    const partial=numericCellValue(v);
+    if(partial!==null){r.sellOverride=partial;r._sellOverrideManual=true;r._clientUnitPriceAuto=false;}
+    return;
+  }
   const number=numericCellValue(v);
   const isEmpty=number===null;
   r.sellOverride=isEmpty?'':number;
@@ -6937,7 +6986,7 @@ function sfSellOverrideCtbl(id,v){
   // その時点の取引先別単価（無ければ原価からの自動売価）へ復帰させる。
   r._sellOverrideManual=!isEmpty;
   r._clientUnitPriceAuto=false;
-  if(isEmpty){
+  if(isEmpty&&r.type!=='discount'){
     setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
   }
   syncBurdenForSellChange(r);
@@ -6966,7 +7015,7 @@ function sfSellOverride(id,el){
   r.sellOverride=isEmpty?'':number;
   r._sellOverrideManual=!isEmpty;
   r._clientUnitPriceAuto=false;
-  if(isEmpty)setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
+  if(isEmpty&&r.type!=='discount')setTimeout(()=>applyRestoredUnitPrice('estimate',id),0);
   syncBurdenForSellChange(r);
   _recalcRow(id);
   renderTotals();syncInv();
@@ -7014,7 +7063,13 @@ function undoInvRows(){
 
 function sfnCalc(id,f,v,inputEl){
   const r=rows.find(r=>r.id===id);if(!r)return;
-  const number=numericCellValue(inputEl?inputEl.value:v);
+  const raw=inputEl?inputEl.value:v;
+  if(window.IzumiEstimateMath.isTransientNumericText(raw)){
+    const partial=numericCellValue(raw);
+    if(partial!==null)r[f]=partial;
+    return;
+  }
+  const number=numericCellValue(raw);
   const isEmpty=number===null;
   r[f]=isEmpty?'':number;
   if(f==='cost'){
@@ -7104,11 +7159,13 @@ function _recalcRow(id,recalculateBurdenAmounts=true){
   if(ctr){
     const cca=ctr.querySelector('.cca');
     if(cca)cca.textContent=costAmount===null?'':yen(costAmount);
+    // 値引行も毎回更新する。客先単価を空欄へ戻した時に、直前の
+    // マイナス金額がDOM上だけ残らないよう、nullなら確実に消す。
+    const csa=ctr.querySelector('.csa');
+    if(csa)csa.textContent=customerAmount===null?'':yen(customerAmount);
     if(r.type!=='discount'){
       const csp=ctr.querySelector('.csp');
       if(csp)csp.textContent=su!==''?yen(su):'';
-      const csa=ctr.querySelector('.csa');
-      if(csa)csa.textContent=customerAmount===null?'':yen(customerAmount);
       // sellOverride inputのplaceholderも更新
       const soInp=ctr.querySelector('[data-f=sellOverride]');
       if(soInp&&document.activeElement!==soInp){
@@ -7152,7 +7209,7 @@ function fmt(n){return Math.round(n||0).toLocaleString('ja-JP');}
 function fmtNum(v){
   if(v===''||v===null||v===undefined)return'';
   const n=parseFloat(v);if(isNaN(n))return'';
-  return n.toLocaleString('ja-JP');
+  return n.toLocaleString('ja-JP',{maximumFractionDigits:12});
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 const UNITS=['式','㎡','m','個','台','箇所','本','枚','ケ','セット','ｍ','㎏','L'];
@@ -7669,8 +7726,14 @@ function renderOrdTable(){
 function ordSf(id,f,v){ const r=ordRows.find(x=>x.id===id);if(!r)return;pushOrdUndo();r[f]=v;renderOrdLeft(); }
 function ordSfNum(id,f,v,el){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
+  const raw=el?el.value:v;
+  if(window.IzumiEstimateMath.isTransientNumericText(raw)){
+    const partial=numericCellValue(raw);
+    if(partial!==null)r[f]=partial;
+    return;
+  }
   pushOrdUndo();
-  const number=numericCellValue(el?el.value:v);
+  const number=numericCellValue(raw);
   const empty=number===null;
   r[f]=empty?'':number;
   if(f==='orderCost')setOrderCostManualFlag(r,r[f]);
@@ -7822,6 +7885,7 @@ function chooseUnitPriceSuggestion(kind,id,item){
 }
 async function applyRestoredUnitPrice(kind,id){
   const row=unitPriceRowsFor(kind,id).find(entry=>entry.id===id);if(!row||!String(row.name||'').trim())return;
+  if(kind==='estimate'&&row.type==='discount')return;
   const items=await candidateUnitPrices(kind,row);
   const item=items.find(entry=>normalizedUnitPriceText(entry.name)===normalizedUnitPriceText(row.name)&&String(entry.unit||'')===String(row.unit||''));
   if(!item)return;
@@ -7878,6 +7942,11 @@ async function setVendor(id,v){
 }
 function setOrderCost(id,val){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
+  if(window.IzumiEstimateMath.isTransientNumericText(val)){
+    const partial=numericCellValue(val);
+    if(partial!==null){r.orderCost=partial;setOrderCostManualFlag(r,r.orderCost);}
+    return;
+  }
   pushOrdUndo();
   const number=numericCellValue(val);
   r.orderCost=number===null?'':number;
@@ -8093,8 +8162,7 @@ if(!window._ordCopyInit){
     if(!(e.ctrlKey||e.metaKey)||e.key!=='c')return;
     if(document.activeElement?.closest('#ctbody'))return; // ctbodyはexcelCopyに任せる
     if(!document.activeElement?.closest('#ordtbody')&&!ordDragSel.startTr)return;
-    const textSel=window.getSelection()?.toString()||'';
-    if(textSel)return;
+    if(hasNativeClipboardSelection(e.target))return;
     const cells=getOrdSelectedCells();
     if(!cells.length)return;
     e.preventDefault();
@@ -10183,6 +10251,14 @@ document.addEventListener('DOMContentLoaded',function(){
   function clearHighlight(){
     document.querySelectorAll('.excel-grid-selected').forEach(el=>el.classList.remove('excel-grid-selected'));
   }
+  // セル内で文字をドラッグ選択したら、残っている表範囲選択を解除。
+  // これにより、部分コピーがセル全体のコピーにすり替わらない。
+  document.addEventListener('select',event=>{
+    const control=event.target;
+    if(!locate(control)||!hasNativeTextSelection(control))return;
+    selection={tbodyId:'',anchorR:-1,anchorC:-1,r1:-1,c1:-1,r2:-1,c2:-1};
+    clearHighlight();
+  },true);
   function highlight(){
     clearHighlight();
     const tbody=document.getElementById(selection.tbodyId);
@@ -10517,10 +10593,11 @@ document.addEventListener('DOMContentLoaded',function(){
   },true);
 
   document.addEventListener('copy',e=>{
+    // 以前の表範囲選択が残っていても、現在の入力欄で
+    // 選択した文字だけのコピーを最優先する。
+    if(hasNativeClipboardSelection(e.target)||hasNativeClipboardSelection(document.activeElement))return;
     const info=selectedGridInfo(document.activeElement);if(!info)return;
-    const range=selectedRange(info);
-    const isGridRange=range.rows>1||range.cols>1;
-    if(!isGridRange&&hasNativeTextSelection(info.control))return;
+    if(hasNativeClipboardSelection(info.control)||hasNativeTextSelection(info.control))return;
     const text=copySelection(info,false);
     if(!e.clipboardData)return;
     e.clipboardData.setData('text/plain',text);
@@ -10529,10 +10606,9 @@ document.addEventListener('DOMContentLoaded',function(){
   },true);
 
   document.addEventListener('cut',e=>{
+    if(hasNativeClipboardSelection(e.target)||hasNativeClipboardSelection(document.activeElement))return;
     const info=selectedGridInfo(document.activeElement);if(!info)return;
-    const range=selectedRange(info);
-    const isGridRange=range.rows>1||range.cols>1;
-    if(!isGridRange&&hasNativeTextSelection(info.control))return;
+    if(hasNativeClipboardSelection(info.control)||hasNativeTextSelection(info.control))return;
     const text=copySelection(info,false);
     if(!e.clipboardData)return;
     e.clipboardData.setData('text/plain',text);
@@ -10545,6 +10621,7 @@ document.addEventListener('DOMContentLoaded',function(){
     const text=e.clipboardData?.getData('text/plain');
     if(text===undefined)return;
     const ctTarget=e.target.closest?.('#ctPrintArea input[data-ctid]');
+    if(ctTarget&&hasNativeClipboardSelection(ctTarget)&&!/[\t\r\n]/.test(text))return;
     if(ctTarget&&pasteCostTable(ctTarget,text)){
       e.preventDefault();e.stopImmediatePropagation();return;
     }
