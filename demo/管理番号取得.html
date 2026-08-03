@@ -16,6 +16,12 @@
     button{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}.primary{width:100%;background:var(--blue);color:#fff;margin-top:17px;font-size:16px}.secondary{background:#edf2fc;color:var(--navy);font-size:13px}.danger{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45);padding:7px 10px;font-size:12px}
     .notice{font-size:13px;line-height:1.6;background:#eef5ff;border-left:4px solid var(--blue);padding:10px 12px;border-radius:5px}.result{display:none;border:2px solid #2f8e59;background:#f1fff6;border-radius:12px;padding:16px;text-align:center;margin-bottom:15px}.result .number{font-size:30px;font-weight:800;color:#157143;letter-spacing:1px}.result p{margin:6px 0 0;font-size:13px}.hidden{display:none!important}.status{font-size:13px;color:var(--muted);padding:8px 0}.error{color:#bd2532}.list{padding:0;overflow:hidden}.list-item{padding:13px 15px;border-bottom:1px solid var(--line)}.list-item:last-child{border-bottom:0}.num{font-weight:800;color:var(--navy);font-size:16px}.meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}.login{max-width:440px;margin:42px auto}.user{font-size:12px;opacity:.9;text-align:right;line-height:1.9}.user a{color:#fff;margin-right:10px;font-weight:700;text-decoration:none;white-space:nowrap}.login-links{text-align:center;margin-top:12px;font-size:12px}.login-links a{color:var(--blue);font-weight:800;text-decoration:none}.login-links a:hover{text-decoration:underline}@media(max-width:560px){header{padding:14px 16px}.wrap{padding:14px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:15px}.result .number{font-size:28px}.user a{display:none}}
   </style>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="../site.webmanifest">
+<meta name="theme-color" content="#006699">
 </head>
 <body>
   <header><div><h1>サンプル装美　管理番号取得</h1><div class="sub">同時取得でも番号は重複しません</div></div><div id="loginUser" class="user hidden"><a href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト.html">一覧メニュー</a><a href="ユーザー設定.html">ユーザー設定</a><span id="adminLinks"></span><br><span id="userEmail"></span> <button class="danger" onclick="signOut()">ログアウト</button></div></header>
