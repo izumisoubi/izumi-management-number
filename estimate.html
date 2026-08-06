@@ -173,6 +173,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .memo-wrap textarea:focus{border-color:var(--ta);}
 .doc-memo{font-size:10px;color:#444;border:1px solid #ccc;padding:5px 8px;margin-top:6px;line-height:1.8;white-space:pre-wrap;}
 .doc-memo-ttl{font-size:10px;font-weight:700;color:#333;margin-top:8px;}
+.estimate-memo-block{break-inside:avoid;page-break-inside:avoid;}
+.estimate-memo-page-title{text-align:center;font-size:14px;letter-spacing:5px;font-weight:700;padding-bottom:6px;border-bottom:1.5px solid #000;margin-bottom:8px;}
+.estimate-page-number{text-align:right;font-size:10px;color:#999;margin-top:4px;}
 /* Tables */
 .sync-tbl{width:100%;border-collapse:collapse;}
 .ptbl{table-layout:auto;width:100%;}
@@ -459,7 +462,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   }
   #estPages .a4{page-break-after:auto;break-after:auto;}
   #estPages .a4 + .a4{page-break-before:always;break-before:page;}
-  /* メモ欄・doc-notesが余白を作らないよう */
+  /* メモ欄は途中で分断せず、収まらない場合はJSで次ページへ送る */
+  .estimate-memo-block,#e-memo-area,.doc-notes{page-break-inside:avoid!important;break-inside:avoid-page!important;}
   #e-memo-area{min-height:0!important;}
   .doc-notes{min-height:0!important;}
   #a4inv{min-height:auto!important;page-break-after:auto!important;}
@@ -1021,7 +1025,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       </div>
       <div class="memo-wrap">
         <label>📝 メモ（入力があれば見積書下部に表示）</label>
-        <textarea id="estMemo" placeholder="例：別途仮設費は含みません。材料費変動の場合は再見積します。" oninput="renderMemo()" style="min-height:110px"></textarea>
+        <textarea id="estMemo" placeholder="例：別途仮設費は含みません。材料費変動の場合は再見積します。" oninput="renderMemo();scheduleEstimateMemoRepagination()" style="min-height:110px"></textarea>
       </div>
     </div>
   </div>
@@ -2748,6 +2752,7 @@ function renderPrint(){
   const rate=getRate();
   const estimateLayout=getEstimateLayout();
   const detailedEstimate=estimateLayout==='landscape';
+  const estimateMemoText=document.getElementById('estMemo')?.value||'';
   const sub=totSell(),tax=Math.round(sub*.1),tot=sub+tax;
   const container=document.getElementById('estPages');
   if(!container)return;
@@ -2812,6 +2817,13 @@ function renderPrint(){
   const FOOT_MID_MM=6;
   // 1行の高さ(mm) ≒ 22px ÷ 3.7795
   const ROW_H_MM=(detailedEstimate?22:24)/MM;
+  // メモ欄は合計行の後ろに付くため、入力行数と折返し量を最終ページの
+  // 必要容量へ含める。ここを無視すると、印刷時だけメモの途中で切れる。
+  const memoCharsPerLine=detailedEstimate?110:70;
+  const memoVisualLines=estimateMemoText.trim()
+    ?estimateMemoText.split(/\r?\n/).reduce((sum,line)=>sum+Math.max(1,Math.ceil(textUnits(line)/memoCharsPerLine)),0)
+    :0;
+  const MEMO_TAIL_MM=memoVisualLines?Math.max(16,8+memoVisualLines*4.8)+12:0;
 
   // ページごとの最大行数（上でmaxRowsForPageとして定義済み）
 
@@ -2819,7 +2831,8 @@ function renderPrint(){
   function maxRowsForPage(isFirstPage,isLastPage){
     const headerMM=isFirstPage?PAGE1_HEADER_MM:PAGE_REST_HEADER_MM;
     const footMM=isLastPage?FOOT_LAST_MM:FOOT_MID_MM;
-    return Math.floor((EST_PAGE_H_MM-headerMM-footMM)/ROW_H_MM);
+    const memoMM=isLastPage?MEMO_TAIL_MM:0;
+    return Math.max(0,Math.floor((EST_PAGE_H_MM-headerMM-footMM-memoMM)/ROW_H_MM));
   }
 
   function splitRows(rows){
@@ -2839,6 +2852,10 @@ function renderPrint(){
         s+=rs;cut=i+1;
       }
       if(cut===0)cut=1;
+      // 明細は中間ページに収まっても、合計＋メモを含む最終ページには
+      // 収まらない場合がある。最低1行を次ページへ残し、メモのための
+      // 最終ページを確実に作る。
+      if(!isLast&&cut>=rem.length&&rem.length>1)cut=rem.length-1;
       chunks.push(rem.splice(0,cut));
       pi++;
     }
@@ -2993,12 +3010,16 @@ function renderPrint(){
     page.appendChild(tbl);
 
     if(isLastPage){
-      // メモ欄をA4枠内・合計行の直下に表示（枠付き・テキスト直接表示）
+      // 合計後のメモと注意書きを一つのブロックにまとめ、印刷途中で
+      // 分断されないようにする。
+      const memoBlock=document.createElement('div');
+      memoBlock.className='estimate-memo-block';
       const memoWrap=document.createElement('div');
       memoWrap.style.cssText='margin-top:8px;border:1px solid #ccc;padding:6px 8px;min-height:32px;font-size:10px;color:#444;line-height:1.8;white-space:pre-wrap;';
       memoWrap.id='e-memo-area';
-      page.appendChild(memoWrap);
-      const nd=document.createElement('div');nd.className='doc-notes';nd.id='e-notes';page.appendChild(nd);
+      memoBlock.appendChild(memoWrap);
+      const nd=document.createElement('div');nd.className='doc-notes';nd.id='e-notes';memoBlock.appendChild(nd);
+      page.appendChild(memoBlock);
       const padd=document.createElement('div');
       padd.className='p-add';
       padd.innerHTML=`<button class="pabtn" onclick="addRow('item')">＋ 明細行</button><button class="pabtn" onclick="addRow('discount')">－ 値引行</button>`;
@@ -3006,7 +3027,7 @@ function renderPrint(){
     }
     if(totalPages>1){
       const pno=document.createElement('div');
-      pno.style.cssText='text-align:right;font-size:10px;color:#999;margin-top:4px;';
+      pno.className='estimate-page-number';
       pno.textContent=`${pi+1} / ${totalPages}`;
       page.appendChild(pno);
     }
@@ -3016,7 +3037,39 @@ function renderPrint(){
   _updatePageHeaders();
   initColResize();
   renderMemo();
-  requestAnimationFrame(()=>{applyEstLayout();fitEstimatePreviewText(container);});
+  requestAnimationFrame(()=>{
+    applyEstLayout();
+    fitEstimatePreviewText(container);
+    moveEstimateMemoToNextPageIfNeeded(container);
+  });
+}
+
+function moveEstimateMemoToNextPageIfNeeded(container=document.getElementById('estPages')){
+  const memoText=document.getElementById('estMemo')?.value||'';
+  if(!container||!memoText.trim())return;
+  const pages=[...container.querySelectorAll(':scope > .a4')];
+  const lastPage=pages[pages.length-1];
+  const memoBlock=lastPage?.querySelector('.estimate-memo-block');
+  if(!lastPage||!memoBlock||!lastPage.clientHeight)return;
+  // 実際のフォント・折返しを反映した高さでも確認する。概算を超えた
+  // 場合はメモ欄全体を専用の次ページへ移す。
+  if(lastPage.scrollHeight<=lastPage.clientHeight+2)return;
+  const memoPage=document.createElement('div');
+  memoPage.className=lastPage.className;
+  memoPage.style.marginBottom=lastPage.style.marginBottom||'20px';
+  memoPage.style.paddingTop='10mm';
+  const title=document.createElement('div');
+  title.className='estimate-memo-page-title';
+  title.textContent='御見積書（メモ）';
+  memoPage.appendChild(title);
+  memoPage.appendChild(memoBlock);
+  container.appendChild(memoPage);
+  const allPages=[...container.querySelectorAll(':scope > .a4')];
+  allPages.forEach((page,index)=>{
+    let number=page.querySelector(':scope > .estimate-page-number');
+    if(!number){number=document.createElement('div');number.className='estimate-page-number';page.appendChild(number);}
+    number.textContent=`${index+1} / ${allPages.length}`;
+  });
 }
 
 // 各ページの空行を実測高さで補完
@@ -3379,6 +3432,11 @@ async function chooseSaveDirectory(){
   return dir;
 }
 
+let estimateMemoPaginationTimer=null;
+function scheduleEstimateMemoRepagination(){
+  clearTimeout(estimateMemoPaginationTimer);
+  estimateMemoPaginationTimer=setTimeout(()=>renderPrint(),80);
+}
 function renderMemo(){
   const memo=document.getElementById('estMemo')?.value||'';
   // 印刷プレビュー内のe-memo-areaを優先して更新
