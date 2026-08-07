@@ -158,8 +158,68 @@
       :{landlordRate:sourceRate,tenantRate:otherRate,landlordGross:sourceGross,tenantGross:otherGross,totalGross};
   }
 
+  // 旧台帳には元の見積明細が無く、業者別の集計原価だけが残っている。
+  // そのため「1原価行 = 1式の見積下書き」として再構成する。
+  // 過去の売上見積合計がある場合は、各行の原価比で配分し、
+  // 最終行で端数を調整して必ず合計を一致させる。
+  function reconstructImportedEstimateRows(lines,salesTotal){
+    const source=(Array.isArray(lines)?lines:[]).filter(line=>{
+      if(!line||typeof line!=='object')return false;
+      return [
+        line.item_name,line.vendor_name,line.category,line.note,
+        line.order_amount_ex_tax,line.cost_amount_ex_tax,
+        line.raw_data?.estimate_amount_ex_tax,line.raw_data?.work_name
+      ].some(value=>String(value??'').trim()!=='');
+    });
+    if(!source.length)return[];
+
+    const costs=source.map(line=>{
+      const amount=numberOrNull(line.order_amount_ex_tax)
+        ??numberOrNull(line.cost_amount_ex_tax)
+        ??numberOrNull(line.raw_data?.estimate_amount_ex_tax)
+        ??0;
+      return Math.round(amount);
+    });
+    const weights=costs.map(amount=>Math.abs(amount));
+    const totalWeight=weights.reduce((sum,amount)=>sum+amount,0);
+    const target=numberOrNull(salesTotal);
+    const roundedTarget=target===null?null:Math.round(target);
+    let allocated=0;
+
+    return source.map((line,index)=>{
+      let sellOverride='';
+      if(roundedTarget!==null){
+        const amount=index===source.length-1
+          ?roundedTarget-allocated
+          :totalWeight>0
+            ?Math.round(roundedTarget*weights[index]/totalWeight)
+            :(index===0?roundedTarget:0);
+        allocated+=amount;
+        sellOverride=amount;
+      }
+      const raw=line.raw_data&&typeof line.raw_data==='object'?line.raw_data:{};
+      return {
+        type:'item',
+        name:String(line.item_name||raw.work_name||line.category||line.vendor_name||'過去原価'),
+        spec:'',
+        qty:1,
+        unit:'式',
+        cost:costs[index],
+        orderCost:costs[index],
+        sellOverride,
+        note:String(line.note||raw.notes||''),
+        vendor:String(line.vendor_name||raw.vendor_name||''),
+        category:String(line.category||raw.category||'外注費'),
+        _legacyImport:true,
+        _legacySourceKey:String(line.source_row_key||''),
+        _legacyLineIndex:Number.isInteger(Number(line.line_index))?Number(line.line_index):null,
+        _legacyRawData:{...raw}
+      };
+    });
+  }
+
   return Object.freeze({
-    version:'1.2.0',
+    version:'1.3.0',
     normalizeNumericText,
     isIncompleteNumericText,
     isTransientNumericText,
@@ -169,6 +229,7 @@
     costAmount,
     customerUnit,
     customerAmount,
-    burdenSplitFromGross
+    burdenSplitFromGross,
+    reconstructImportedEstimateRows
   });
 });

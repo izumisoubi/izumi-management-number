@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
 <script src="年度共通.js?v=20260729-UX51"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
-<script src="見積計算共通.js?v=20260803-INPUT62"></script>
+<script src="見積計算共通.js?v=20260807-RECON63"></script>
 <script src="自社原価共通.js?v=20260803-IME61"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -5699,10 +5699,29 @@ async function loadMasterList(){
   if(!session)return;
   openMasterModal('Supabase 管理番号台帳を読み込み中…','<div style="padding:18px;color:var(--tm);text-align:center">台帳を読み込んでいます…</div>',null,null);
   hideMasterModalActions();
-  const {data,error}=await managementDb.from('management_numbers').select('*').order('management_number',{ascending:false}).limit(2000);
+  const {data,error}=await fetchAllManagementMasterItems();
   if(error){document.getElementById('masterModalBody').innerHTML='<div style="color:var(--tr);line-height:1.7">台帳を読み込めません。<br>'+esc(error.message)+'</div>';return;}
   managementMasterItems=data||[];
   renderManagementMasterList();
+}
+
+// Supabaseの1回あたりの取得上限を越える過去案件も、
+// 1,000件ずつ読み込んで「管理番号の取込」の検索対象にする。
+async function fetchAllManagementMasterItems(){
+  const collected=[];
+  const batchSize=1000;
+  const safetyLimit=20000;
+  for(let from=0;from<safetyLimit;from+=batchSize){
+    const {data,error}=await managementDb.from('management_numbers')
+      .select('*').is('deleted_at',null)
+      .order('management_number',{ascending:false})
+      .range(from,from+batchSize-1);
+    if(error)return {data:collected,error};
+    const batch=data||[];
+    collected.push(...batch);
+    if(batch.length<batchSize)return {data:collected,error:null};
+  }
+  return {data:collected,error:new Error('管理番号が20,000件を超えたため、安全上限で読み込みを停止しました。')};
 }
 
 function openManagementLogin(){
@@ -5768,6 +5787,45 @@ function filterMasterList(){
   target.innerHTML=filtered.length?filtered.map(({item,index})=>`<div onclick="pickManagementMasterItem(${index})" style="padding:10px 12px;border-bottom:1px solid var(--tbr);cursor:pointer;border-radius:4px" onmouseover="this.style.background='var(--ti)'" onmouseout="this.style.background=''"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:12px;font-weight:800;color:var(--ta)">${esc(item.management_number||'')}</span><span style="font-size:10px;color:var(--tm)">受付日：${esc(formatManagementDateWithEra(item.reception_date))}　完工日：${esc(formatManagementDateWithEra(item.completed_on))}</span></div><div style="font-size:12px;font-weight:700;color:var(--tt);margin-top:2px">${esc(item.property_name||'（物件名未入力）')} ${esc(item.room_number||'')}</div><div style="font-size:10px;color:var(--tm);margin-top:2px">担当：${esc(item.staff_name||'')}　工事：${esc(item.work_name||'')}<br>得意先：${esc(item.customer_name||item.client_name||'')}　${esc(item.customer_contact_name||'')}</div></div>`).join(''):'<div style="padding:18px;color:var(--tm);text-align:center">該当する管理番号はありません。</div>';
 }
 
+async function loadImportedCostLinesForEstimate(managementNumber){
+  if(!managementDb||!managementNumber)return[];
+  const {data,error}=await managementDb.from('project_line_items')
+    .select('line_index,source_row_key,item_name,vendor_name,category,order_amount_ex_tax,cost_amount_ex_tax,note,raw_data')
+    .eq('management_number',managementNumber)
+    .eq('document_type','order')
+    .is('deleted_at',null)
+    .order('line_index',{ascending:true});
+  if(error){showToastMsg('過去原価の読み込みに失敗しました：'+error.message);return[];}
+  // 現行の見積・発注明細は対象外。Excel「原価」シート由来だけを復元する。
+  return (data||[]).filter(line=>{
+    const raw=line.raw_data&&typeof line.raw_data==='object'?line.raw_data:{};
+    return raw.sheet_name==='原価'||String(line.source_row_key||'').includes('原価');
+  });
+}
+
+async function reconstructEstimateFromImportedCosts(item){
+  const importedLines=await loadImportedCostLinesForEstimate(item?.management_number);
+  if(!importedLines.length)return 0;
+  const historicalSales=item.sales_estimate_ex_tax
+    ??item.invoice_subtotal_ex_tax
+    ??item.sales_invoice_ex_tax
+    ??'';
+  const reconstructed=window.IzumiEstimateMath.reconstructImportedEstimateRows(importedLines,historicalSales);
+  if(!reconstructed.length)return 0;
+
+  rows=[];rowId=0;
+  reconstructed.forEach(source=>{
+    const row=createEstimateRow('item');
+    Object.assign(row,source,{id:row.id});
+    rows.push(row);
+  });
+  while(rows.length<12)rows.push(createEstimateRow('item'));
+  ordRows=[];ordRowId=0;
+  renderAll();
+  syncOrdFromEst({silent:true});
+  return reconstructed.length;
+}
+
 async function pickManagementMasterItem(index){
   const item=managementMasterItems[index];if(!item)return;
   // 台帳の「見積を開く」と同じ正本読込を必ず先に通す。
@@ -5804,11 +5862,14 @@ async function pickManagementMasterItem(index){
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
   const staff=document.getElementById('b-staff');if(staff&&item.staff_name){let option=[...staff.options].find(o=>o.value===item.staff_name||o.textContent===item.staff_name);if(!option){option=new Option(item.staff_name,item.staff_name);staff.add(option);}staff.value=item.staff_name;}
   const mappedStatus=item.status==='受付'?'見積中':item.status||'見積中';const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mappedStatus);if(!option){option=new Option(mappedStatus,mappedStatus);status.add(option);}status.value=mappedStatus;}
+  const reconstructedCount=await reconstructEstimateFromImportedCosts(item);
   syncKeijoSelect();syncCompletedDate('basic');
   syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);
   // 固定操作は不要。新規案件も、選択直後に正本へ保存して台帳へ自動反映する。
   scheduleOnlineAutosave(250);
-  showToastMsg('Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
+  showToastMsg(reconstructedCount
+    ?`過去原価${reconstructedCount}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
+    :'Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
 }
 
 // ===== Supabase 案件本体のオンライン保存・読込 =====
@@ -6160,7 +6221,22 @@ function onlineMeaningfulOrderRows(){
 }
 
 function onlineOrderLines(){
-  return onlineMeaningfulOrderRows().map((row,index)=>{
+  const meaningfulRows=onlineMeaningfulOrderRows();
+  const reservedIndexes=new Set(meaningfulRows
+    .map(row=>Number(row._legacyLineIndex))
+    .filter(index=>Number.isInteger(index)&&index>=0));
+  const usedIndexes=new Set();
+  let nextAvailableIndex=0;
+  return meaningfulRows.map(row=>{
+    const legacyIndex=Number(row._legacyLineIndex);
+    let lineIndex;
+    if(Number.isInteger(legacyIndex)&&legacyIndex>=0&&!usedIndexes.has(legacyIndex)){
+      lineIndex=legacyIndex;
+    }else{
+      while(reservedIndexes.has(nextAvailableIndex)||usedIndexes.has(nextAvailableIndex))nextAvailableIndex++;
+      lineIndex=nextAvailableIndex++;
+    }
+    usedIndexes.add(lineIndex);
     const quantity=numberValue(row.qty);
     const orderUnit=numberValue(row.orderCost!==''&&row.orderCost!==undefined?row.orderCost:row.cost);
     const orderAmount=Math.round(quantity*orderUnit);
@@ -6168,8 +6244,8 @@ function onlineOrderLines(){
     const supplierPaid=Boolean(row.supplierPaid||row.supplier_paid);
     const supplierInvoiceDate=row.supplierInvoiceDate||row.supplier_invoice_date||'';
     return {
-      line_index:index,
-      source_row_key:String(row._eid||row.id||index),
+      line_index:lineIndex,
+      source_row_key:String(row._legacySourceKey||row._eid||row.id||lineIndex),
       row_type:row.type||'item',
       item_name:row.name||'',
       quantity:quantity||'',
@@ -6190,7 +6266,12 @@ function onlineOrderLines(){
       supplier_paid:supplierPaid,
       reminder_required:Boolean(row.reminderRequired||row.reminder_required),
       note:row.note||'',
-      raw_data:row
+      raw_data:row._legacyRawData
+        ?{...row._legacyRawData,reconstructed_estimate:true,reconstructed_estimate_row:{
+          name:row.name||'',quantity:quantity||'',unit:row.unit||'',cost_unit_ex_tax:numberValue(row.cost)||'',
+          order_unit_ex_tax:orderUnit||'',order_amount_ex_tax:orderAmount||'',vendor_name:row.vendor||''
+        }}
+        :row
     };
   });
 }
@@ -6546,7 +6627,7 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
     showToastMsg('管理番号 '+managementNumber+' の見積はまだ保存されていません。台帳情報だけを取り込みます。');
     await loadMasterList();
     const index=managementMasterItems.findIndex(item=>item.management_number===managementNumber);
-    if(index>=0)pickManagementMasterItem(index);
+    if(index>=0)await pickManagementMasterItem(index);
     return false;
   }
   loadAllFromText(JSON.stringify(data.payload));
@@ -7702,7 +7783,7 @@ function setOrderCostManualFlag(row,value=row?.orderCost){
   if(!row)return;
   row._orderCostManual=value!==''&&value!==null&&value!==undefined;
 }
-function syncOrdFromEst(){
+function syncOrdFromEst({silent=false}={}){
   pushOrdUndo();
   const next=[];
   // 見積書の全行（空白行含む）を発注書に反映
@@ -7717,7 +7798,10 @@ function syncOrdFromEst(){
     next.push({id:ex?ex.id:++ordRowId,_eid:r.id,type:r.type,
       name:r.name||'',spec:r.spec||'',qty:r.qty||'',unit:r.unit||'',
       orderCost:oc, note:r.note||'', vendor:ex?ex.vendor:(r.vendor||''),
-      _orderCostManual:manualOrderCost,_estimateCost:estimateCost});
+      _orderCostManual:manualOrderCost,_estimateCost:estimateCost,
+      _legacySourceKey:r._legacySourceKey||ex?._legacySourceKey||'',
+      _legacyLineIndex:r._legacyLineIndex??ex?._legacyLineIndex??null,
+      _legacyRawData:r._legacyRawData||ex?._legacyRawData||null});
   });
   // 不足分10行補完
   while(next.length<10) next.push({id:++ordRowId,type:'item',name:'',spec:'',qty:'',unit:'',orderCost:'',note:'',vendor:'',_orderCostManual:false});
@@ -7747,7 +7831,7 @@ function syncOrdFromEst(){
     renderOrdLeft();
   }, 50);
   renderOrdLeft();
-  showToastMsg('取り込みました');
+  if(!silent)showToastMsg('取り込みました');
 }
 
 // renderCostと同じ差分更新方式

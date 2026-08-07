@@ -43,7 +43,11 @@ const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
 const fiscalYearOptions=['',...(fiscalYearCore?.options({minimumCode:22,futureYears:3})||[]).map(item=>item.label)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
-let currentPage=1,pageSize=200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+// 原価一覧は年度内の全件を一続きで確認する業務画面なので、ページ分割しない。
+// 検索・集計・CSVも同じ全件を対象にする。他の台帳は従来どおり200件単位。
+let currentPage=1,pageSize=config.viewKey==='cost'?0:200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+const continuousBatchSize=200;
+let continuousRenderedCount=continuousBatchSize,continuousScrollFrame=0;
 let loadedLedgerYear='';
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
 let quickHintTimer=null;
@@ -342,6 +346,21 @@ function initAdvancedControls(){
   $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
   $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
   $('lastPage').addEventListener('click',()=>setPage(totalPages()));
+  const tableWrap=document.querySelector('.table-wrap');
+  if(pageSize<=0&&tableWrap&&!tableWrap.dataset.continuousRowsBound){
+    tableWrap.dataset.continuousRowsBound='1';
+    tableWrap.addEventListener('scroll',()=>{
+      if(continuousScrollFrame)return;
+      continuousScrollFrame=requestAnimationFrame(()=>{
+        continuousScrollFrame=0;
+        const remaining=tableWrap.scrollHeight-tableWrap.scrollTop-tableWrap.clientHeight;
+        if(remaining>Math.max(500,tableWrap.clientHeight*.6)||continuousRenderedCount>=viewRows.length)return;
+        continuousRenderedCount=Math.min(viewRows.length,continuousRenderedCount+continuousBatchSize);
+        renderTable();
+        updateResultStatus();
+      });
+    },{passive:true});
+  }
   $('staffFilter').addEventListener('change',()=>applyView(true));
   $('quickFilter').addEventListener('change',()=>applyView(true));
   if($('meetingMonthFilter')){
@@ -380,7 +399,7 @@ function totalPages(){
   return Math.max(1,Math.ceil(viewRows.length/pageSize));
 }
 function pageRows(){
-  if(pageSize<=0)return viewRows;
+  if(pageSize<=0)return viewRows.slice(0,continuousRenderedCount);
   const start=(currentPage-1)*pageSize;
   return viewRows.slice(start,start+pageSize);
 }
@@ -415,6 +434,11 @@ function updatePager(){
   $('lastPage').disabled=currentPage>=pages;
 }
 function updateResultStatus(){
+  if(pageSize<=0){
+    const rendered=Math.min(continuousRenderedCount,viewRows.length);
+    setStatus(`全${viewRows.length.toLocaleString()}件を連続表示（現在${rendered.toLocaleString()}件を描画 / 下へスクロールで続き）`);
+    return;
+  }
   const start=viewRows.length?(pageSize<=0?1:(currentPage-1)*pageSize+1):0;
   const end=pageSize<=0?viewRows.length:Math.min(currentPage*pageSize,viewRows.length);
   setStatus(`${start}〜${end}件を表示 / 絞り込み${viewRows.length.toLocaleString()}件 / 全${allRows.length.toLocaleString()}件`);
@@ -803,10 +827,14 @@ function currentFiscalCode(){
 function populateYearFilter(){
   const select=$('yearFilter');
   const previous=loadedLedgerYear||select.value;
-  const years=fiscalYearCore
-    ?fiscalYearCore.options({minimumCode:22,futureYears:3}).map(item=>item.code)
-    :Array.from({length:Math.max(1,Number(currentFiscalCode())-21)},(_,index)=>String(Number(currentFiscalCode())-index).padStart(2,'0'));
-  select.innerHTML='<option value="">すべて</option>'+years.map(year=>`<option value="${esc(year)}">20${esc(year)}年度</option>`).join('');
+  const yearItems=fiscalYearCore
+    ?fiscalYearCore.options({minimumCode:22,futureYears:3})
+    :Array.from({length:Math.max(1,Number(currentFiscalCode())-21)},(_,index)=>{
+      const code=String(Number(currentFiscalCode())-index).padStart(2,'0');
+      return {code,label:`${1999+Number(code)}年度`};
+    });
+  const years=yearItems.map(item=>item.code);
+  select.innerHTML='<option value="">すべて</option>'+yearItems.map(item=>`<option value="${esc(item.code)}">${esc(item.label)}</option>`).join('');
   const preferred=previous||currentFiscalCode();
   if(years.includes(preferred))select.value=preferred;
 }
@@ -836,6 +864,7 @@ function applyView(resetPage=false){
     return yearMatch&&staffMatch&&meetingMonthMatch&&(!keyword||text.includes(keyword))&&matchesQuickFilter(merged.values);
   });
   viewRows.sort(compareRows);
+  if(pageSize<=0)continuousRenderedCount=Math.min(continuousBatchSize,viewRows.length);
   if(resetPage)currentPage=1;
   currentPage=Math.max(1,Math.min(totalPages(),currentPage));
   renderTable();

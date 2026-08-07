@@ -24,11 +24,12 @@
   }
   function labelForCode(code){
     const number=Number(String(code||'').replace(/\D/g,''));
-    return Number.isFinite(number)&&number>0?`${2000+(number%100)}年度`:'';
+    return Number.isFinite(number)&&number>0?`${1999+(number%100)}年度`:'';
   }
   function accountingYearForDate(value){
-    const year=fiscalEndYearForDate(value);
-    return year?`${year}年度`:'';
+    const parts=dateParts(value);
+    if(!parts)return'';
+    return `${parts.month>=START_MONTH?parts.year:parts.year-1}年度`;
   }
   function options({today=new Date(),minimumCode=22,pastYears=6,futureYears=3,includeCodes=[]}={}){
     const current=Number(codeForDate(today));
