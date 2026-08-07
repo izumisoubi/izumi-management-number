@@ -440,7 +440,7 @@ function accountingYearForDate(value){
   const match=String(value||'').match(/^(\d{4})[-/](\d{1,2})/);
   if(!match)return'';
   const year=Number(match[1]),month=Number(match[2]);
-  return `${month>=9?year+1:year}年度`;
+  return `${month>=9?year:year-1}年度`;
 }
 function projectAccountingYear(project){
   return project.accounting_year||accountingYearForDate(
