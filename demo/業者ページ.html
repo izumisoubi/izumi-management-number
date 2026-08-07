@@ -63,5 +63,6 @@ function showDispute(){$('disputeBox').classList.remove('hidden');$('disputeReas
 async function sendDispute(){const reason=$('disputeReason').value.trim(),amountText=String($('disputeAmount').value).replace(/[,，¥￥\s]/g,''),amount=Number(amountText);if(!reason||amountText===''||!Number.isFinite(amount))return $('actionStatus').textContent='正しいと考える税込支払額と相違内容を入力してください。';if(submitting)return;submitting=true;$('actionStatus').textContent='相違内容を記録中…';const result=await db.functions.invoke('notice-action',{body:{action:'dispute',token,reason,amount}});if(result.error||result.data?.error){submitting=false;$('actionStatus').textContent=result.data?.error||result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='相違内容を受け付けました。サンプル装美の担当者からご連絡します。'}
 loadNotice();
 </script>
+<script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

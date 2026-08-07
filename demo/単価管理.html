@@ -265,5 +265,6 @@ async function signIn(){$('loginStatus').textContent='確認中…';const result
 async function signOut(){await db.auth.signOut();location.reload()}
 loadLocal();db.auth.getSession().then(({data})=>sessionReady(data.session));
 </script>
+<script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

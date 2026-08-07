@@ -2,7 +2,7 @@
 import {existsSync,readFileSync,writeFileSync,rmSync,readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 
-const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
+const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','本日日付共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/本日日付共通.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/本日日付共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
 const failures=[];
 const expect=(condition,message)=>{if(!condition)failures.push(message)};
 const read=file=>readFileSync(file,'utf8');
@@ -25,6 +25,11 @@ if(!failures.length){
   const demoEstimateHtml=read('demo/estimate/index.html');
   const demoEstimateStandalone=read('demo/estimate/standalone.js');
   const demoEstimateIntegration=read('demo/estimate/demo-integration.js');
+  const rootHtmlFiles=readdirSync('.').filter(file=>file.endsWith('.html'));
+  rootHtmlFiles.forEach(file=>expect(read(file).includes('本日日付共通.js?v=20260808-TODAY1'),`${file} が本日の日付表示を読み込んでいません`));
+  const todayDisplay=read('本日日付共通.js');
+  ['todayDateDisplay','本日　','weekdays','scheduleNextDay','today-date-full','today-date-short','@media print'].forEach(text=>expect(todayDisplay.includes(text),`本日の日付表示の契約が見つかりません: ${text}`));
+  expect(demoEstimateHtml.includes('本日日付共通.js?v=20260808-TODAY1'),`デモ見積が本日の日付表示を読み込んでいません`);
   const requiredEstimateContracts=['is_current_app_user_enabled','is_management_admin','save_project_bundle','onlineProjectSummary','grossProfit','async function loadOnlineProjectByNumber(managementNumber','const restored=await loadOnlineProjectByNumber(item.management_number,{silentWhenMissing:true,showToast:false});','scheduleOnlineAutosave(250)'];
   const requiredLedgerContracts=['save_cost_ledger_row','save_billing_ledger_row','values.variance_ex_tax=numberValue(values.invoice_amount_ex_tax)-numberValue(values.estimate_amount_ex_tax)'];
   const requiredGridContracts=['normalizeRange','parseTsv','matrixToTsv','planPaste','movePoint','rangeMatrix'];

@@ -23,4 +23,5 @@ async function changePassword(){const password=$('password').value;if(password.l
 async function sendReset(){const {error}=await db.auth.resetPasswordForEmail(currentUser.email,{redirectTo:new URL('auth.html?mode=recovery',location.href).href});if(error)return status('passwordStatus',error.message,true);status('passwordStatus','再設定メールを送りました。')}
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
 init();
-</script><script src="common-nav.js?v=20260801-MOBILE4"></script></body></html>
+</script><script src="common-nav.js?v=20260801-MOBILE4"></script><script src="本日日付共通.js?v=20260808-TODAY1"></script>
+</body></html>

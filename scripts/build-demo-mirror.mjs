@@ -15,7 +15,7 @@ for(const file of sources){
 // 単体見積デモも、本番と同じ表計算・自社原価ロジックを使う。
 // ここを別コピーのままにすると、本番で直したIME・全角数字・数式対応が
 // 販売デモだけ古い挙動へ戻るため、生成のたびに共通ファイルを同期する。
-for(const file of ['表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js']){
+for(const file of ['表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','本日日付共通.js']){
   copyFileSync(join(root,file),join(demo,'estimate',file));
 }
 copyFileSync(join(root,'index.html'),join(demo,'管理番号取得.html'));
@@ -73,7 +73,7 @@ for(const file of ['index.html','standalone.js','demo-integration.js']){
   writeFileSync(path,sanitizeIdentity(readFileSync(path,'utf8')));
 }
 
-const redirect=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>見積システムを開いています</title><link rel="icon" href="../favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png"><meta name="theme-color" content="#006699"></head><body><script>
+const redirect=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>見積システムを開いています</title><link rel="icon" href="../favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png"><meta name="theme-color" content="#006699"></head><body><script src="本日日付共通.js?v=20260808-TODAY1"></script><script>
 const source=new URL(location.href);const target=new URL('estimate/',location.href);source.searchParams.forEach((value,key)=>target.searchParams.set(key==='management_number'?'managementNo':key,value));location.replace(target.href+source.hash);
 </script></body></html>`;
 writeFileSync(join(demo,'estimate.html'),redirect);
