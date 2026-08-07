@@ -631,6 +631,15 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 </head>
 <body class="t-light">
 
+<!-- 単位は候補から選べるだけでなく、現場固有の呼称も直接入力できます。 -->
+<datalist id="estimateUnitOptions">
+  <option value="式"></option><option value="人工"></option><option value="㎡"></option>
+  <option value="m"></option><option value="個"></option><option value="台"></option>
+  <option value="箇所"></option><option value="本"></option><option value="枚"></option>
+  <option value="ケ"></option><option value="セット"></option><option value="㎏"></option>
+  <option value="L"></option><option value="基"></option><option value="㎝"></option>
+</datalist>
+
 <div class="tabbar">
   <div class="brand"><div class="brand-ico">📋</div><span class="brand-nm">見積/発注/原価/管理請求システム</span></div>
   <div class="tab" onclick="showTab('basic',this)">基本情報</div>
@@ -1683,7 +1692,8 @@ function showStorageHelp(){
       <div class="storage-help-intro"><b>管理番号がある案件は自動保存されます。</b><br>入力が止まってから短時間後にクラウドへ保存され、各台帳にも自動反映されます。</div>
       <div class="storage-help-card recommended"><strong>💾 今すぐ保存</strong><span>通常は押す必要はありません。直ちに保存したい場合に使用します。別端末の更新と重なった場合も、現在操作している画面を最新として保存します。⌘/Ctrl＋Sでも実行できます。</span></div>
       <div class="storage-help-card"><strong>📂 保存済み案件を開く</strong><span>クラウドにある案件一覧から選んで開きます。台帳の管理番号をクリックして開くこともできます。</span></div>
-      <div class="storage-help-card"><strong>📦 PCへバックアップ</strong><span>障害・復旧に備え、現在の案件をJSONファイルとしてPCへ保存します。通常の共有作業では毎回行う必要はありません。</span></div>
+      <div class="storage-help-card"><strong>📦 PCへバックアップ</strong><span>障害・復旧に備え、現在の案件をJSONファイルとしてPCへ保存します。対応ブラウザでは保存のたびに保存先を選べます。Safariは「設定 ＞ 一般 ＞ ファイルのダウンロード先」を「ダウンロードごとに確認」にすると、毎回保存先を選べます。</span></div>
+      <div class="storage-help-card"><strong>🖨 PDF保存</strong><span>各帳票の「印刷 / PDF保存」から、印刷画面で「PDFとして保存」を選びます。ファイル名と保存先は、その保存画面で変更できます。</span></div>
       <div class="storage-help-card"><strong>🗂 PCバックアップを読込</strong><span>以前PCへ保存したJSONを開きます。管理番号がある場合は、読込後に編集すると自動保存されます。内容確認だけなら編集せず閉じてください。</span></div>
       <div class="storage-help-note"><b>ネットが切れている場合：</b>自動保存と管理番号取得は利用できません。「PCへバックアップ」で退避し、通信復旧後に読み込んで「今すぐ保存」を実行してください。</div>
     </div>`;
@@ -2689,7 +2699,7 @@ function renderCost(){
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'estimate',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
-          <td><select data-f="unit" onchange="sf(${r.id},'unit',this.value)">${uopts('')}</select></td>
+          <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="sf(${r.id},'unit',this.value)" autocomplete="off"></td>
           <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
@@ -2721,11 +2731,8 @@ function renderCost(){
           else i.value=v;
         }
       });
-      const sel=tr.querySelector('[data-f=unit]');if(sel&&document.activeElement!==sel){
-        const unit=String(r.unit||'');
-        if(unit&&![...sel.options].some(option=>option.value===unit))sel.add(new Option(unit,unit));
-        sel.value=unit;
-      }
+      const unitInput=tr.querySelector('[data-f=unit]');
+      if(unitInput&&document.activeElement!==unitInput)unitInput.value=String(r.unit||'');
       const soInp=tr.querySelector('[data-f=sellOverride]');
       if(soInp&&document.activeElement!==soInp){
         const soVal=r.sellOverride!==undefined&&r.sellOverride!==''?fmtNum(r.sellOverride):'';
@@ -3390,6 +3397,16 @@ function getProjectFileBaseName(){
   const projectName=[workName,managementNo].filter(Boolean).join(' ')||'工事名称未入力';
   return `【${getActiveSaveDocumentLabel()}】${projectName}`.slice(0,120);
 }
+function normalizeDocumentLabel(value){
+  return String(value||'').replace(/[\s　]/g,'').replace(/^御/,'').replace(/^売上/,'');
+}
+function getDocumentFileTitle(label){
+  const base=getProjectFileBaseName();
+  const bracketLabel=base.match(/^【([^】]+)】/)?.[1]||'';
+  return normalizeDocumentLabel(label)===normalizeDocumentLabel(bracketLabel)
+    ?base
+    :[sanitizeFileNamePart(label),base].filter(Boolean).join(' ');
+}
 function openSaveDirectoryDb(){
   return new Promise((resolve,reject)=>{
     if(!window.indexedDB){resolve(null);return;}
@@ -3500,7 +3517,7 @@ function renderInvCtbl(){
       <td><input data-f="date" type="date" value="${dateVal}" onchange="siInvDate(${r.id},this.value)" style="width:118px;font-size:11px"></td>
       <td><input data-f="content" value="${esc(r.content)}" placeholder="内容" oninput="siInv(${r.id},'content',this.value)"></td>
       <td><input data-f="qty" type="text" inputmode="decimal" value="${r.qty?Number(r.qty).toLocaleString('ja-JP'):''}" oninput="sinInv(${r.id},'qty',this.value)" onblur="syncInvoiceFieldDisplay(${r.id},'qty',this)" style="width:58px;text-align:right"></td>
-      <td><select data-f="unit" onchange="siInv(${r.id},'unit',this.value)">${uopts(r.unit)}</select></td>
+      <td><input type="text" list="estimateUnitOptions" data-f="unit" value="${escapeHtmlAttribute(r.unit)}" placeholder="単位" oninput="siInv(${r.id},'unit',this.value)" autocomplete="off"></td>
       <td><input data-f="amount" type="text" inputmode="decimal" value="${amtDisp?Number(amtDisp).toLocaleString('ja-JP'):''}" placeholder="0" oninput="sinInv(${r.id},'amount',this.value)" onblur="syncInvoiceFieldDisplay(${r.id},'amount',this)" style="width:118px;text-align:right"></td>
       <td class="cdel" onclick="delInvRow(${r.id})">✕</td>`;
     tbody.appendChild(tr);
@@ -5538,7 +5555,7 @@ function printCostTable(){
 
   var preview=window.open('','_blank','width=820,height=1100');
   if(!preview){alert('プレビューを開けませんでした。ポップアップを許可してください。');return;}
-  preview.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>売上原価管理表　'+esc(getProjectFileBaseName())+'</title><style>'+ 
+  preview.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+esc(getDocumentFileTitle('売上原価管理表'))+'</title><style>'+
     '*{box-sizing:border-box;margin:0;padding:0;}'+
     'body{background:#e8e8e8;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:#111;}'+
     '.toolbar{background:#1A3E6E;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}'+
@@ -6989,7 +7006,7 @@ function openSelectedInvoiceTemplate(autoPrint){
   const label=INVOICE_TEMPLATE_LABELS[type]||'御請求書';
   const preview=window.open('','_blank','width=1220,height=900');
   if(!preview){alert('プレビューを開けませんでした。ポップアップを許可してください。');return;}
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><base href="${esc(location.href)}"><title>${esc(label)} ${esc(getProjectFileBaseName())}</title><style>
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><base href="${esc(location.href)}"><title>${esc(getDocumentFileTitle(label))}</title><style>
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{background:#dfe3e8;color:#111;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif}.toolbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 18px;background:#1a3e6e;color:#fff;font-family:'Hiragino Sans','Yu Gothic',sans-serif}.toolbar strong{flex:1}.toolbar button{border:0;border-radius:5px;padding:8px 18px;font-weight:700;cursor:pointer}.pages{padding:18px;display:flex;flex-direction:column;align-items:center;gap:18px}.burden-page{position:relative;width:297mm;min-height:210mm;padding:14mm 16mm 12mm;background:#fff;box-shadow:0 4px 18px #0003;page-break-after:always}.burden-page:last-child{page-break-after:auto}.top-date{text-align:right;font-size:11px}.burden-page h1{text-align:center;letter-spacing:.8em;font-size:25px;margin:2mm 0 5mm;border-bottom:2px solid #111;padding-bottom:3mm}.head-grid{display:grid;grid-template-columns:1fr 1fr;gap:18mm;min-height:44mm}.recipient-name{font-size:19px;font-weight:700;border-bottom:1px solid #222;padding-bottom:2mm;margin-bottom:2mm}.recipient,.issuer{font-size:11px;line-height:1.55}.recipient-address{min-height:11mm}.project{margin-top:3mm;font-weight:700}.issuer{text-align:right;position:relative}.issuer-name{font-size:15px;font-weight:700;position:relative;display:inline-block;margin-bottom:1mm}.company-stamp{position:absolute;width:25mm;height:25mm;object-fit:contain;right:-2mm;top:-8mm;mix-blend-mode:multiply}.employee-stamp-pair{margin-top:2mm!important}.invoice-number{margin-top:1mm}.bank{border-top:1px solid #aaa;margin-top:1mm;padding-top:1mm}.amount-box{border:2px solid #111;margin:5mm 0 3mm;padding:3mm 4mm;display:flex;align-items:center;justify-content:space-between}.amount-box small{display:block;margin-top:1mm;font-size:10px;font-weight:400}.amount-box strong{font-size:25px}.burden-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}.burden-table th,.burden-table td{border:1px solid #777;padding:2mm 1.5mm;vertical-align:middle;overflow-wrap:anywhere}.burden-table thead th{background:#f0f0f0}.burden-table th:nth-child(1){width:5%}.burden-table th:nth-child(2){width:16%}.burden-table th:nth-child(3){width:19%}.burden-table th:nth-child(4){width:15%}.burden-table th:nth-child(5){width:11%}.burden-table th:nth-child(6){width:9%}.burden-table th:nth-child(n+7){width:8.33%}.center{text-align:center}.num{text-align:right;font-variant-numeric:tabular-nums}.empty-row{text-align:center;color:#b45309;background:#fff8df;padding:8mm!important}.remarks{margin-top:4mm;font-size:10.5px}.remarks>div{border:1px solid #999;min-height:18mm;margin-top:1mm;padding:2mm}.burden-table tfoot th,.burden-table tfoot td{font-weight:700;background:#f7f7f7}
 @page{size:A4 landscape;margin:0}@media print{body{background:#fff}.toolbar{display:none}.pages{padding:0;gap:0}.burden-page{width:296mm;height:200mm;min-height:200mm;max-height:200mm;overflow:hidden;box-shadow:none;margin:0;padding:8mm 12mm 7mm;page-break-inside:avoid;break-inside:avoid-page;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body><div class="toolbar"><strong>${esc(label)}　${esc(vv('b-kanri'))}</strong><button onclick="window.print()">印刷 / PDF保存</button><button onclick="window.close()">閉じる</button></div><main class="pages">${pages}</main>${autoPrint?'<script>addEventListener("load",()=>setTimeout(()=>print(),300))<\/script>':''}</body></html>`;
@@ -7103,7 +7120,7 @@ function printDocumentPreviewWindow(){
   const printPadding=landscape?'4mm 8mm':'18mm 14mm 10mm';
   const printScale=landscape?'.90':'1';
   const pageSize=landscape?'297mm 210mm':'210mm 297mm';
-  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${docLabel}　${esc(getProjectFileBaseName())}</title>
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>${esc(getDocumentFileTitle(docLabel))}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 ${cssText}
@@ -7401,7 +7418,8 @@ function fmtNum(v){
   return n.toLocaleString('ja-JP',{maximumFractionDigits:12});
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-const UNITS=['式','㎡','m','個','台','箇所','本','枚','ケ','セット','ｍ','㎏','L'];
+function escapeHtmlAttribute(s){return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+const UNITS=['式','人工','㎡','m','個','台','箇所','本','枚','ケ','セット','ｍ','㎏','L','基','ｍ²','㎝'];
 function uopts(cur){
   const empty=`<option value=""${!cur?' selected':''}></option>`;
   return empty+UNITS.map(u=>`<option${u===cur?' selected':''}>${u}</option>`).join('');
@@ -7851,8 +7869,6 @@ function renderOrdTable(){
     let tr=tbody.querySelector(`tr[data-rid="${r.id}"]`);
     const unknownVendor=r.vendor&&!vendors.includes(r.vendor)?`<option selected>${esc(r.vendor)}</option>`:'';
     const vOpts='<option value=""></option>'+vendors.map(v=>`<option${v===r.vendor?' selected':''}>${v}</option>`).join('')+unknownVendor;
-    const uOpts=`<option value=""></option>`+['式','㎡','m','個','台','箇所','本','枚','ｍ','㎏','L','基','ｍ²','㎝'].map(u=>`<option${u===r.unit?' selected':''}>${u}</option>`).join('');
-
     if(!tr){
       tr=document.createElement('tr'); tr.dataset.rid=r.id;
       if(r.type==='section'){
@@ -7864,7 +7880,7 @@ function renderOrdTable(){
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="ordSf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'order',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="syncOrderFieldDisplay(${r.id},'qty',this)"></td>
-          <td><select data-f="unit" onchange="ordSf(${r.id},'unit',this.value)">${uOpts}</select></td>
+          <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="ordSf(${r.id},'unit',this.value)" autocomplete="off"></td>
           <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="syncOrderFieldDisplay(${r.id},'orderCost',this)"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>

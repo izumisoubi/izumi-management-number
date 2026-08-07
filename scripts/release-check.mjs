@@ -43,6 +43,10 @@ if(!failures.length){
   expect(estimate.includes('表入力共通.js')&&estimate.includes('window.IzumiGridCore'),`見積・請求・発注表が共通表入力へ接続されていません`);
   expect(estimate.includes('見積計算共通.js')&&estimate.includes('window.IzumiEstimateMath'),`見積表が共通計算へ接続されていません`);
   expect(estimate.includes('客先単価')&&estimate.includes('客先金額'),`見積表の客先向け金額表記が見つかりません`);
+  expect(estimate.includes('<option value="人工"></option>'),`単位候補に「人工」が見つかりません`);
+  expect((estimate.match(/list="estimateUnitOptions" data-f="unit"/g)||[]).length===3,`見積・発注・請求の単位自由入力欄が揃っていません`);
+  expect(estimate.includes('function getDocumentFileTitle(label)')&&estimate.includes('<title>${esc(getDocumentFileTitle(docLabel))}</title>'),`PDF保存名の帳票名重複防止が見つかりません`);
+  ['showDirectoryPicker','showSaveFilePicker','ダウンロードごとに確認','ファイル名と保存先は、その保存画面で変更できます'].forEach(text=>expect(estimate.includes(text),`PC保存先選択の案内または処理が見つかりません: ${text}`));
   expect(estimate.includes('自社人工・自社資材は原価・粗利益の計算に含まれます'),`自社原価の注意書きが見つかりません`);
   expect(estimate.includes('自社原価共通.js')&&estimate.includes('costTable:window.IzumiSelfCosts.normalize(ctData)'),`自社原価4枠が案件保存へ接続されていません`);
   expect(estimate.includes('referralFees:{')&&estimate.includes("if(d.referralFees&&typeof d.referralFees==='object'"),`紹介料1・2が案件保存・読込へ接続されていません`);
