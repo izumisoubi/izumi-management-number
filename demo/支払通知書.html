@@ -48,7 +48,7 @@
 const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
-let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false,usedPoLineIds=new Set(),usedChangeOrderIds=new Set(),noticePage=0;
+let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false,usedPoLineIds=new Set(),usedChangeOrderIds=new Set(),noticeVisibleCount=100;
 const NOTICE_PAGE_SIZE=100;
 const schemaMissing=error=>/payment_notice|purchase_orders|vendors|schema cache|does not exist|could not find/i.test(error?.message||'');
 function setStatus(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'')}
@@ -143,12 +143,11 @@ async function createDraft(){
   await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(n=>n.id===created?.id);if(index>=0)await openNotice(index);
 }
 function renderNoticeList(){
-  const pageCount=Math.max(1,Math.ceil(notices.length/NOTICE_PAGE_SIZE));noticePage=Math.min(noticePage,pageCount-1);
-  const start=noticePage*NOTICE_PAGE_SIZE,pageRows=notices.slice(start,start+NOTICE_PAGE_SIZE);
-  $('noticeList').innerHTML=pageRows.length?pageRows.map((notice,index)=>`<button class="notice-item ${activeNotice?.id===notice.id?'active':''}" onclick="openNotice(${start+index})"><b>${esc(notice.payment_notice_groups?.notice_no||'通知番号未取得')} v${notice.version}</b> <span class="state ${notice.status}">${esc(notice.status)}</span><small>${esc(notice.vendor_name_snapshot)}　${esc(notice.issue_date)}　${yen(notice.total_snapshot)}</small></button>`).join(''):'<div class="empty">支払通知書はまだありません。</div>';
-  $('noticePager').innerHTML=notices.length>NOTICE_PAGE_SIZE?`<button ${noticePage===0?'disabled':''} onclick="changeNoticePage(-1)">前へ</button><span>${noticePage+1} / ${pageCount}ページ（全${notices.length}件）</span><button ${noticePage>=pageCount-1?'disabled':''} onclick="changeNoticePage(1)">次へ</button>`:'';
+  const pageRows=notices.slice(0,noticeVisibleCount);
+  $('noticeList').innerHTML=pageRows.length?pageRows.map((notice,index)=>`<button class="notice-item ${activeNotice?.id===notice.id?'active':''}" onclick="openNotice(${index})"><b>${esc(notice.payment_notice_groups?.notice_no||'通知番号未取得')} v${notice.version}</b> <span class="state ${notice.status}">${esc(notice.status)}</span><small>${esc(notice.vendor_name_snapshot)}　${esc(notice.issue_date)}　${yen(notice.total_snapshot)}</small></button>`).join(''):'<div class="empty">支払通知書はまだありません。</div>';
+  $('noticePager').textContent=notices.length?`${Math.min(noticeVisibleCount,notices.length)}件表示 / 全${notices.length}件${noticeVisibleCount<notices.length?'（下へスクロールすると続きを表示）':''}`:'';
 }
-function changeNoticePage(delta){noticePage=Math.max(0,noticePage+delta);renderNoticeList();$('noticeList').scrollIntoView({behavior:'smooth',block:'start'})}
+$('noticeList').addEventListener('scroll',event=>{const box=event.currentTarget;if(box.scrollTop+box.clientHeight>=box.scrollHeight-120&&noticeVisibleCount<notices.length){noticeVisibleCount=Math.min(notices.length,noticeVisibleCount+NOTICE_PAGE_SIZE);renderNoticeList()}});
 async function openNotice(index){
   const summary=notices[index];if(!summary)return;setStatus('editorStatus','明細を読み込み中…');
   const result=await db.from('payment_notice_lines').select('*').eq('notice_id',summary.id).is('deleted_at',null).order('line_no');

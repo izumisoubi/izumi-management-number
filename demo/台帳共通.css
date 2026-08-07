@@ -496,6 +496,20 @@ td[data-col] {
   cursor: cell;
 }
 
+/* 全件スクロールでも、実際の入力行は約200件だけDOMへ置く。
+   上下の空白行が総件数分のスクロール位置を保つ。 */
+tr.virtual-spacer,
+tr.virtual-spacer:hover {
+  pointer-events: none;
+}
+
+tr.virtual-spacer td,
+tr.virtual-spacer:hover td {
+  padding: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+
 tbody tr:hover td {
   background: #f8fbff;
 }

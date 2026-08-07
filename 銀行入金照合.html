@@ -9,7 +9,7 @@
     .import-grid{display:grid;grid-template-columns:180px minmax(250px,1fr) auto;gap:12px;align-items:end}
     .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-top:14px}
     .metric{padding:12px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}.metric b{display:block;font-size:18px;margin-top:4px}
-    .table-wrap{overflow:auto}.desktop-table{min-width:900px}.desktop-table tr.selected{background:#eaf2ff}.desktop-table button{white-space:nowrap}
+    .table-wrap{overflow:auto}.transaction-scroll{max-height:70vh}.desktop-table{min-width:900px}.desktop-table tr.selected{background:#eaf2ff}.desktop-table button{white-space:nowrap}
     .status-unmatched{color:#b45309}.status-review{color:#7c3aed}.status-matched{color:#168657}.status-ignored{color:#64748b}
     .candidate-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.candidate-total{font-weight:900;color:var(--navy)}
     .amount{font-variant-numeric:tabular-nums;text-align:right}.danger-zone{margin-left:auto}
@@ -42,8 +42,7 @@
     <section class="panel">
       <div class="toolbar"><h2 style="margin-right:auto">2. 入金明細を案件へ割り当てる</h2><select id="statusFilter"><option value="unmatched,review">未照合・要確認</option><option value="matched">照合済み</option><option value="all">すべて</option></select><button class="btn secondary" onclick="loadTransactions()">更新</button></div>
       <div id="listStatus" class="status"></div>
-      <div class="table-wrap"><table class="desktop-table"><thead><tr><th>状態</th><th>入金日</th><th>銀行</th><th>入金額</th><th>振込依頼人</th><th>摘要</th><th>操作</th></tr></thead><tbody id="transactionBody"></tbody></table></div>
-      <div class="toolbar"><button id="transactionPrev" class="btn secondary">前の200件</button><span id="transactionPage" class="muted"></span><button id="transactionNext" class="btn secondary">次の200件</button></div>
+      <div id="transactionScroll" class="table-wrap transaction-scroll"><table class="desktop-table"><thead><tr><th>状態</th><th>入金日</th><th>銀行</th><th>入金額</th><th>振込依頼人</th><th>摘要</th><th>操作</th></tr></thead><tbody id="transactionBody"></tbody></table></div>
     </section>
     <section id="candidatePanel" class="panel hidden">
       <div class="candidate-head"><div><h2>3. 候補を確認して確定</h2><div id="selectedTransaction" class="muted"></div></div><div id="candidateTotal" class="candidate-total"></div></div>
@@ -59,7 +58,7 @@
 <script>
 const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
 const $=id=>document.getElementById(id),money=value=>'¥'+Number(value||0).toLocaleString('ja-JP'),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-let parsedFile=null,transactions=[],selectedTx=null,candidates=[],combinationSuggestion=null,transactionOffset=0,transactionCount=0;
+let parsedFile=null,transactions=[],selectedTx=null,candidates=[],combinationSuggestion=null,transactionOffset=0,transactionCount=0,transactionLoading=false,transactionHasMore=true;
 const transactionPageSize=200;
 const schemaMissing=error=>/bank_transactions|import_bank_statement|find_bank_payment_candidates|schema cache|does not exist|could not find/i.test(error?.message||'');
 async function sha256(value){const bytes=value instanceof ArrayBuffer?value:new TextEncoder().encode(String(value));return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(byte=>byte.toString(16).padStart(2,'0')).join('')}
@@ -120,24 +119,25 @@ $('importButton').addEventListener('click',async()=>{
   if(result.error){$('importStatus').textContent=schemaMissing(result.error)?'検証DB適用前：銀行入金基盤を先に適用してください。':'取込失敗：'+result.error.message;$('importButton').disabled=false;return}
   $('importStatus').textContent=result.data?.duplicate?'同じCSVは取込済みです（重複登録なし）。':`${result.data?.inserted||0}件を取り込みました。`;await loadTransactions();
 });
-async function loadTransactions(){
+async function loadTransactions(append=false){
+  if(transactionLoading)return;transactionLoading=true;
+  if(!append){transactionOffset=0;transactions=[];transactionHasMore=true}
+  if(!transactionHasMore){transactionLoading=false;return}
   $('listStatus').textContent='明細を読込中…';
   let query=db.from('bank_transactions').select('id,bank_code,transaction_date,direction,amount,payer_name,description,status,revision,confirmed_at,bank_payment_allocations(allocated_amount,voided_at)',{count:'exact'}).eq('direction','credit').order('transaction_date',{ascending:false}).order('id',{ascending:false}).range(transactionOffset,transactionOffset+transactionPageSize-1);
   const filter=$('statusFilter').value;if(filter!=='all')query=query.in('status',filter.split(','));
   const result=await query;
-  if(result.error){$('transactionBody').innerHTML='';$('listStatus').textContent=schemaMissing(result.error)?'検証DB適用前：銀行入金基盤を先に適用してください。':'読込失敗：'+result.error.message;return}
+  if(result.error){if(!append)$('transactionBody').innerHTML='';$('listStatus').textContent=schemaMissing(result.error)?'検証DB適用前：銀行入金基盤を先に適用してください。':'読込失敗：'+result.error.message;transactionLoading=false;return}
   transactionCount=Number(result.count||0);
-  if(transactionOffset>=transactionCount&&transactionOffset>0){transactionOffset=Math.max(0,Math.floor(Math.max(0,transactionCount-1)/transactionPageSize)*transactionPageSize);return loadTransactions()}
-  transactions=(result.data||[]).map(tx=>({...tx,allocated:(tx.bank_payment_allocations||[]).filter(item=>!item.voided_at).reduce((sum,item)=>sum+Number(item.allocated_amount||0),0)}));
-  const first=transactionCount?transactionOffset+1:0,last=Math.min(transactionOffset+transactions.length,transactionCount);
-  $('listStatus').textContent=`${first}〜${last}件 / 全${transactionCount.toLocaleString('ja-JP')}件`;
-  $('transactionPage').textContent=`${Math.floor(transactionOffset/transactionPageSize)+1} / ${Math.max(1,Math.ceil(transactionCount/transactionPageSize))}ページ`;
-  $('transactionPrev').disabled=transactionOffset===0;$('transactionNext').disabled=transactionOffset+transactionPageSize>=transactionCount;
+  const nextRows=(result.data||[]).map(tx=>({...tx,allocated:(tx.bank_payment_allocations||[]).filter(item=>!item.voided_at).reduce((sum,item)=>sum+Number(item.allocated_amount||0),0)}));
+  transactions=append?[...transactions,...nextRows]:nextRows;
+  transactionOffset=transactions.length;transactionHasMore=transactionOffset<transactionCount&&nextRows.length===transactionPageSize;
+  $('listStatus').textContent=`${transactions.length.toLocaleString('ja-JP')}件表示 / 全${transactionCount.toLocaleString('ja-JP')}件${transactionHasMore?'（下へスクロールすると続きを表示）':''}`;
   $('transactionBody').innerHTML=transactions.map(tx=>`<tr data-id="${tx.id}" class="${selectedTx?.id===tx.id?'selected':''}"><td class="status-${tx.status}"><b>${statusName(tx.status)}</b></td><td>${esc(tx.transaction_date)}</td><td>${bankName(tx.bank_code)}</td><td class="amount">${money(tx.amount)}</td><td>${esc(tx.payer_name)}</td><td>${esc(tx.description)}</td><td><button class="btn secondary" onclick="openCandidates('${tx.id}')">${tx.status==='matched'?'詳細・取消':'候補を見る'}</button></td></tr>`).join('')||'<tr><td colspan="7">対象の入金明細はありません。</td></tr>';
+  transactionLoading=false;
 }
-$('statusFilter').addEventListener('change',()=>{transactionOffset=0;loadTransactions()});
-$('transactionPrev').addEventListener('click',()=>{transactionOffset=Math.max(0,transactionOffset-transactionPageSize);loadTransactions()});
-$('transactionNext').addEventListener('click',()=>{if(transactionOffset+transactionPageSize<transactionCount){transactionOffset+=transactionPageSize;loadTransactions()}});
+$('statusFilter').addEventListener('change',()=>loadTransactions());
+$('transactionScroll').addEventListener('scroll',event=>{const box=event.currentTarget;if(box.scrollTop+box.clientHeight>=box.scrollHeight-240)loadTransactions(true)});
 async function openCandidates(id){
   selectedTx=transactions.find(tx=>tx.id===id);if(!selectedTx)return;
   $('candidatePanel').classList.remove('hidden');$('selectedTransaction').textContent=`${selectedTx.transaction_date}　${selectedTx.payer_name||'名義なし'}　入金 ${money(selectedTx.amount)}（割当済 ${money(selectedTx.allocated)}）`;

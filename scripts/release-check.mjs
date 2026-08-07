@@ -37,9 +37,15 @@ if(!failures.length){
   const supabasePages=readdirSync('.').filter(file=>file.endsWith('.html')&&read(file).includes('@supabase/supabase-js@2'));
   supabasePages.forEach(file=>expect(read(file).includes('認証セッション共通.js'),`${file} が共通ログイン継続設定を読み込んでいません`));
   requiredLedgerContracts.forEach(text=>expect(ledger.includes(text),`台帳の重要契約が見つかりません: ${text}`));
-  const costLedgerPage=read('工事リスト・原価.html');
-  expect(costLedgerPage.includes("viewKey:'cost'")&&costLedgerPage.includes('continuousRows:true')&&costLedgerPage.includes('台帳共通.js?v=20260807-COST53'),`工事リスト・原価の連続表示設定またはキャッシュ更新が見つかりません`);
-  ['const continuousRows=config.continuousRows===true', 'pageSize=continuousRows?0:200', 'const continuousBatchSize=200', 'continuousRenderedCount+continuousBatchSize', 'pageSize>0?\`<nav id="pager"'].forEach(text=>expect(ledger.includes(text),`工事リスト・原価の200件ずつ連続描画が見つかりません: ${text}`));
+  const continuousLedgerPages=['管理番号台帳.html','工事リスト・未発注.html','工事リスト・原価.html','請求.html','会議用案件一覧.html'];
+  continuousLedgerPages.forEach(file=>expect(read(file).includes('continuousRows:true')&&read(file).includes('台帳共通.js?v=20260807-FAST54'),`${file} の全件連続表示設定またはキャッシュ更新が見つかりません`));
+  ['const continuousRows=config.continuousRows!==false', 'pageSize=continuousRows?0:200', 'const continuousWindowSize=200', 'scheduleContinuousWindow(targetStart)', 'viewRows.slice(continuousWindowStart,continuousWindowStart+continuousWindowSize)', 'class="virtual-spacer"', 'pageSize>0?\`<nav id="pager"'].forEach(text=>expect(ledger.includes(text),`台帳の軽量な全件連続表示が見つかりません: ${text}`));
+  expect(read('台帳共通.css').includes('tr.virtual-spacer td'),`台帳の仮想スクロール用スタイルが見つかりません`);
+  const bankLedger=read('銀行入金照合.html'),electronicLedger=read('電子帳簿検索.html'),paymentNotice=read('支払通知書.html'),closing=read('変更注文・締め管理.html');
+  expect(bankLedger.includes('transactionHasMore')&&bankLedger.includes("loadTransactions(true)")&&!bankLedger.includes('transactionPrev'),`銀行入金照合が軽量な連続読込になっていません`);
+  expect(electronicLedger.includes('visibleRecordCount')&&electronicLedger.includes('recordBatchSize')&&!electronicLedger.includes('movePage('),`電子帳簿検索が軽量な連続表示になっていません`);
+  expect(paymentNotice.includes('noticeVisibleCount')&&!paymentNotice.includes('changeNoticePage('),`支払通知書が軽量な連続表示になっていません`);
+  expect(closing.includes('async function fetchAll(buildQuery)')&&!closing.includes('.limit(200)'),`変更注文・締め管理に200件制限が残っています`);
   requiredGridContracts.forEach(text=>expect(gridCore.includes(text),`共通表入力の契約が見つかりません: ${text}`));
   requiredEstimateMathContracts.forEach(text=>expect(estimateMath.includes(text),`見積計算の契約が見つかりません: ${text}`));
   requiredSelfCostContracts.forEach(text=>expect(selfCosts.includes(text),`自社原価の契約が見つかりません: ${text}`));

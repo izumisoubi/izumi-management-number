@@ -43,11 +43,12 @@ const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
 const fiscalYearOptions=['',...(fiscalYearCore?.options({minimumCode:22,futureYears:3})||[]).map(item=>item.label)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
-// 原価一覧は年度内の全件を一続きで確認する業務画面なので、ページ分割しない。
-// 検索・集計・CSVも同じ全件を対象にする。他の台帳は従来どおり200件単位。
-let currentPage=1,pageSize=config.viewKey==='cost'?0:200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
-const continuousBatchSize=200;
-let continuousRenderedCount=continuousBatchSize,continuousScrollFrame=0;
+// 台帳は年度内の全件を一続きで確認する。検索・集計・CSVも同じ全件が対象。
+// ただしDOMへ全行を積み上げると端末が重くなるため、画面上には常に約200行だけを残す。
+const continuousRows=config.continuousRows!==false;
+let currentPage=1,pageSize=continuousRows?0:200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+const continuousWindowSize=200,continuousWindowStep=40,continuousRowHeight=42;
+let continuousWindowStart=0,continuousScrollFrame=0,continuousVirtualizing=false,continuousPendingStart=null;
 let loadedLedgerYear='';
 let guideTargetCell=null,datePickerTarget=null,datePickerMonth=null,datePickerCloseTimer=null;
 let quickHintTimer=null;
@@ -332,20 +333,22 @@ function initAdvancedControls(){
   controls.insertAdjacentHTML('beforeend',`
     <div class="status-row">
       <div id="statusMount"></div>
-      <nav id="pager" class="pager" aria-label="台帳ページ">
+      ${pageSize>0?`<nav id="pager" class="pager" aria-label="台帳ページ">
         <button id="firstPage" type="button" aria-label="最初のページ">≪</button>
         <button id="prevPage" type="button" aria-label="前のページ">‹</button>
         <span id="pageLabel" class="page-label">1 / 1</span>
         <button id="nextPage" type="button" aria-label="次のページ">›</button>
         <button id="lastPage" type="button" aria-label="最後のページ">≫</button>
-      </nav>
+      </nav>`:``}
     </div>
   `);
   $('statusMount').append(status);
-  $('firstPage').addEventListener('click',()=>setPage(1));
-  $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
-  $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
-  $('lastPage').addEventListener('click',()=>setPage(totalPages()));
+  if(pageSize>0){
+    $('firstPage').addEventListener('click',()=>setPage(1));
+    $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
+    $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
+    $('lastPage').addEventListener('click',()=>setPage(totalPages()));
+  }
   const tableWrap=document.querySelector('.table-wrap');
   if(pageSize<=0&&tableWrap&&!tableWrap.dataset.continuousRowsBound){
     tableWrap.dataset.continuousRowsBound='1';
@@ -353,11 +356,14 @@ function initAdvancedControls(){
       if(continuousScrollFrame)return;
       continuousScrollFrame=requestAnimationFrame(()=>{
         continuousScrollFrame=0;
-        const remaining=tableWrap.scrollHeight-tableWrap.scrollTop-tableWrap.clientHeight;
-        if(remaining>Math.max(500,tableWrap.clientHeight*.6)||continuousRenderedCount>=viewRows.length)return;
-        continuousRenderedCount=Math.min(viewRows.length,continuousRenderedCount+continuousBatchSize);
-        renderTable();
-        updateResultStatus();
+        const zoom=Math.max(.1,numberValue($('zoom')?.value)||1);
+        const firstVisible=Math.max(0,Math.floor((tableWrap.scrollTop-42*zoom)/(continuousRowHeight*zoom)));
+        const maxStart=Math.max(0,viewRows.length-continuousWindowSize);
+        const targetStart=Math.min(maxStart,Math.max(0,
+          Math.floor(Math.max(0,firstVisible-continuousWindowStep)/continuousWindowStep)*continuousWindowStep
+        ));
+        if(targetStart===continuousWindowStart)return;
+        scheduleContinuousWindow(targetStart);
       });
     },{passive:true});
   }
@@ -399,9 +405,25 @@ function totalPages(){
   return Math.max(1,Math.ceil(viewRows.length/pageSize));
 }
 function pageRows(){
-  if(pageSize<=0)return viewRows.slice(0,continuousRenderedCount);
+  if(pageSize<=0)return viewRows.slice(continuousWindowStart,continuousWindowStart+continuousWindowSize);
   const start=(currentPage-1)*pageSize;
   return viewRows.slice(start,start+pageSize);
+}
+function scheduleContinuousWindow(targetStart){
+  continuousPendingStart=targetStart;
+  if(continuousVirtualizing)return;
+  continuousVirtualizing=true;
+  Promise.resolve(flushDirtyRows()).finally(()=>{
+    const next=continuousPendingStart;
+    continuousPendingStart=null;
+    continuousWindowStart=Math.max(0,Number(next)||0);
+    renderTable();
+    updateResultStatus();
+    continuousVirtualizing=false;
+    if(continuousPendingStart!==null&&continuousPendingStart!==continuousWindowStart){
+      scheduleContinuousWindow(continuousPendingStart);
+    }
+  });
 }
 function flushDirtyRows(){
   const keys=[...new Set([...document.querySelectorAll('#ledgerBody tr.dirty[data-key]')].map(row=>row.dataset.key))];
@@ -435,8 +457,9 @@ function updatePager(){
 }
 function updateResultStatus(){
   if(pageSize<=0){
-    const rendered=Math.min(continuousRenderedCount,viewRows.length);
-    setStatus(`全${viewRows.length.toLocaleString()}件を連続表示（現在${rendered.toLocaleString()}件を描画 / 下へスクロールで続き）`);
+    const start=viewRows.length?continuousWindowStart+1:0;
+    const end=Math.min(continuousWindowStart+continuousWindowSize,viewRows.length);
+    setStatus(`全${viewRows.length.toLocaleString()}件を連続表示（画面処理 ${start.toLocaleString()}〜${end.toLocaleString()}件）`);
     return;
   }
   const start=viewRows.length?(pageSize<=0?1:(currentPage-1)*pageSize+1):0;
@@ -763,16 +786,30 @@ async function fetchAll(table,{filter=null,order=null,batchSize=1000,maxRows=100
   }
   return {data:collected,error:new Error(`${table} が ${maxRows.toLocaleString()}件を超えました。管理者へ連絡してください。`)};
 }
+const yieldToBrowser=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
 async function fetchAllForProjectIds(table,projectIds,options={}){
   if(!projectIds.length)return {data:[],error:null};
+  const {onProgress=null,concurrency=3,...fetchOptions}=options;
   const chunks=[];
   for(let index=0;index<projectIds.length;index+=500)chunks.push(projectIds.slice(index,index+500));
-  const results=await Promise.all(chunks.map(ids=>fetchAll(table,{
-    ...options,filter:query=>{
-      const scoped=query.in('project_id',ids);
-      return options.filter?options.filter(scoped):scoped;
+  const results=new Array(chunks.length);
+  let nextChunk=0,finished=0;
+  const worker=async()=>{
+    while(nextChunk<chunks.length){
+      const index=nextChunk++;
+      const ids=chunks[index];
+      results[index]=await fetchAll(table,{
+        ...fetchOptions,filter:query=>{
+          const scoped=query.in('project_id',ids);
+          return fetchOptions.filter?fetchOptions.filter(scoped):scoped;
+        }
+      });
+      finished++;
+      onProgress?.(finished,chunks.length);
+      await yieldToBrowser();
     }
-  })));
+  };
+  await Promise.all(Array.from({length:Math.min(concurrency,chunks.length)},worker));
   return {data:results.flatMap(result=>result.data||[]),error:results.find(result=>result.error)?.error||null};
 }
 async function loadData(){
@@ -790,8 +827,13 @@ async function loadData(){
     },order:{column:'management_number',ascending:false}
   });
   const projectIds=(projectResult.data||[]).map(project=>project.id).filter(Boolean);
+  setStatus(`案件 ${projectIds.length.toLocaleString()}件を確認しました。明細を読み込み中…`);
+  await yieldToBrowser();
   const [lineResult,overrideResult,employeeResult]=await Promise.all([
-    needsLineItems?fetchAllForProjectIds('project_line_items',projectIds,{filter:query=>query.is('deleted_at',null),order:{column:'id',ascending:true},maxRows:200000}):Promise.resolve({data:[],error:null}),
+    needsLineItems?fetchAllForProjectIds('project_line_items',projectIds,{
+      filter:query=>query.is('deleted_at',null),order:{column:'id',ascending:true},maxRows:200000,
+      onProgress:(done,total)=>setStatus(`明細を読み込み中… ${done}/${total}`)
+    }):Promise.resolve({data:[],error:null}),
     fetchAllForProjectIds('project_manual_overrides',projectIds,{filter:query=>query.eq('view_key',config.viewKey),order:{column:'id',ascending:true}}),
     db.from('employee_master').select('*').eq('active',true).order('display_order',{ascending:true})
   ]);
@@ -812,7 +854,10 @@ async function loadData(){
   overrideRevisions=new Map((overrideResult.data||[]).map(item=>[item.row_key,numberValue(item.revision)]));
   populateYearFilter();
   populateStaffFilter();
+  setStatus('一覧を組み立てています…');
+  await yieldToBrowser();
   allRows=buildRows();
+  await yieldToBrowser();
   applyView(true);
   // UX42適用前に保存された「台帳上書き」を一度だけ正本へ救済する。
   // 以後は通常のsaveRowで即時に正本へ反映される。
@@ -855,16 +900,29 @@ function applyView(resetPage=false){
   const staff=$('staffFilter')?.value||'';
   const meetingMonth=$('meetingMonthFilter')?.value||'';
   const keyword=$('search').value.trim().toLowerCase();
-  viewRows=allRows.filter(row=>{
+  const prepared=[];
+  allRows.forEach(row=>{
     const merged=mergedRow(row);
     const yearMatch=!year||String(merged.values.management_number||'').startsWith(`${year}-`);
     const staffMatch=!staff||merged.values.staff_name===staff;
     const meetingMonthMatch=!meetingMonth||normalizeMonth(merged.values.meeting_month)===normalizeMonth(meetingMonth);
-    const text=Object.values(merged.values).join(' ').toLowerCase();
-    return yearMatch&&staffMatch&&meetingMonthMatch&&(!keyword||text.includes(keyword))&&matchesQuickFilter(merged.values);
+    if(!yearMatch||!staffMatch||!meetingMonthMatch||!matchesQuickFilter(merged.values))return;
+    if(keyword&&!Object.values(merged.values).join(' ').toLowerCase().includes(keyword))return;
+    prepared.push({row,sortValue:merged.values[sortField]??''});
   });
-  viewRows.sort(compareRows);
-  if(pageSize<=0)continuousRenderedCount=Math.min(continuousBatchSize,viewRows.length);
+  const field=config.fields.find(item=>item.key===sortField);
+  prepared.sort((left,right)=>{
+    const result=field?.type==='money'||field?.computed
+      ?numberValue(left.sortValue)-numberValue(right.sortValue)
+      :String(left.sortValue).localeCompare(String(right.sortValue),'ja',{numeric:true});
+    return sortDirection==='asc'?result:-result;
+  });
+  viewRows=prepared.map(item=>item.row);
+  if(pageSize<=0){
+    continuousWindowStart=0;
+    const tableWrap=document.querySelector('.table-wrap');
+    if(tableWrap)tableWrap.scrollTop=0;
+  }
   if(resetPage)currentPage=1;
   currentPage=Math.max(1,Math.min(totalPages(),currentPage));
   renderTable();
@@ -876,12 +934,6 @@ function applyView(resetPage=false){
   checkboxBrush=null;
   updatePager();
   updateResultStatus();
-}
-function compareRows(left,right){
-  const a=mergedRow(left).values[sortField]??'',b=mergedRow(right).values[sortField]??'';
-  const field=config.fields.find(item=>item.key===sortField);
-  const result=field?.type==='money'||field?.computed?numberValue(a)-numberValue(b):String(a).localeCompare(String(b),'ja',{numeric:true});
-  return sortDirection==='asc'?result:-result;
 }
 function sortLedger(field){
   if(sortField===field)sortDirection=sortDirection==='asc'?'desc':'asc';
@@ -1112,13 +1164,17 @@ function updateSheetHeight(visibleRowCount=viewRows.length){
 }
 function renderTable(){
   const rows=pageRows();
-  updateSheetHeight(rows.length);
+  updateSheetHeight(pageSize<=0?continuousWindowSize:rows.length);
+  const columnCount=config.fields.length+(config.allowDelete?1:0);
+  const topSpacerHeight=pageSize<=0?continuousWindowStart*continuousRowHeight:0;
+  const bottomSpacerHeight=pageSize<=0?Math.max(0,viewRows.length-continuousWindowStart-rows.length)*continuousRowHeight:0;
+  const spacer=height=>height>0?`<tr class="virtual-spacer" aria-hidden="true"><td colspan="${columnCount}" style="height:${height}px"></td></tr>`:'';
   const deleteHead=config.allowDelete?'<th class="delete-head">削除</th>':'';
   $('ledgerHead').innerHTML=`<tr>${config.fields.map(field=>{
     const sticky=field.key==='meeting_checked'?' meeting-head':field.key==='management_number'?' number-head':'';
     return `<th class="${field.width||''}${sticky} field-${field.key}"><button class="sort${sortField===field.key?' active':''}" onclick="sortLedger('${field.key}')">${field.label}${sortField===field.key?(sortDirection==='asc'?' ▲':' ▼'):''}</button></th>`;
   }).join('')}${deleteHead}</tr>`;
-  $('ledgerBody').innerHTML=rows.length?rows.map((row,rowIndex)=>{
+  $('ledgerBody').innerHTML=rows.length?spacer(topSpacerHeight)+rows.map((row,rowIndex)=>{
     const merged=mergedRow(row);
     const cells=config.fields.map((field,colIndex)=>{
       const sticky=field.key==='meeting_checked'?' meeting-cell':field.key==='management_number'?' number-cell':'';
@@ -1137,7 +1193,7 @@ function renderTable(){
     }).join('');
     const visualClass=rowVisualClass(merged);
     return `<tr data-key="${esc(row.key)}" data-row="${rowIndex}" class="${visualClass}">${cells}${deleteCell(row)}</tr>`;
-  }).join(''):`<tr><td class="empty-state" colspan="${config.fields.length+(config.allowDelete?1:0)}">条件に一致するデータはありません。検索条件を解除してご確認ください。</td></tr>`;
+  }).join('')+spacer(bottomSpacerHeight):`<tr><td class="empty-state" colspan="${columnCount}">条件に一致するデータはありません。検索条件を解除してご確認ください。</td></tr>`;
   bindSheetEvents();
 }
 function deleteCell(){
@@ -1148,12 +1204,19 @@ function meetingCheckedCount(){
 }
 function renderSummary(){
   const definitions=config.summaries||[];
+  const totals=new Map(definitions.filter(item=>item.type!=='count').map(item=>[item.key,0]));
+  let checkedCount=0;
+  viewRows.forEach(row=>{
+    const values=mergedRow(row).values;
+    totals.forEach((value,key)=>totals.set(key,value+numberValue(values[key])));
+    if(config.viewKey==='meeting'&&values.meeting_checked)checkedCount++;
+  });
   $('summary').innerHTML=definitions.map(item=>{
-    const value=item.type==='count'?viewRows.length:viewRows.reduce((sum,row)=>sum+numberValue(mergedRow(row).values[item.key]),0);
+    const value=item.type==='count'?viewRows.length:(totals.get(item.key)||0);
     return `<div class="sum-card"><span>${item.label}</span><b>${item.type==='count'?`${value}件`:money(value)}</b></div>`;
   }).join('')
     +`<div class="sum-card selection-summary"><span>選択範囲</span><b id="selectionSum">0セル　合計 ¥0</b></div>`
-    +(config.viewKey==='meeting'?`<div class="sum-card meeting-summary"><span>翌月繰越</span><b id="meetingCheckedSum">${meetingCheckedCount()}件</b></div>`:'');
+    +(config.viewKey==='meeting'?`<div class="sum-card meeting-summary"><span>翌月繰越</span><b id="meetingCheckedSum">${checkedCount}件</b></div>`:'');
 }
 function meetingSourceRow(row){
   return allRows.find(item=>String(item.key)===String(row?.dataset?.key));
