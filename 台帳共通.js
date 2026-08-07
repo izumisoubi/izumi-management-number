@@ -45,7 +45,8 @@ let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
 // 原価一覧は年度内の全件を一続きで確認する業務画面なので、ページ分割しない。
 // 検索・集計・CSVも同じ全件を対象にする。他の台帳は従来どおり200件単位。
-let currentPage=1,pageSize=config.viewKey==='cost'?0:200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
+const continuousRows=config.continuousRows===true||config.viewKey==='cost';
+let currentPage=1,pageSize=continuousRows?0:200,searchTimer=null,appOpening=false,ledgerRealtimeChannel=null,ledgerRealtimeTimer=null;
 const continuousBatchSize=200;
 let continuousRenderedCount=continuousBatchSize,continuousScrollFrame=0;
 let loadedLedgerYear='';
@@ -332,20 +333,22 @@ function initAdvancedControls(){
   controls.insertAdjacentHTML('beforeend',`
     <div class="status-row">
       <div id="statusMount"></div>
-      <nav id="pager" class="pager" aria-label="台帳ページ">
+      ${pageSize>0?`<nav id="pager" class="pager" aria-label="台帳ページ">
         <button id="firstPage" type="button" aria-label="最初のページ">≪</button>
         <button id="prevPage" type="button" aria-label="前のページ">‹</button>
         <span id="pageLabel" class="page-label">1 / 1</span>
         <button id="nextPage" type="button" aria-label="次のページ">›</button>
         <button id="lastPage" type="button" aria-label="最後のページ">≫</button>
-      </nav>
+      </nav>`:``}
     </div>
   `);
   $('statusMount').append(status);
-  $('firstPage').addEventListener('click',()=>setPage(1));
-  $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
-  $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
-  $('lastPage').addEventListener('click',()=>setPage(totalPages()));
+  if(pageSize>0){
+    $('firstPage').addEventListener('click',()=>setPage(1));
+    $('prevPage').addEventListener('click',()=>setPage(currentPage-1));
+    $('nextPage').addEventListener('click',()=>setPage(currentPage+1));
+    $('lastPage').addEventListener('click',()=>setPage(totalPages()));
+  }
   const tableWrap=document.querySelector('.table-wrap');
   if(pageSize<=0&&tableWrap&&!tableWrap.dataset.continuousRowsBound){
     tableWrap.dataset.continuousRowsBound='1';

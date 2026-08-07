@@ -37,6 +37,9 @@ if(!failures.length){
   const supabasePages=readdirSync('.').filter(file=>file.endsWith('.html')&&read(file).includes('@supabase/supabase-js@2'));
   supabasePages.forEach(file=>expect(read(file).includes('認証セッション共通.js'),`${file} が共通ログイン継続設定を読み込んでいません`));
   requiredLedgerContracts.forEach(text=>expect(ledger.includes(text),`台帳の重要契約が見つかりません: ${text}`));
+  const costLedgerPage=read('工事リスト・原価.html');
+  expect(costLedgerPage.includes("viewKey:'cost'")&&costLedgerPage.includes('continuousRows:true')&&costLedgerPage.includes('台帳共通.js?v=20260807-COST53'),`工事リスト・原価の連続表示設定またはキャッシュ更新が見つかりません`);
+  ['const continuousRows=config.continuousRows===true', 'pageSize=continuousRows?0:200', 'const continuousBatchSize=200', 'continuousRenderedCount+continuousBatchSize', 'pageSize>0?\`<nav id="pager"'].forEach(text=>expect(ledger.includes(text),`工事リスト・原価の200件ずつ連続描画が見つかりません: ${text}`));
   requiredGridContracts.forEach(text=>expect(gridCore.includes(text),`共通表入力の契約が見つかりません: ${text}`));
   requiredEstimateMathContracts.forEach(text=>expect(estimateMath.includes(text),`見積計算の契約が見つかりません: ${text}`));
   requiredSelfCostContracts.forEach(text=>expect(selfCosts.includes(text),`自社原価の契約が見つかりません: ${text}`));
