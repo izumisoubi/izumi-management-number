@@ -263,6 +263,11 @@ button:active {
   width: 128px;
 }
 
+.field.accounting-month-filter,
+.field.meeting-month-filter {
+  width: 92px;
+}
+
 .field.search {
   width: min(360px, 34vw);
 }

@@ -323,6 +323,15 @@ function initAdvancedControls(){
   const toolbar=document.querySelector('.toolbar');
   const zoomField=toolbar?.querySelector('.field.zoom');
   if(!toolbar||!zoomField)return;
+  const yearField=toolbar.querySelector('.field.year');
+  if(yearField&&config.viewKey!=='meeting'){
+    yearField.insertAdjacentHTML('afterend',`
+      <div class="field accounting-month-filter" title="案件の計上月を基準に絞り込みます">
+        <label>計上月</label>
+        <select id="accountingMonthFilter"><option value="">すべて</option>${monthOptions.slice(1).map(value=>`<option value="${value}">${value}</option>`).join('')}</select>
+      </div>
+    `);
+  }
   zoomField.insertAdjacentHTML('afterend',`
     ${config.viewKey==='meeting'?`<div class="field meeting-month-filter"><label>会議月度</label><select id="meetingMonthFilter"><option value="">すべて</option>${monthOptions.slice(1).map(value=>`<option value="${value}">${value}</option>`).join('')}</select></div>`:''}
     <div class="field staff-filter"><label>工事担当者</label><select id="staffFilter"><option value="">社員マスタから選択</option></select></div>
@@ -369,6 +378,12 @@ function initAdvancedControls(){
   }
   $('staffFilter').addEventListener('change',()=>applyView(true));
   $('quickFilter').addEventListener('change',()=>applyView(true));
+  if($('accountingMonthFilter')){
+    const requestedAccountingMonth=new URL(location.href).searchParams.get('accounting_month');
+    const requestedValue=requestedAccountingMonth?`${Number(requestedAccountingMonth)}月`:'';
+    if(monthOptions.includes(requestedValue))$('accountingMonthFilter').value=requestedValue;
+    $('accountingMonthFilter').addEventListener('change',()=>applyView(true));
+  }
   if($('meetingMonthFilter')){
     const requestedMonth=new URL(location.href).searchParams.get('month');
     $('meetingMonthFilter').value=requestedMonth&&monthOptions.includes(`${Number(requestedMonth)}月`)
@@ -898,6 +913,7 @@ function applyView(resetPage=false){
   flushDirtyRows();
   const year=$('yearFilter').value;
   const staff=$('staffFilter')?.value||'';
+  const accountingMonth=$('accountingMonthFilter')?.value||'';
   const meetingMonth=$('meetingMonthFilter')?.value||'';
   const keyword=$('search').value.trim().toLowerCase();
   const prepared=[];
@@ -905,8 +921,9 @@ function applyView(resetPage=false){
     const merged=mergedRow(row);
     const yearMatch=!year||String(merged.values.management_number||'').startsWith(`${year}-`);
     const staffMatch=!staff||merged.values.staff_name===staff;
+    const accountingMonthMatch=!accountingMonth||normalizeMonth(merged.values.accounting_month)===normalizeMonth(accountingMonth);
     const meetingMonthMatch=!meetingMonth||normalizeMonth(merged.values.meeting_month)===normalizeMonth(meetingMonth);
-    if(!yearMatch||!staffMatch||!meetingMonthMatch||!matchesQuickFilter(merged.values))return;
+    if(!yearMatch||!staffMatch||!accountingMonthMatch||!meetingMonthMatch||!matchesQuickFilter(merged.values))return;
     if(keyword&&!Object.values(merged.values).join(' ').toLowerCase().includes(keyword))return;
     prepared.push({row,sortValue:merged.values[sortField]??''});
   });
@@ -944,6 +961,7 @@ function clearSearch(){
   $('search').value='';
   if($('staffFilter'))$('staffFilter').value='';
   if($('quickFilter'))$('quickFilter').value='all';
+  if($('accountingMonthFilter'))$('accountingMonthFilter').value='';
   if($('meetingMonthFilter'))$('meetingMonthFilter').value='';
   applyView(true);
 }

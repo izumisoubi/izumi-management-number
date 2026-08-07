@@ -38,9 +38,11 @@ if(!failures.length){
   supabasePages.forEach(file=>expect(read(file).includes('認証セッション共通.js'),`${file} が共通ログイン継続設定を読み込んでいません`));
   requiredLedgerContracts.forEach(text=>expect(ledger.includes(text),`台帳の重要契約が見つかりません: ${text}`));
   const continuousLedgerPages=['管理番号台帳.html','工事リスト・未発注.html','工事リスト・原価.html','請求.html','会議用案件一覧.html'];
-  continuousLedgerPages.forEach(file=>expect(read(file).includes('continuousRows:true')&&read(file).includes('台帳共通.js?v=20260807-FAST54'),`${file} の全件連続表示設定またはキャッシュ更新が見つかりません`));
+  continuousLedgerPages.forEach(file=>expect(read(file).includes('continuousRows:true')&&read(file).includes('台帳共通.js?v=20260807-MONTH55'),`${file} の全件連続表示設定またはキャッシュ更新が見つかりません`));
   ['const continuousRows=config.continuousRows!==false', 'pageSize=continuousRows?0:200', 'const continuousWindowSize=200', 'scheduleContinuousWindow(targetStart)', 'viewRows.slice(continuousWindowStart,continuousWindowStart+continuousWindowSize)', 'class="virtual-spacer"', 'pageSize>0?\`<nav id="pager"'].forEach(text=>expect(ledger.includes(text),`台帳の軽量な全件連続表示が見つかりません: ${text}`));
+  ['id="accountingMonthFilter"',"searchParams.get('accounting_month')",'normalizeMonth(merged.values.accounting_month)===normalizeMonth(accountingMonth)',"if($('accountingMonthFilter'))$('accountingMonthFilter').value='';"].forEach(text=>expect(ledger.includes(text),`台帳の計上月絞り込みが見つかりません: ${text}`));
   expect(read('台帳共通.css').includes('tr.virtual-spacer td'),`台帳の仮想スクロール用スタイルが見つかりません`);
+  expect(read('台帳共通.css').includes('.field.accounting-month-filter'),`台帳の計上月絞り込み用スタイルが見つかりません`);
   const bankLedger=read('銀行入金照合.html'),electronicLedger=read('電子帳簿検索.html'),paymentNotice=read('支払通知書.html'),closing=read('変更注文・締め管理.html');
   expect(bankLedger.includes('transactionHasMore')&&bankLedger.includes("loadTransactions(true)")&&!bankLedger.includes('transactionPrev'),`銀行入金照合が軽量な連続読込になっていません`);
   expect(electronicLedger.includes('visibleRecordCount')&&electronicLedger.includes('recordBatchSize')&&!electronicLedger.includes('movePage('),`電子帳簿検索が軽量な連続表示になっていません`);
