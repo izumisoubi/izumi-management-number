@@ -45,6 +45,7 @@ if(!failures.length){
   expect(estimate.includes('客先単価')&&estimate.includes('客先金額'),`見積表の客先向け金額表記が見つかりません`);
   expect(estimate.includes('<option value="人工"></option>'),`単位候補に「人工」が見つかりません`);
   expect((estimate.match(/list="estimateUnitOptions" data-f="unit"/g)||[]).length===3,`見積・発注・請求の単位自由入力欄が揃っていません`);
+  expect(!estimate.includes('工事名称')&&estimate.includes('<span class="doc-meta-label">物件名：</span>')&&estimate.includes("s('p-kojiname',getDocumentPropertyName())"),`見積書の物件名と工事概要が分離されていません`);
   expect(estimate.includes('function getDocumentFileTitle(label)')&&estimate.includes('<title>${esc(getDocumentFileTitle(docLabel))}</title>'),`PDF保存名の帳票名重複防止が見つかりません`);
   ['showDirectoryPicker','showSaveFilePicker','ダウンロードごとに確認','ファイル名と保存先は、その保存画面で変更できます'].forEach(text=>expect(estimate.includes(text),`PC保存先選択の案内または処理が見つかりません: ${text}`));
   expect(estimate.includes('自社人工・自社資材は原価・粗利益の計算に含まれます'),`自社原価の注意書きが見つかりません`);

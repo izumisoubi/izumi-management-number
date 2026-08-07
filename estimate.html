@@ -753,7 +753,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
       <label>工事概要</label><input id="b-summary" oninput="autoFillKojiname();syncEst()">
-      <label>工事名称</label><input id="b-kojiname" placeholder="物件名＋工事概要から自動生成" oninput="syncEst()">
+      <input type="hidden" id="b-kojiname">
       <label>工期日数</label><input id="b-duration" placeholder="例：30日間" oninput="syncEst()">
       <label>支払条件</label>
       <div style="display:flex;flex-direction:column;gap:5px;">
@@ -1443,7 +1443,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
       <div style="padding:12px 15px;display:grid;gap:9px;">
-        <div class="inv-link-box" style="margin:0;">基本情報の客先名・物件名・工事名称・工事場所・部屋番号・完工予定日を自動反映します。</div>
+        <div class="inv-link-box" style="margin:0;">基本情報の客先名・物件名・工事場所・部屋番号・完工予定日を自動反映します。</div>
         <label>発行会社</label>
         <select class="cosel" id="coSel3" onchange="applyReportCo()"></select>
         <label>報告日</label>
@@ -2254,6 +2254,14 @@ function autoFillKojiname(){
   const propertyAndRoom=prop+room;
   el.value=propertyAndRoom+(propertyAndRoom&&sum?' ':'')+sum;
 }
+function getDocumentPropertyName(){
+  const prop=vv('b-property').trim();
+  const room=vv('b-room').trim();
+  if(prop)return prop+room;
+  const summary=vv('b-summary').trim();
+  const legacy=vv('b-kojiname').trim();
+  return summary&&legacy.endsWith(summary)?legacy.slice(0,-summary.length).trim():legacy;
+}
 let postalLookupTimer=null;
 let lastPostalLookup='';
 function normalizePostalCode(value){return String(value||'').replace(/\D/g,'').slice(0,7);}
@@ -2316,7 +2324,7 @@ function attachPostalCodeFromAddress(addressId,postalId){
   address.addEventListener('blur',()=>lookupPostalCodeFromAddress(addressId,postalId));
 }
 function syncEst(){
-  st('e-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));st('e-kojiname',vv('b-kojiname'));
+  st('e-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));st('e-kojiname',getDocumentPropertyName());
   st('e-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));st('e-summary',vv('b-summary'));
   st('e-payment',getPayment());st('e-expire','見積日より'+vv('b-expire'));st('e-cond',vv('b-cond'));
   st('e-date',fmtD(vv('b-date')));
@@ -2893,7 +2901,7 @@ function renderPrint(){
           <div class="left-col">
             <div class="client-line"><span class="p-client"></span></div>
             <div class="doc-meta-lines">
-              <div class="doc-meta-line"><span class="doc-meta-label">工事名称：</span><span class="doc-meta-value p-kojiname"></span></div>
+              <div class="doc-meta-line"><span class="doc-meta-label">物件名：</span><span class="doc-meta-value p-kojiname"></span></div>
               <div class="doc-meta-line"><span class="doc-meta-label">工事場所：</span><span class="doc-meta-value p-place"></span></div>
               <div class="doc-meta-line"><span class="doc-meta-label">工事概要：</span><span class="doc-meta-value p-summary"></span></div>
               <div class="doc-meta-line p-duration-row"><span class="doc-meta-label">工　　期：</span><span class="doc-meta-value p-duration"></span></div>
@@ -3122,7 +3130,7 @@ function _updatePageHeaders(){
   const s=(cls,val)=>document.querySelectorAll('.'+cls).forEach(el=>el.textContent=val);
   s('p-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));s('p-date-top',fmtD(vv('b-date')));
   s('p-kanri',vv('b-kanri'));document.querySelectorAll('.p-kanri-row').forEach(el=>el.style.visibility=(vv('b-kanri')||vv('b-date'))?'visible':'hidden');
-  s('p-kojiname',vv('b-kojiname'));s('p-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));
+  s('p-kojiname',getDocumentPropertyName());s('p-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));
   s('p-summary',vv('b-summary'));s('p-payment',getPayment());
   s('p-duration',vv('b-duration'));
   s('p-expire','見積日より'+vv('b-expire'));s('p-cond',vv('b-cond'));
@@ -3392,9 +3400,9 @@ function getActiveSaveDocumentLabel(){
   }[activeScreen]||'御見積書';
 }
 function getProjectFileBaseName(){
-  const workName=sanitizeFileNamePart(vv('b-kojiname')||vv('b-property')||'工事名称未入力');
+  const workName=sanitizeFileNamePart(vv('b-kojiname')||vv('b-property')||'物件名未入力');
   const managementNo=sanitizeFileNamePart(vv('b-kanri'));
-  const projectName=[workName,managementNo].filter(Boolean).join(' ')||'工事名称未入力';
+  const projectName=[workName,managementNo].filter(Boolean).join(' ')||'物件名未入力';
   return `【${getActiveSaveDocumentLabel()}】${projectName}`.slice(0,120);
 }
 function normalizeDocumentLabel(value){
@@ -7742,7 +7750,7 @@ function updateOrderProjectContext(){
   const kanri=vv('b-kanri').trim();
   const property=vv('b-property').trim();
   const room=vv('b-room').trim();
-  // 工事名称は「物件名＋部屋番号＋工事概要」から自動生成されるため、
+  // 帳票の物件名は「物件名＋部屋番号＋工事概要」から自動生成されるため、
   // 対象案件の帯では重複しない工事概要を優先して表示する。
   const work=vv('b-summary').trim()||vv('b-kojiname').trim();
   const client=vv('b-client').trim();
