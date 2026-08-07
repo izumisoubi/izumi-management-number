@@ -381,7 +381,9 @@ function initAdvancedControls(){
   if($('accountingMonthFilter')){
     const requestedAccountingMonth=new URL(location.href).searchParams.get('accounting_month');
     const requestedValue=requestedAccountingMonth?`${Number(requestedAccountingMonth)}月`:'';
-    if(monthOptions.includes(requestedValue))$('accountingMonthFilter').value=requestedValue;
+    $('accountingMonthFilter').value=monthOptions.includes(requestedValue)
+      ?requestedValue
+      :`${new Date().getMonth()+1}月`;
     $('accountingMonthFilter').addEventListener('change',()=>applyView(true));
   }
   if($('meetingMonthFilter')){

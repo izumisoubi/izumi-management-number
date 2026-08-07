@@ -31,6 +31,7 @@ if(!failures.length){
   const requiredEstimateMathContracts=['unitFromMargin','costAmount','customerUnit','customerAmount','burdenSplitFromGross'];
   const requiredSelfCostContracts=['slotTotal','normalize','setSlot','setGross','setTotal'];
   requiredEstimateContracts.forEach(text=>expect(estimate.includes(text),`見積の重要契約が見つかりません: ${text}`));
+  ['function todayDateValue()','function displayDateValue(id)',"const invoiceDisplayDate=displayDateValue('i-date-in')"].forEach(text=>expect(estimate.includes(text),`未確定日付を本日表示する契約が見つかりません: ${text}`));
   ['loadEvents','render()','saveQuickEntry','updateEventDirect','persistCalendarEvent','newEvent','editEvent'].forEach(text=>expect(calendar.includes(text),`カレンダーの重要機能が見つかりません: ${text}`));
   ['calendar-command','month-nav','calendar-legend','event-direct-content','event-slot','sticky-calendar-shell','newLeaveFromCell','saveLeavePeriod','leavePickerBack','renderTodayAttendance','attendanceForDate','date-attendance','japaneseHolidayMap','holiday-label','weekday-row','saturday-row','sunday-row','4px double','#e0efff','#ffe0e5','th.date-col','z-index:120','scroll-snap-type:y mandatory','scroll-snap-stop:always','explicitReturnStatus','calendarReturnStatus','normalizeDisplaySlot','positionCalendarEvents','data-slot="${slot}"','display_slot:normalizeDisplaySlot(content.dataset.slot)',"!['メモ','予定'].includes(statusValue)",'setAuthView','data-auth-view="app"',"event==='INITIAL_SESSION'","scheduleWrap.classList.toggle('is-scrolled'"].forEach(text=>expect(calendar.includes(text),`カレンダーの新しい表示構造が見つかりません: ${text}`));
   ['autoRefreshToken:true','persistSession:true','detectSessionInUrl:true','storage:window.localStorage'].forEach(text=>expect(authSession.includes(text),`30日ログイン継続の設定が見つかりません: ${text}`));
@@ -38,9 +39,10 @@ if(!failures.length){
   supabasePages.forEach(file=>expect(read(file).includes('認証セッション共通.js'),`${file} が共通ログイン継続設定を読み込んでいません`));
   requiredLedgerContracts.forEach(text=>expect(ledger.includes(text),`台帳の重要契約が見つかりません: ${text}`));
   const continuousLedgerPages=['管理番号台帳.html','工事リスト・未発注.html','工事リスト・原価.html','請求.html','会議用案件一覧.html'];
-  continuousLedgerPages.forEach(file=>expect(read(file).includes('continuousRows:true')&&read(file).includes('台帳共通.js?v=20260807-MONTH55'),`${file} の全件連続表示設定またはキャッシュ更新が見つかりません`));
+  continuousLedgerPages.forEach(file=>expect(read(file).includes('continuousRows:true')&&read(file).includes('台帳共通.js?v=20260808-MONTH56'),`${file} の全件連続表示設定またはキャッシュ更新が見つかりません`));
   ['const continuousRows=config.continuousRows!==false', 'pageSize=continuousRows?0:200', 'const continuousWindowSize=200', 'scheduleContinuousWindow(targetStart)', 'viewRows.slice(continuousWindowStart,continuousWindowStart+continuousWindowSize)', 'class="virtual-spacer"', 'pageSize>0?\`<nav id="pager"'].forEach(text=>expect(ledger.includes(text),`台帳の軽量な全件連続表示が見つかりません: ${text}`));
   ['id="accountingMonthFilter"',"searchParams.get('accounting_month')",'normalizeMonth(merged.values.accounting_month)===normalizeMonth(accountingMonth)',"if($('accountingMonthFilter'))$('accountingMonthFilter').value='';"].forEach(text=>expect(ledger.includes(text),`台帳の計上月絞り込みが見つかりません: ${text}`));
+  expect(ledger.includes('new Date().getMonth()+1'),`台帳の初期計上月が開いた日の月になっていません`);
   expect(read('台帳共通.css').includes('tr.virtual-spacer td'),`台帳の仮想スクロール用スタイルが見つかりません`);
   expect(read('台帳共通.css').includes('.field.accounting-month-filter'),`台帳の計上月絞り込み用スタイルが見つかりません`);
   const bankLedger=read('銀行入金照合.html'),electronicLedger=read('電子帳簿検索.html'),paymentNotice=read('支払通知書.html'),closing=read('変更注文・締め管理.html');

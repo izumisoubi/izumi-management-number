@@ -1558,6 +1558,12 @@ function duplicateProject(){
 const DATE_LOCK_STORAGE='izumi_date_locks_v1';
 function loadDateLocks(){try{return JSON.parse(localStorage.getItem(DATE_LOCK_STORAGE)||'{}');}catch(e){return {};}}
 function saveDateLocks(locks){try{localStorage.setItem(DATE_LOCK_STORAGE,JSON.stringify(locks));}catch(e){}}
+function todayDateValue(){return new Date().toLocaleDateString('sv-SE');}
+function displayDateValue(id){
+  const value=vv(id);
+  if(value)return value;
+  return loadDateLocks()[id]?'':todayDateValue();
+}
 function setupDateActions(){
   const locks=loadDateLocks();
   ['b-uketsuke','b-kanko-date','b-completed-on','b-date','r-date-in','r-completed-in','ord-date-from','ord-date-to','ord-key-return'].forEach(id=>{
@@ -2327,7 +2333,7 @@ function syncEst(){
   st('e-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));st('e-kojiname',getDocumentPropertyName());
   st('e-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));st('e-summary',vv('b-summary'));
   st('e-payment',getPayment());st('e-expire','見積日より'+vv('b-expire'));st('e-cond',vv('b-cond'));
-  st('e-date',fmtD(vv('b-date')));
+  st('e-date',fmtD(displayDateValue('b-date')));
   _updatePageHeaders();
   saveBasic();
   syncInv();
@@ -2357,8 +2363,9 @@ function getClientBillingInfo(){
 }
 function syncInv(){
   const billing=getClientBillingInfo();
-  st('i-kanri',vv('b-kanri'));st('i-date-top',fmtD(vv('i-date-in')));
-  const kanriRow=document.getElementById('i-kanri-row');if(kanriRow)kanriRow.style.visibility=(vv('b-kanri')||vv('i-date-in'))?'visible':'hidden';
+  const invoiceDisplayDate=displayDateValue('i-date-in');
+  st('i-kanri',vv('b-kanri'));st('i-date-top',fmtD(invoiceDisplayDate));
+  const kanriRow=document.getElementById('i-kanri-row');if(kanriRow)kanriRow.style.visibility=(vv('b-kanri')||invoiceDisplayDate)?'visible':'hidden';
   st('i-client',(vv('i-ov-client')||vv('b-inv-client')||billing.name||vv('b-client'))+(vv('b-honorific')?' '+vv('b-honorific'):''));
   st('i-client-dept',vv('i-ov-dept')||vv('b-inv-dept')||billing.dept);
   st('i-client-addr',vv('i-ov-addr')||vv('b-inv-addr')||billing.address);
@@ -2372,7 +2379,7 @@ function syncInv(){
   renderInv();renderInvMemo();syncInvoiceTemplateControls();
 }
 function syncReport(){
-  const reportDate=vv('r-date-in')||vv('b-kanko-date')||vv('b-date');
+  const reportDate=vv('r-date-in')||vv('b-kanko-date')||displayDateValue('b-date');
   const completedDate=vv('b-completed-on')||vv('r-completed-in')||vv('b-kanko-date');
   st('r-kanri',vv('b-kanri'));
   st('r-date',fmtD(reportDate));
