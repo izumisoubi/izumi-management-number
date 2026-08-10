@@ -8956,8 +8956,18 @@ function normalizePropertyCompany(property){
   const row={...(property||{})};
   const name=String(row.name||'').normalize('NFKC');
   const company=String(row.mgmt||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
+  const companyAliases={
+    'TAKUTO':'株式会社TAKUTO',
+    'ベスト・プロパティ':'株式会社ベスト・プロパティ',
+    'リロケーション・ジャパン':'株式会社リロケーション・ジャパン',
+    'ワールドレジデンシャル':'株式会社ワールドレジデンシャル',
+    '集住企画':'株式会社集住企画',
+    '毎日コムネット':'株式会社毎日コムネット',
+    'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ'
+  };
   const isBrillia=/(?:brillia|briria|ブリリア)/i.test(name);
   const isTokyoTatemonoVariant=/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company);
+  row.mgmt=companyAliases[company]||company;
   if(isBrillia||isTokyoTatemonoVariant)row.mgmt='東京建物不動産販売株式会社';
   return row;
 }
