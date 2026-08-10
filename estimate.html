@@ -9345,23 +9345,36 @@ function renderPropertyMaster(){
   const q=(document.getElementById('propSearch')?.value||'').toLowerCase();
   const list=propertyList.filter(p=>!q||(p.name+p.mgmt+p.addr+p.client+p.person).toLowerCase().includes(q));
   if(!list.length){wrap.innerHTML='<div style="padding:16px;color:var(--tm);font-size:12px">該当なし</div>';return;}
+  const propertyGroups=[...list.reduce((groups,property)=>{
+    const company=String(property.mgmt||property.client||'管理会社未設定').trim()||'管理会社未設定';
+    if(!groups.has(company))groups.set(company,[]);
+    groups.get(company).push(property);
+    return groups;
+  },new Map()).entries()].sort(([a],[b])=>{
+    if(a==='管理会社未設定')return 1;
+    if(b==='管理会社未設定')return -1;
+    return a.localeCompare(b,'ja');
+  });
+  propertyGroups.forEach(([,properties])=>properties.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ja')));
 
   if(viewModes.prop==='list'){
     wrap.style.display='block';
     wrap.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:11px">
       <thead><tr style="background:var(--tb)">
         <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--tbr);font-size:10px;color:var(--tm)">物件名</th>
-        <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--tbr);font-size:10px;color:var(--tm)">管理会社</th>
         <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--tbr);font-size:10px;color:var(--tm)">住所</th>
         <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--tbr);font-size:10px;color:var(--tm);width:50px">担当</th>
         <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--tbr);font-size:10px;color:var(--tm)">鍵場所</th>
         <th style="width:60px;border-bottom:1px solid var(--tbr)"></th>
       </tr></thead><tbody>`+
-      list.map(p=>{
+      propertyGroups.map(([company,properties])=>`<tr>
+        <td colspan="5" style="padding:8px 10px 6px;background:var(--tb);border-top:2px solid var(--tbr);border-bottom:1px solid var(--tbr);font-size:11px;font-weight:800;color:var(--tt)">
+          ${esc(company)} <span style="margin-left:6px;color:var(--tm);font-size:9px;font-weight:600">${properties.length}件</span>
+        </td>
+      </tr>`+properties.map(p=>{
         const i=propertyList.indexOf(p);
         return `<tr style="border-bottom:1px solid var(--tbr)" onmouseover="this.style.background='var(--ti)'" onmouseout="this.style.background=''">
           <td style="padding:5px 10px;font-weight:700;white-space:nowrap">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),esc(p.name),'Googleマップで物件を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</td>
-          <td style="padding:5px 10px;font-size:10px;color:var(--tm);white-space:nowrap">${esc(p.mgmt||'')}</td>
           <td style="padding:5px 10px;font-size:10px">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),p.addr?esc((p.zip?p.zip+' ':'')+p.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:10px">${esc(p.person||'')}</td>
           <td style="padding:5px 10px;font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.key||'')}">${esc(p.key||'')}</td>
@@ -9369,12 +9382,16 @@ function renderPropertyMaster(){
             <button class="ubtn" onclick="openPropertyModal(${i})" style="font-size:10px;padding:2px 8px">編集</button>
           </td>
         </tr>`;
-      }).join('')+'</tbody></table>';
+      }).join('')).join('')+'</tbody></table>';
   } else {
-    wrap.style.display='grid';
-    wrap.style.gridTemplateColumns='repeat(auto-fill,minmax(240px,1fr))';
-    wrap.style.gap='10px';
-    wrap.innerHTML=list.map(p=>{
+    wrap.style.display='block';
+    wrap.style.gridTemplateColumns='';
+    wrap.style.gap='';
+    wrap.innerHTML=propertyGroups.map(([company,properties])=>`<section style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:7px 10px;background:var(--tb);border-left:4px solid var(--ta);border-radius:6px;font-size:12px;font-weight:800;color:var(--tt)">
+        <span>${esc(company)}</span><span style="color:var(--tm);font-size:9px;font-weight:600">${properties.length}件</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">${properties.map(p=>{
       const i=propertyList.indexOf(p);
       return `<div style="background:var(--tc);border:1px solid var(--tbr);border-left:3px solid var(--ta);border-radius:8px;padding:12px 14px;cursor:grab"
         draggable="true"
@@ -9383,7 +9400,6 @@ function renderPropertyMaster(){
         ondrop="masterDrop(event,'prop',${i})"
         ondragend="masterDragEnd(event)">
         <div style="font-size:12px;font-weight:800;color:var(--tt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),esc(p.name),'Googleマップで物件を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
-        <div style="font-size:10px;color:var(--ta);margin-bottom:5px;font-weight:700">${esc(p.mgmt||'')}</div>
         <div style="font-size:10px;color:var(--tm);line-height:1.7">
           <div>📍 ${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),p.addr?`〒${esc(p.zip||'')} ${esc(p.addr)}`:'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
           ${p.person?`<div>👤 担当：${esc(p.person)}</div>`:''}
@@ -9392,7 +9408,7 @@ function renderPropertyMaster(){
         </div>
         <button class="ubtn" onclick="openPropertyModal(${i})" style="font-size:10px;padding:3px 10px;margin-top:8px;width:100%">✏ 編集</button>
       </div>`;
-    }).join('');
+    }).join('')}</div></section>`).join('');
   }
 }
 function openPropertyModal(idx){
