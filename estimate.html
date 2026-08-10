@@ -8965,7 +8965,8 @@ function normalizePropertyCompany(property){
     'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ',
     '第一プレイス':'有限会社第一プレイス',
     'ライズ・リース':'株式会社ライズ・リース',
-    'ライズ・リーズ':'株式会社ライズ・リース'
+    'ライズ・リーズ':'株式会社ライズ・リース',
+    '個人(管理会社なし)':'個人（管理会社なし）'
   };
   const canonicalCompany=value=>{
     const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
