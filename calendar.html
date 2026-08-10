@@ -335,7 +335,20 @@
     await loadEmployees();
     await Promise.all([loadCalendarMasters(),loadEvents()]);
   }
-  async function loadEmployees(){employees=[...DEFAULT_STAFF];$('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');$('eventStaff').innerHTML=staffOptions('');$('additionalStaff').innerHTML=staffOptions('')}
+  async function loadEmployees(){
+    let masterNames=[];
+    try{
+      const {data,error}=await db.from('employee_master').select('name').eq('active',true).order('display_order',{ascending:true});
+      if(error)throw error;
+      masterNames=(data||[]).map(row=>String(row.name||'').trim()).filter(Boolean);
+    }catch(error){
+      console.warn('社員マスタの読込に失敗したため、標準社員一覧を使用します。',error);
+    }
+    employees=[...new Set([...masterNames,...DEFAULT_STAFF])];
+    $('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');
+    $('eventStaff').innerHTML=staffOptions('');
+    $('additionalStaff').innerHTML=staffOptions('');
+  }
   function masterText(value){return String(value||'').trim().replace(/[\s　]+/g,' ')}
   function propertyCompany(property){return masterText(property.mgmt||property.client)}
   function matchingClient(name){const key=masterText(name);return calendarClients.find(client=>masterText(client.name)===key)||null}

@@ -863,7 +863,8 @@ async function loadData(){
   projectMap=new Map(projects.map(project=>[project.id,project]));
   lineItems=lineResult.data||[];
   employees=employeeResult.data||[];
-  const staffNames=[...new Set([...projects.map(project=>project.staff_name).filter(Boolean),'林'])];
+  const fallbackStaff=['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田','林','長谷川','中井'];
+  const staffNames=[...new Set([...projects.map(project=>project.staff_name).filter(Boolean),...fallbackStaff])];
   staffNames.forEach((name,index)=>{
     if(!employees.some(employee=>employee.name===name))employees.push({name,display_order:900+index});
   });
