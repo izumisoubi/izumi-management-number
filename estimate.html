@@ -12,6 +12,7 @@
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260807-RECON63"></script>
 <script src="自社原価共通.js?v=20260803-IME61"></script>
+<script src="バックアップ共通.js?v=20260811-AUDIT01"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--to:#f0a33a;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -669,6 +670,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <button class="ubtn" onclick="duplicateProject()" title="内容を複製し、管理番号・請求日・完工日・部屋番号をクリア">⧉ 複製</button>
     <button class="ubtn" onclick="saveAll()" title="入力内容は自動保存されます。このボタンは直ちに保存したい場合に使用します（⌘/Ctrl＋S）">💾 今すぐ保存</button>
     <span id="onlineSaveStatus" title="管理番号がある案件は、入力が止まると自動でクラウド保存されます" style="font-size:10px;color:var(--tm);white-space:nowrap">自動保存：待機</span>
+    <span id="onlineEditorsStatus" hidden style="font-size:10px;font-weight:700;color:#b45309;white-space:nowrap;padding:3px 7px;border:1px solid #f0b35a;border-radius:999px;background:#fff8e8" title="同じ案件を別の社員も開いています。保存時は版競合を検出し、こちらの入力を端末内へ退避します。"></span>
     <button class="ubtn" id="conflictDraftButton" onclick="restoreConflictDraft()" style="display:none;color:#b45309;border-color:#b45309" title="同時編集の競合時に退避した入力を確認します">⚠ 競合退避を確認</button>
     <button class="ubtn" onclick="openProjectOnline()" title="クラウドに保存済みの案件一覧から選んで開きます">📂 保存済み案件を開く</button>
     <button class="ubtn" onclick="saveBackupToPc()" title="障害・復旧に備え、現在の案件をJSONファイルとしてこのPCへ保存します">📦 PCへバックアップ</button>
@@ -1548,6 +1550,7 @@ function duplicateProject(){
   if(onlineProjectRealtimeChannel)managementDb.removeChannel(onlineProjectRealtimeChannel);
   onlineProjectRealtimeChannel=null;
   onlineProjectRealtimeManagementNumber='';
+  stopOnlineEditorPresence();
   cancelOnlineAutosave();
   setOnlineSaveStatus('自動保存：管理番号取得後');
   history.replaceState(null,'',location.pathname);
@@ -2713,7 +2716,7 @@ function renderCost(){
           <td><button type="button" class="row-number-toggle" onclick="toggleEstimateRowNumber(${r.id})" title="クリックで見積書の番号を表示／非表示"></button></td>
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'estimate',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
-          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
+          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'qty',this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
           <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="sf(${r.id},'unit',this.value)" autocomplete="off"></td>
           <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
@@ -3794,7 +3797,41 @@ document.addEventListener('keydown',event=>{
   const key=String(event.key||'').toLowerCase();
   const modifier=event.ctrlKey||event.metaKey;
   const nativeEditingShortcut=modifier&&['a','z','y'].includes(key);
-  if(nativeEditingShortcut||event.key==='F2')beginSpreadsheetTextEdit(event.target);
+  // Home / End はセル移動ではなく、セル内の先頭・末尾へキャレットを
+  // 動かす操作として扱う。入力後の再描画で input 要素が入れ替わっても、
+  // このキーを押した時点で確実に文字編集モードへ戻す。
+  if(nativeEditingShortcut||event.key==='F2'||event.key==='Home'||event.key==='End')beginSpreadsheetTextEdit(event.target);
+  if((event.key==='Home'||event.key==='End')&&(event.target.tagName==='INPUT'||event.target.tagName==='TEXTAREA')){
+    const control=event.target;
+    const length=String(control.value??'').length;
+    const start=Number.isInteger(control.selectionStart)?control.selectionStart:0;
+    const end=Number.isInteger(control.selectionEnd)?control.selectionEnd:start;
+    event.preventDefault();
+    if(event.key==='Home')control.setSelectionRange(0,event.shiftKey?end:0,'backward');
+    else control.setSelectionRange(event.shiftKey?start:length,length,'forward');
+    event.stopImmediatePropagation();
+    return;
+  }
+  if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&isSpreadsheetTextEditMode(event.target)
+    &&(event.target.tagName==='INPUT'||event.target.tagName==='TEXTAREA')){
+    const control=event.target;
+    const length=String(control.value??'').length;
+    const start=Number.isInteger(control.selectionStart)?control.selectionStart:0;
+    const end=Number.isInteger(control.selectionEnd)?control.selectionEnd:start;
+    const backward=control.selectionDirection==='backward';
+    const anchor=backward?end:start;
+    const focus=backward?start:end;
+    event.preventDefault();
+    if(event.shiftKey){
+      const next=Math.max(0,Math.min(length,focus+(event.key==='ArrowLeft'?-1:1)));
+      control.setSelectionRange(Math.min(anchor,next),Math.max(anchor,next),next<anchor?'backward':'forward');
+    }else{
+      const next=start!==end?(event.key==='ArrowLeft'?start:end):Math.max(0,Math.min(length,start+(event.key==='ArrowLeft'?-1:1)));
+      control.setSelectionRange(next,next);
+    }
+    event.stopImmediatePropagation();
+    return;
+  }
   const nativeSelectionShortcut=hasNativeClipboardSelection(event.target)
     &&((modifier&&['c','x'].includes(key))||['delete','backspace'].includes(key));
   // セル内編集中の左右・Home・Endはキャレット移動。
@@ -5915,6 +5952,9 @@ let onlineAutosaveInFlight=false;
 let onlineAutosaveQueued=false;
 let onlineProjectRealtimeChannel=null;
 let onlineProjectRealtimeManagementNumber='';
+let onlinePresenceChannel=null;
+let onlinePresenceManagementNumber='';
+const onlinePresenceTabId=(globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`);
 let onlineProjectId=null;
 let onlineProjectIdManagementNumber='';
 let onlinePurchaseOrderSignature='';
@@ -5924,6 +5964,65 @@ function rememberLastOpenedManagementNumber(managementNumber){
   const value=String(managementNumber||'').trim();
   if(!value)return;
   try{localStorage.setItem(LS_LAST_OPENED_MANAGEMENT_NUMBER,value);}catch(_error){}
+}
+
+function onlineEditorDisplayName(session){
+  const metadata=session?.user?.user_metadata||{};
+  return String(metadata.display_name||metadata.full_name||metadata.name||session?.user?.email?.split('@')[0]||'社員').trim();
+}
+function renderOnlineEditorsStatus(){
+  const status=document.getElementById('onlineEditorsStatus');if(!status)return;
+  if(!onlinePresenceChannel){status.hidden=true;status.textContent='';return;}
+  const state=onlinePresenceChannel.presenceState?.()||{};
+  const others=[];
+  Object.values(state).flat().forEach(item=>{
+    if(!item||item.tab_id===onlinePresenceTabId)return;
+    const name=String(item.display_name||'社員').trim();
+    if(name&&!others.includes(name))others.push(name);
+  });
+  status.hidden=others.length===0;
+  status.textContent=others.length?`同時編集中：${others.join('・')}`:'';
+}
+async function stopOnlineEditorPresence(){
+  const channel=onlinePresenceChannel;
+  onlinePresenceChannel=null;
+  onlinePresenceManagementNumber='';
+  renderOnlineEditorsStatus();
+  if(!channel||!managementDb)return;
+  try{await channel.untrack();}catch(_error){}
+  try{await managementDb.removeChannel(channel);}catch(_error){}
+}
+async function syncOnlineEditorPresence(managementNumber){
+  const value=String(managementNumber||'').trim();
+  if(!managementDb||!/^[0-9]{2}-[0-9]{4}$/.test(value)){
+    await stopOnlineEditorPresence();
+    return;
+  }
+  if(onlinePresenceChannel&&onlinePresenceManagementNumber===value)return;
+  await stopOnlineEditorPresence();
+  const {data:{session}}=await managementDb.auth.getSession();if(!session)return;
+  let displayName=onlineEditorDisplayName(session);
+  try{
+    const {data:profiles}=await managementDb.rpc('get_my_app_profile');
+    displayName=String(profiles?.[0]?.display_name||displayName).trim();
+  }catch(_error){}
+  onlinePresenceManagementNumber=value;
+  const channel=managementDb.channel(`estimate-presence-${value}`,{
+    config:{presence:{key:`${session.user.id}:${onlinePresenceTabId}`}}
+  });
+  onlinePresenceChannel=channel;
+  channel.on('presence',{event:'sync'},renderOnlineEditorsStatus)
+    .on('presence',{event:'join'},renderOnlineEditorsStatus)
+    .on('presence',{event:'leave'},renderOnlineEditorsStatus)
+    .subscribe(async state=>{
+      if(state!=='SUBSCRIBED'||onlinePresenceChannel!==channel)return;
+      await channel.track({
+        user_id:session.user.id,
+        display_name:displayName,
+        tab_id:onlinePresenceTabId,
+        online_at:new Date().toISOString()
+      });
+    });
 }
 function getLastOpenedManagementNumber(){
   try{return String(localStorage.getItem(LS_LAST_OPENED_MANAGEMENT_NUMBER)||'').trim();}catch(_error){return '';}
@@ -6029,6 +6128,7 @@ function mergeLatestBlankBasicFields(latestPayload,targetData=null){
 
 async function subscribeOnlineProjectUpdates(managementNumber){
   if(!managementDb||!managementNumber)return;
+  await syncOnlineEditorPresence(managementNumber);
   if(onlineProjectRealtimeChannel&&onlineProjectRealtimeManagementNumber===managementNumber)return;
   if(onlineProjectRealtimeChannel){
     await managementDb.removeChannel(onlineProjectRealtimeChannel);
@@ -6048,6 +6148,10 @@ async function subscribeOnlineProjectUpdates(managementNumber){
     })
     .subscribe();
 }
+
+window.addEventListener('beforeunload',()=>{
+  if(onlinePresenceChannel)onlinePresenceChannel.untrack().catch(()=>{});
+});
 
 // 別タブの台帳で入力した内容はRealtimeで即時に届くが、PCの復帰や長時間
 // 開きっぱなしの画面では通知を取り逃すことがある。画面へ戻った時だけ、
@@ -7585,7 +7689,7 @@ function loadAll(input){
 
 function loadAllFromText(text){
   try{
-      const d=JSON.parse(text);
+      const d=window.IzumiBackup.parseAndValidate(text);
       if(d.costTable&&typeof d.costTable==='object'&&!Array.isArray(d.costTable)){
         ctData=window.IzumiSelfCosts.normalize(d.costTable);
         saveCtData(false);
@@ -7663,7 +7767,8 @@ function loadAllFromText(text){
       _invShokaiEdited=false;
       applyEstCo();applyInvCo();syncEst();updateShokai1();updateShokai2();syncInvShokai();renderMemo();renderInvMemo();renderLedgerWritebackHints();
       showToastMsg('✅ 読み込み完了');
-    }catch(err){alert('読み込み失敗: '+err.message);}
+      return true;
+    }catch(err){alert('読み込み失敗: '+err.message);return false;}
 }
 
 // 旧ブラウザ向けフォールバック。通常は末尾のExcel互換処理が先に処理します。

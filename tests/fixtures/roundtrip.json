@@ -1,0 +1,38 @@
+{
+  "v": 21,
+  "estimateLayout": "landscape",
+  "rows": [
+    {
+      "id": 1,
+      "type": "item",
+      "name": "全角・再読込テスト",
+      "spec": "１．０３人工",
+      "qty": 1.03,
+      "unit": "人工",
+      "cost": 54,
+      "sellOverride": 700,
+      "note": "JSON往復"
+    },
+    {
+      "id": 2,
+      "type": "discount",
+      "name": "値引き",
+      "qty": 1,
+      "unit": "式",
+      "sellOverride": -60
+    }
+  ],
+  "rowId": 2,
+  "ordRows": [],
+  "invRows": [],
+  "vendors": [],
+  "companies": {},
+  "basic": {
+    "kanri": "TEST-ROUNDTRIP",
+    "client": "テスト取引先",
+    "property": "テスト物件",
+    "summary": "入力検証",
+    "date": "2026-08-11"
+  },
+  "costTable": {"labor": [], "material": []}
+}

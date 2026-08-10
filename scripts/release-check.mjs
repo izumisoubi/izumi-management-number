@@ -2,7 +2,7 @@
 import {existsSync,readFileSync,writeFileSync,rmSync,readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 
-const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','本日日付共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/本日日付共通.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/本日日付共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
+const requiredFiles=['estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','バックアップ共通.js','年度共通.js','本日日付共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/本日日付共通.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/本日日付共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
 const failures=[];
 const expect=(condition,message)=>{if(!condition)failures.push(message)};
 const read=file=>readFileSync(file,'utf8');
@@ -14,6 +14,7 @@ if(!failures.length){
   const gridCore=read('表入力共通.js');
   const estimateMath=read('見積計算共通.js');
   const selfCosts=read('自社原価共通.js');
+  const backupCore=read('バックアップ共通.js');
   const authSession=read('認証セッション共通.js');
   const fiscalYear=read('年度共通.js');
   const ledger=read('台帳共通.js');
@@ -59,7 +60,13 @@ if(!failures.length){
   requiredEstimateMathContracts.forEach(text=>expect(estimateMath.includes(text),`見積計算の契約が見つかりません: ${text}`));
   requiredSelfCostContracts.forEach(text=>expect(selfCosts.includes(text),`自社原価の契約が見つかりません: ${text}`));
   expect(estimate.includes('表入力共通.js')&&estimate.includes('window.IzumiGridCore'),`見積・請求・発注表が共通表入力へ接続されていません`);
+  expect(estimate.includes("sfnCalcFmt(${r.id},'qty',this)")&&estimate.includes('Home / End はセル移動ではなく'),`数量の全角・小数・数式入力またはセル内文字編集の保護が見つかりません`);
+  expect(estimate.includes('バックアップ共通.js')&&estimate.includes('window.IzumiBackup.parseAndValidate'),`JSONバックアップの事前検証が見積システムへ接続されていません`);
+  ['parseAndValidate','validateRow','data[key].length>10000'].forEach(text=>expect(backupCore.includes(text),`JSONバックアップ検証の契約が見つかりません: ${text}`));
   expect(estimate.includes('見積計算共通.js')&&estimate.includes('window.IzumiEstimateMath'),`見積表が共通計算へ接続されていません`);
+  ['work_items','client_unit_prices','vendor_effective_unit_prices','候補選択は「自動単価」'].forEach(text=>expect(estimate.includes(text),`推奨単価マスタ連動が見つかりません: ${text}`));
+  ['onlineEditorsStatus','同時編集中：','save_project_bundle','conflictDraftButton'].forEach(text=>expect(estimate.includes(text),`同時編集の表示・競合保護が見つかりません: ${text}`));
+  expect(estimate.includes('moveEstimateMemoToNextPageIfNeeded')&&estimate.includes('estimate-memo-block'),`見積メモを途中分断しない改ページ処理が見つかりません`);
   expect(estimate.includes('客先単価')&&estimate.includes('客先金額'),`見積表の客先向け金額表記が見つかりません`);
   expect(estimate.includes('<option value="人工"></option>'),`単位候補に「人工」が見つかりません`);
   expect((estimate.match(/list="estimateUnitOptions" data-f="unit"/g)||[]).length===3,`見積・発注・請求の単位自由入力欄が揃っていません`);
@@ -130,6 +137,8 @@ if(!failures.length){
   expect(estimateMathSyntax.status===0,`見積計算共通.jsの構文エラー: ${estimateMathSyntax.stderr}`);
   const selfCostsSyntax=spawnSync(process.execPath,['--check','自社原価共通.js'],{encoding:'utf8'});
   expect(selfCostsSyntax.status===0,`自社原価共通.jsの構文エラー: ${selfCostsSyntax.stderr}`);
+  const backupCoreSyntax=spawnSync(process.execPath,['--check','バックアップ共通.js'],{encoding:'utf8'});
+  expect(backupCoreSyntax.status===0,`バックアップ共通.jsの構文エラー: ${backupCoreSyntax.stderr}`);
   const authSessionSyntax=spawnSync(process.execPath,['--check','認証セッション共通.js'],{encoding:'utf8'});
   expect(authSessionSyntax.status===0,`認証セッション共通.jsの構文エラー: ${authSessionSyntax.stderr}`);
   const demoRuntimeSyntax=spawnSync(process.execPath,['--check','demo/demo-runtime.js'],{encoding:'utf8'});
@@ -209,9 +218,16 @@ if(!failures.length){
     [['2026-05-06','振替休日'],['2026-07-20','海の日'],['2026-09-22','国民の休日'],['2026-10-12','スポーツの日']].forEach(([date,name])=>expect(holidays2026.get(date)===name,`2026年の祝日判定が不正です: ${date} ${name}`));
   }catch(error){expect(false,`カレンダーの祝日判定を検証できません: ${error.message}`)}
   if(existsSync('tests')){
-    const testFiles=readdirSync('tests').filter(file=>file.endsWith('.test.mjs')).map(file=>`tests/${file}`);
-    const tests=spawnSync(process.execPath,['--test',...testFiles],{encoding:'utf8'});
-    expect(tests.status===0,`自動テストに失敗しました: ${tests.stdout}\n${tests.stderr}`);
+    const nodeTestFiles=readdirSync('tests').filter(file=>file.endsWith('.test.mjs')).map(file=>`tests/${file}`);
+    if(nodeTestFiles.length){
+      const tests=spawnSync(process.execPath,['--test',...nodeTestFiles],{encoding:'utf8'});
+      expect(tests.status===0,`自動テストに失敗しました: ${tests.stdout}\n${tests.stderr}`);
+    }
+    const scriptTestFiles=readdirSync('tests').filter(file=>file.endsWith('.test.js')).map(file=>`tests/${file}`);
+    scriptTestFiles.forEach(file=>{
+      const test=spawnSync(process.execPath,[file],{encoding:'utf8'});
+      expect(test.status===0,`${file} に失敗しました: ${test.stdout}\n${test.stderr}`);
+    });
   }
 }
 
