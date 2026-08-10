@@ -9101,20 +9101,29 @@ function renderVendorMaster(){
         <div style="font-size:11px;font-weight:800;color:var(--ta);padding:6px 0;border-bottom:2px solid var(--ta);margin-bottom:10px;letter-spacing:1px;">
           ▸ ${label} <span style="font-size:10px;color:var(--tm);font-weight:400;">(${rows.length}社)</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">`;
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`;
       rows.forEach(v=>{
         const i=vendorDetails.indexOf(v);
-        const col=vColor(v.name);
-        html+=`<div style="background:var(--tc);border:1px solid var(--tbr);border-top:3px solid ${col};border-radius:8px;padding:10px 12px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-            <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
-            <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${masterExternalLink(masterWebsiteUrl(v.name,v.website),esc(v.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
+        const hasDetail=!!(v.addr||v.tel||v.contact||v.email);
+        html+=`<div style="background:var(--tc);border:1px solid #cbd5e1;border-radius:12px;padding:14px 15px 11px;box-shadow:0 2px 7px rgba(15,23,42,.06);min-height:132px;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+            <div style="width:34px;height:34px;border-radius:9px;background:#e8f0fc;color:#174a7e;display:grid;place-items:center;font-size:15px;font-weight:900;flex-shrink:0">${esc((v.name||'業').replace(/^(株式会社|有限会社|合同会社)/,'').slice(0,1)||'業')}</div>
+            <div style="min-width:0;flex:1">
+              <div style="font-size:14px;font-weight:850;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(v.name)}">${masterExternalLink(masterWebsiteUrl(v.name,v.website),esc(v.name),'会社情報を開く','color:#102a43;text-decoration:none')}</div>
+              <span style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#edf4ff;color:#245a91;font-size:9px;font-weight:800">${esc(v.category||'未分類')}</span>
+            </div>
           </div>
-          <div style="font-size:10px;color:var(--tm);line-height:1.6">
-            <div>📍 ${masterExternalLink(masterMapUrl(v.name,v.zip,v.addr),v.addr?esc((v.zip?v.zip+' ':'')+v.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
-            ${v.tel?`<div>📞 ${esc(v.tel)}</div>`:''}
+          <div style="font-size:10.5px;color:#526579;line-height:1.7;min-height:38px;flex:1">
+            ${v.addr?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">所在地　${masterExternalLink(masterMapUrl(v.name,v.zip,v.addr),esc((v.zip?v.zip+' ':'')+v.addr),'Googleマップで開く','color:#526579;text-decoration:none')}</div>`:''}
+            ${v.tel?`<div>電話　　${esc(v.tel)}</div>`:''}
+            ${v.contact?`<div>担当　　${esc(v.contact)}</div>`:''}
+            ${!hasDetail?'<div style="color:#94a3b8">連絡先・住所は未登録です</div>':''}
           </div>
-          <button class="ubtn" onclick="openVendorModal(${i})" style="font-size:10px;padding:2px 10px;margin-top:6px;width:100%;border-color:${col};color:${col}">✏ 編集</button>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:9px;border-top:1px solid #e2e8f0">
+            ${masterExternalLink(masterWebsiteUrl(v.name,v.website),'会社情報 ↗','会社情報を開く','font-size:10px;font-weight:750;color:#315f8c;text-decoration:none;padding:4px 7px')}
+            ${masterExternalLink(masterMapUrl(v.name,v.zip,v.addr),'地図 ↗','Googleマップで開く','font-size:10px;font-weight:750;color:#315f8c;text-decoration:none;padding:4px 7px')}
+            <button class="ubtn" onclick="openVendorModal(${i})" style="font-size:10px;padding:4px 11px;margin-left:auto;border-color:#7f9dbb;color:#174a7e;background:#fff">編集</button>
+          </div>
         </div>`;
       });
       html+='</div></div>';
@@ -9234,30 +9243,36 @@ function renderClientMaster(){
       }).join('')+'</tbody></table>';
   } else {
     wrap.style.display='grid';
-    wrap.style.gridTemplateColumns='repeat(auto-fill,minmax(260px,1fr))';
-    wrap.style.gap='10px';
+    wrap.style.gridTemplateColumns='repeat(auto-fill,minmax(320px,1fr))';
+    wrap.style.gap='12px';
     wrap.innerHTML=list.map(c=>{
       const i=clientList2.indexOf(c);
-      const cCol=vColor(c.name);
-      return `<div style="background:var(--tc);border:1px solid var(--tbr);border-top:3px solid ${cCol};border-radius:8px;padding:12px 14px;cursor:grab"
+      const hasDetail=!!(c.addr||c.tel||c.person||c.email||c.dept);
+      return `<div style="background:var(--tc);border:1px solid #cbd5e1;border-radius:12px;padding:14px 15px 11px;cursor:grab;box-shadow:0 2px 7px rgba(15,23,42,.06);min-height:150px;display:flex;flex-direction:column"
         draggable="true"
         ondragstart="masterDragStart(event,'client',${i})"
         ondragover="masterDragOver(event)"
         ondrop="masterDrop(event,'client',${i})"
         ondragend="masterDragEnd(event)">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="width:10px;height:10px;border-radius:50%;background:${cCol};flex-shrink:0"></div>
-          <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${escAttr(c.name)}">${masterExternalLink(masterWebsiteUrl(c.name,c.website),esc(c.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#e8f0fc;color:#174a7e;display:grid;place-items:center;font-size:15px;font-weight:900;flex-shrink:0">${esc((c.name||'取').replace(/^(株式会社|有限会社|合同会社)/,'').slice(0,1)||'取')}</div>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:14px;font-weight:850;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escAttr(c.name)}">${masterExternalLink(masterWebsiteUrl(c.name,c.website),esc(c.name),'会社情報を開く','color:#102a43;text-decoration:none')}</div>
+            ${c.dept||c.person?`<div style="font-size:10px;color:#587087;margin-top:4px">${esc([c.dept,c.person].filter(Boolean).join('　'))}</div>`:'<div style="font-size:10px;color:#94a3b8;margin-top:4px">部署・担当者未登録</div>'}
+          </div>
         </div>
-        <div style="font-size:10px;color:var(--tm);line-height:1.8">
-          <div>📍 ${masterExternalLink(masterMapUrl(c.name,c.zip,c.addr),c.zip||c.addr?`〒${esc(c.zip||'')} ${esc(c.addr||'')}`:'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
-          ${c.tel?`<div>📞 ${esc(c.tel)}</div>`:''}
-          ${c.fax?`<div>📠 ${esc(c.fax)}</div>`:''}
-          ${c.dept||c.person?`<div>👤 ${esc([c.dept,c.person].filter(Boolean).join(' '))}</div>`:''}
-          ${c.billingAddr?`<div>🧾 〒${esc(c.billingZip||'')} ${esc(c.billingAddr)}</div>`:''}
-          ${c.email?`<div>✉ ${esc(c.email)}</div>`:''}
+        <div style="font-size:10.5px;color:#526579;line-height:1.7;min-height:42px;flex:1">
+          ${c.addr?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">所在地　${masterExternalLink(masterMapUrl(c.name,c.zip,c.addr),`〒${esc(c.zip||'')} ${esc(c.addr||'')}`,'Googleマップで開く','color:#526579;text-decoration:none')}</div>`:''}
+          ${c.tel?`<div>電話　　${esc(c.tel)}</div>`:''}
+          ${c.email?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">メール　${esc(c.email)}</div>`:''}
+          ${c.billingAddr&&c.billingAddr!==c.addr?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">請求先　〒${esc(c.billingZip||'')} ${esc(c.billingAddr)}</div>`:''}
+          ${!hasDetail?'<div style="color:#94a3b8">連絡先・住所は未登録です</div>':''}
         </div>
-        <button class="ubtn" onclick="openClientModal(${i})" style="font-size:10px;padding:3px 10px;margin-top:8px;width:100%;border-color:${cCol};color:${cCol}">✏ 編集</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:9px;border-top:1px solid #e2e8f0">
+          ${masterExternalLink(masterWebsiteUrl(c.name,c.website),'会社情報 ↗','会社情報を開く','font-size:10px;font-weight:750;color:#315f8c;text-decoration:none;padding:4px 7px')}
+          ${masterExternalLink(masterMapUrl(c.name,c.zip,c.addr),'地図 ↗','Googleマップで開く','font-size:10px;font-weight:750;color:#315f8c;text-decoration:none;padding:4px 7px')}
+          <button class="ubtn" onclick="openClientModal(${i})" style="font-size:10px;padding:4px 11px;margin-left:auto;border-color:#7f9dbb;color:#174a7e;background:#fff">編集</button>
+        </div>
       </div>`;
     }).join('');
   }
