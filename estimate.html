@@ -8952,8 +8952,17 @@ function isNonPropertyMasterName(name){
   return /^(?:19|20)\d{2}年\d{1,2}月(?:解約立会業務|解約立会手数料)$/.test(value)
     || /^解約立会手数料(?:19|20)\d{2}[.年/-]?\d{1,2}月?$/.test(value);
 }
+function normalizePropertyCompany(property){
+  const row={...(property||{})};
+  const name=String(row.name||'').normalize('NFKC');
+  const company=String(row.mgmt||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
+  const isBrillia=/(?:brillia|briria|ブリリア)/i.test(name);
+  const isTokyoTatemonoVariant=/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company);
+  if(isBrillia||isTokyoTatemonoVariant)row.mgmt='東京建物不動産販売株式会社';
+  return row;
+}
 function validPropertyMasterRows(rows){
-  return (rows||[]).filter(property=>!isNonPropertyMasterName(property?.name));
+  return (rows||[]).filter(property=>!isNonPropertyMasterName(property?.name)).map(normalizePropertyCompany);
 }
 function loadProperties(){
   try{
@@ -9006,6 +9015,7 @@ async function loadSharedMastersFromCloud(){
 async function saveSharedMasterRecord(type,existing,updated){
   if(!managementDb)return{error:{message:'クラウドへ接続できません'}};
   const data={...updated};delete data._cloudId;
+  if(type==='property')Object.assign(data,normalizePropertyCompany(data));
   if(type==='property'&&isNonPropertyMasterName(data.name)){
     return{error:{message:'「解約立会業務」などの業務名は物件マスタへ登録できません。物件名を入力してください'}};
   }
