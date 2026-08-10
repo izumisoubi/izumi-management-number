@@ -8955,7 +8955,6 @@ function isNonPropertyMasterName(name){
 function normalizePropertyCompany(property){
   const row={...(property||{})};
   const name=String(row.name||'').normalize('NFKC');
-  const company=String(row.mgmt||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
   const companyAliases={
     'TAKUTO':'株式会社TAKUTO',
     'ベスト・プロパティ':'株式会社ベスト・プロパティ',
@@ -8965,10 +8964,15 @@ function normalizePropertyCompany(property){
     '毎日コムネット':'株式会社毎日コムネット',
     'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ'
   };
+  const canonicalCompany=value=>{
+    const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
+    if(/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company))return '東京建物不動産販売株式会社';
+    return companyAliases[company]||company;
+  };
   const isBrillia=/(?:brillia|briria|ブリリア)/i.test(name);
-  const isTokyoTatemonoVariant=/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company);
-  row.mgmt=companyAliases[company]||company;
-  if(isBrillia||isTokyoTatemonoVariant)row.mgmt='東京建物不動産販売株式会社';
+  row.mgmt=canonicalCompany(row.mgmt);
+  row.client=canonicalCompany(row.client);
+  if(isBrillia){row.mgmt='東京建物不動産販売株式会社';row.client='東京建物不動産販売株式会社';}
   return row;
 }
 function validPropertyMasterRows(rows){
