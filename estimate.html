@@ -8863,7 +8863,7 @@ var INIT_VENDORS_FULL = [
   {name:'稲垣機材株式会社',category:'設備',zip:'',addr:'',tel:'',fax:'',contact:'',note:''},
   {name:'(有)ケーアンドワイコーポレーション',category:'設備',zip:'',addr:'',tel:'',fax:'',contact:'',note:''},
 ];
-var INIT_EMPLOYEES = ['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田','林'];
+var INIT_EMPLOYEES = ['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田','林','長谷川','中井'];
 const EMPLOYEE_PROFILES = {
   '大島':{title:'取締役',email:'ooshima@izumisoubi.co.jp',access:'最高権限'},
   '花田':{title:'営業',email:'hanada@izumisoubi.co.jp',access:'従業員権限'},
@@ -8874,7 +8874,9 @@ const EMPLOYEE_PROFILES = {
   '出町':{title:'事務',email:'demachi@izumisoubi.co.jp',access:'最高権限'},
   '水口':{title:'事務',email:'mizuguchi@izumisoubi.co.jp',access:'従業員権限'},
   '飯田':{title:'管理部長',email:'iida@izumisoubi.co.jp',access:'最高権限'},
-  '林':{title:'営業　外注',email:'',access:'従業員権限'}
+  '林':{title:'営業　外注',email:'',access:'従業員権限'},
+  '長谷川':{title:'入社予定 9/21',email:'',access:'従業員権限',joinDate:'2026-09-21'},
+  '中井':{title:'入社予定 10/1',email:'',access:'従業員権限',joinDate:'2026-10-01'}
 };
 const BUNDLED_EMPLOYEE_STAMPS = {
   '大島':'assets/stamps/oshima.png?v=20260720',
@@ -8886,8 +8888,14 @@ const BUNDLED_EMPLOYEE_STAMPS = {
   '大塚':'assets/stamps/otsuka.png?v=20260720',
   '池野':'assets/stamps/ikeno.png?v=20260720',
   '花田':'assets/stamps/hanada.png?v=20260720',
-  '林':'assets/stamps/hayashi.png?v=20260727-2'
+  '林':'assets/stamps/hayashi.png?v=20260727-2',
+  '長谷川':'assets/stamps/hasegawa.png?v=20260811',
+  '中井':'assets/stamps/nakai.png?v=20260811'
 };
+const PERSONAL_CLIENT_MASTER_NAMES = new Set([
+  'ハバユズキ','マツバラミサエ','一ノ瀬佐季','三留貴司','中村賢治','中澤博正','中澤和典','今野卓','仲井大介','伊藤友紀','住吉玄徳','佐藤光','兼安亮輔','前田周五郎','加藤芳浩','北口敬二郎','千葉勝彦','吉原','吉原孝典','坂本','坂田靖弘','堀内栄治','大黒公嗣','奥田竜太郎','好井貴重','安田たかし','宮原武士','宮本康宏','小川拓哉','小林清太郎','小林義幸','小林豊','山口トラアキ','山口直志','山﨑日勝','山本仁','岡本和人','嶋村伸吾','平井勇一郎','徳重広為智','折出','早田武士','有本竜彦','木下英明','末原都志実','松崎正明','松本恒作','林','桑原光枝','森三樹雄','森田哲','森田英明','江原勇輝','河野ユキエ','浜田浩一郎','渡辺','滝口','濱松泰広','田中 徳之','田口廣見','石澤邦彦','秋葉将人','米山浩','若林豊','薗 智子','藤平','藤村（ウーブ）','藤永麻希子','西山泰輔','角井マサミ','金田唯花','長谷川剛','関口雪風','関根大仁','飯塚尚敬','高橋謙二','黒田直美'
+]);
+const isPersonalClientMasterName=name=>PERSONAL_CLIENT_MASTER_NAMES.has(String(name||'').trim());
 function needsBundledEmployeeStamp(stamp){
   return !stamp
     || stamp.includes('見積書システム')
@@ -8906,6 +8914,7 @@ let _vendorNames = []; // vendors[] と同期
 
 function loadAllMasters(){
   try{ clientList2  = JSON.parse(localStorage.getItem(LS_CLIENTS2)||'null') || JSON.parse(JSON.stringify(INIT_CLIENTS)); }catch(e){ clientList2=JSON.parse(JSON.stringify(INIT_CLIENTS)); }
+  clientList2=clientList2.filter(client=>!isPersonalClientMasterName(client.name));
   try{ vendorDetails = JSON.parse(localStorage.getItem(LS_VENDORS2)||'null') || JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }catch(e){ vendorDetails=JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }
   try{ employeeList  = JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'null') || INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }catch(e){ employeeList=INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }
   let employeeStampsUpdated=false;
@@ -8920,7 +8929,7 @@ function loadAllMasters(){
   });
   employeeList.forEach(employee=>{
     const profile=EMPLOYEE_PROFILES[employee.name];if(!profile)return;
-    employee.title=profile.title;employee.email=profile.email;employee.access=profile.access;
+    employee.title=profile.title;employee.email=profile.email;employee.access=profile.access;employee.joinDate=profile.joinDate||employee.joinDate||'';
   });
   if(employeeStampsUpdated)saveEmployees();
   let bossFound=false;
@@ -9005,7 +9014,7 @@ function masterRecordsForSeed(){
 }
 function applySharedMasterRows(records){
   const grouped={vendor:[],client:[],property:[]};
-  (records||[]).forEach(record=>{if(grouped[record.master_type])grouped[record.master_type].push({...record.data,name:record.name,_cloudId:record.id})});
+  (records||[]).forEach(record=>{if(grouped[record.master_type]&&!(record.master_type==='client'&&isPersonalClientMasterName(record.name)))grouped[record.master_type].push({...record.data,name:record.name,_cloudId:record.id})});
   if(grouped.vendor.length)vendorDetails=grouped.vendor;
   if(grouped.client.length)clientList2=grouped.client;
   if(grouped.property.length)propertyList=validPropertyMasterRows(grouped.property);
@@ -9021,6 +9030,15 @@ async function loadSharedMastersFromCloud(){
     const seed=await managementDb.rpc('seed_shared_master_records',{p_records:masterRecordsForSeed()});
     if(seed.error){console.warn('共通マスタの初期移行に失敗しました',seed.error);return false}
     result=await managementDb.rpc('list_shared_master_records');
+  }
+  const personalClientRecords=(result.data||[]).filter(record=>record.master_type==='client'&&isPersonalClientMasterName(record.name));
+  if(sharedMasterAdmin&&personalClientRecords.length){
+    for(let offset=0;offset<personalClientRecords.length;offset+=15){
+      const batch=personalClientRecords.slice(offset,offset+15);
+      const deleted=await Promise.all(batch.map(record=>managementDb.rpc('delete_shared_master_record',{p_id:record.id,p_reason:'個人名の取引先マスタを整理'})));
+      deleted.forEach((entry,index)=>{if(entry.error)console.warn('個人名取引先の整理を保留しました',batch[index].name,entry.error)});
+    }
+    result.data=(result.data||[]).filter(record=>!personalClientRecords.some(personal=>personal.id===record.id));
   }
   applySharedMasterRows(result.data||[]);
   const stampResult=await managementDb.rpc('list_employee_stamps');
