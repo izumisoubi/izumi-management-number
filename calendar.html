@@ -254,7 +254,7 @@
   const DEFAULT_STAFF=['大島','林','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
   const COLOR_PALETTE={blue:{line:'#2563eb',bg:'#eef5ff'},purple:{line:'#7c3aed',bg:'#f5f0ff'},green:{line:'#15805d',bg:'#edf9f3'},cyan:{line:'#0891b2',bg:'#ebfbff'},yellow:{line:'#d59b12',bg:'#fff8d7'},orange:{line:'#e46c1a',bg:'#fff1e6'},red:{line:'#c94352',bg:'#fff0f2'},gray:{line:'#64748b',bg:'#f1f5f9'}};
   const AUTO_COLORS={'現地調査':'purple','見積訪問':'purple','工事':'green','完工確認':'cyan','休み':'gray','その他':'yellow','退去立会':'blue'};
-  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:'',slot:null},authFlowId=0;
+  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},calendarClients=[],calendarProperties=[],dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:'',slot:null},authFlowId=0;
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const isoDate=date=>{const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`};
   const estimateDocumentUrl=()=>new URL('estimate.html',location.href);
@@ -332,9 +332,47 @@
     $('userEmail').textContent=user.email;
     setAuthView('app');
     await loadEmployees();
-    await loadEvents();
+    await Promise.all([loadCalendarMasters(),loadEvents()]);
   }
   async function loadEmployees(){employees=[...DEFAULT_STAFF];$('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');$('eventStaff').innerHTML=staffOptions('');$('additionalStaff').innerHTML=staffOptions('')}
+  function ensureCalendarDatalist(id,inputId){
+    let list=$(id);
+    if(!list){list=document.createElement('datalist');list.id=id;document.body.appendChild(list)}
+    const input=$(inputId);if(input){input.setAttribute('list',id);input.setAttribute('autocomplete','off')}
+    return list;
+  }
+  function masterText(value){return String(value||'').trim().replace(/[\s　]+/g,' ')}
+  function propertyCompany(property){return masterText(property.mgmt||property.client)}
+  function matchingClient(name){const key=masterText(name);return calendarClients.find(client=>masterText(client.name)===key)||null}
+  function matchingProperty(name){const key=masterText(name);return calendarProperties.find(property=>masterText(property.name)===key)||null}
+  function renderCalendarMasterCandidates(){
+    const company=masterText($('clientName')?.value);
+    const scoped=company?calendarProperties.filter(property=>propertyCompany(property)===company):calendarProperties;
+    ensureCalendarDatalist('calendarClientCandidates','clientName').innerHTML=calendarClients.map(client=>`<option value="${esc(client.name)}">${esc([client.addr,client.tel].filter(Boolean).join(' ／ '))}</option>`).join('');
+    ensureCalendarDatalist('calendarPropertyCandidates','propertyName').innerHTML=scoped.map(property=>`<option value="${esc(property.name)}">${esc([propertyCompany(property),property.addr].filter(Boolean).join(' ／ '))}</option>`).join('');
+    ensureCalendarDatalist('calendarAddressCandidates','eventAddress').innerHTML=scoped.filter(property=>property.addr).map(property=>`<option value="${esc(property.addr)}">${esc(property.name)}</option>`).join('');
+  }
+  function applyClientMasterCandidate(){
+    const client=matchingClient($('clientName').value);renderCalendarMasterCandidates();if(!client)return;
+    if(!$('contactName').value.trim())$('contactName').value=client.person||client.billingPerson||'';
+    if(!$('phone').value.trim())$('phone').value=client.tel||client.billingTel||'';
+  }
+  function applyPropertyMasterCandidate(){
+    const property=matchingProperty($('propertyName').value);if(!property)return;
+    const company=propertyCompany(property);if(company)$('clientName').value=company;
+    if(property.addr)$('eventAddress').value=property.addr;
+    if(!$('contactName').value.trim())$('contactName').value=property.person||'';
+    const client=matchingClient(company);if(client&&!$('phone').value.trim())$('phone').value=client.tel||client.billingTel||'';
+    renderCalendarMasterCandidates();
+  }
+  async function loadCalendarMasters(){
+    let result=await db.rpc('list_shared_master_records');
+    if(result.error){console.warn('カレンダーのマスタ候補を読み込めませんでした',result.error);calendarClients=[];calendarProperties=[];renderCalendarMasterCandidates();return}
+    const rows=Array.isArray(result.data)?result.data:[];
+    calendarClients=rows.filter(row=>row.master_type==='client').map(row=>({...row.data,name:row.name||row.data?.name||'',_cloudId:row.id})).filter(row=>row.name).sort((a,b)=>masterText(a.name).localeCompare(masterText(b.name),'ja'));
+    calendarProperties=rows.filter(row=>row.master_type==='property').map(row=>({...row.data,name:row.name||row.data?.name||'',_cloudId:row.id})).filter(row=>row.name).sort((a,b)=>masterText(a.name).localeCompare(masterText(b.name),'ja'));
+    renderCalendarMasterCandidates();
+  }
   function calendarScaleKey(){return `izumiCalendarScaleV2:${currentUser?.id||'local'}`}
   function applyCalendarScale(value){
     const scale=Math.max(70,Math.min(120,Number(value)||100));
@@ -611,7 +649,7 @@
     $('deleteEvent').classList.remove('hidden');
   }
   function closeModal(){$('modalBack').classList.add('hidden')}
-  function eventPayload(){const memo=$('eventMode').value==='memo',startText=$('startTime').value.trim(),returnText=$('endTime').value.trim();return {event_date:$('eventDate').value,start_text:startText||null,return_status_text:returnText||null,start_time:startText&&validNormalizedTime(startText)?normalizeManualTime(startText):null,end_time:returnText&&validNormalizedTime(returnText)?normalizeManualTime(returnText):null,event_type:$('eventType').value,event_status:memo?'メモ':$('eventStatus').value,staff_name:$('eventStaff').value,additional_staff_names:selectedAdditional().filter(name=>name!==$('eventStaff').value),management_number:memo?null:$('managementNumber').value.trim()||null,client_name:memo?null:$('clientName').value.trim()||null,property_name:$('propertyName').value.trim()||null,room_number:memo?null:$('roomNumber').value.trim()||null,work_name:memo?null:$('eventWorkName').value.trim()||null,address:memo?null:$('eventAddress').value.trim()||null,contact_name:memo?null:$('contactName').value.trim()||null,phone:memo?null:$('phone').value.trim()||null,notes:$('eventNotes').value.trim()||null,color_key:$('eventColor').value||'auto',memo_only:memo,display_slot:normalizeDisplaySlot($('eventDisplaySlot').value),updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||''}}
+  function eventPayload(){const memo=$('eventMode').value==='memo',startText=$('startTime').value.trim(),returnText=$('endTime').value.trim();return {event_date:$('eventDate').value,start_text:startText||null,return_status_text:returnText||null,start_time:startText&&validNormalizedTime(startText)?normalizeManualTime(startText):null,end_time:returnText&&validNormalizedTime(returnText)?normalizeManualTime(returnText):null,event_type:$('eventType').value,event_status:memo?'メモ':$('eventStatus').value,staff_name:$('eventStaff').value,additional_staff_names:selectedAdditional().filter(name=>name!==$('eventStaff').value),management_number:memo?null:$('managementNumber').value.trim()||null,client_name:$('clientName').value.trim()||null,property_name:$('propertyName').value.trim()||null,room_number:$('roomNumber').value.trim()||null,work_name:memo?null:$('eventWorkName').value.trim()||null,address:$('eventAddress').value.trim()||null,contact_name:$('contactName').value.trim()||null,phone:$('phone').value.trim()||null,notes:$('eventNotes').value.trim()||null,color_key:$('eventColor').value||'auto',memo_only:memo,display_slot:normalizeDisplaySlot($('eventDisplaySlot').value),updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||''}}
   async function saveEvent(options={}){
     if(!$('eventForm').reportValidity())return false;
     const originalId=$('eventId').value,payload=eventPayload();
@@ -643,6 +681,10 @@
     scheduleWrap.classList.toggle('is-x-scrolled',scheduleWrap.scrollLeft>2);
   },{passive:true});
   $('login').onclick=async()=>{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else if(data.session)await showApp(data.session)};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;$('closeLeavePicker').onclick=closeLeavePicker;$('leavePickerBack').addEventListener('click',event=>{if(event.target===$('leavePickerBack'))closeLeavePicker()});document.querySelectorAll('.leave-option').forEach(button=>button.onclick=()=>saveLeavePeriod(button.dataset.period,button));
+  $('clientName').addEventListener('input',renderCalendarMasterCandidates);
+  $('clientName').addEventListener('change',applyClientMasterCandidate);
+  $('propertyName').addEventListener('change',applyPropertyMasterCandidate);
+  $('propertyName').addEventListener('blur',applyPropertyMasterCandidate);
   setAuthView('loading');
   db.auth.onAuthStateChange((event,session)=>{
     if(event==='INITIAL_SESSION')return;
