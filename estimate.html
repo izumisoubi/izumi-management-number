@@ -7433,6 +7433,22 @@ function fmtNum(v){
   return n.toLocaleString('ja-JP',{maximumFractionDigits:12});
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function masterWebsiteUrl(name,website){
+  const raw=String(website||'').trim();
+  if(raw){
+    const withScheme=/^https?:\/\//i.test(raw)?raw:'https://'+raw;
+    try{const parsed=new URL(withScheme);if(/^https?:$/.test(parsed.protocol))return parsed.href;}catch(_error){}
+  }
+  return 'https://www.google.com/search?q='+encodeURIComponent(String(name||'')+' 公式');
+}
+function masterMapUrl(name,zip,address){
+  const location=[zip?('〒'+zip):'',address||'',address?'':(name||'')].filter(Boolean).join(' ');
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(location);
+}
+function masterExternalLink(url,label,title,style){
+  return `<a href="${escAttr(url)}" target="_blank" rel="noopener noreferrer" title="${escAttr(title||'')}" style="${style||''}">${label}</a>`;
+}
 function escapeHtmlAttribute(s){return esc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const UNITS=['式','人工','㎡','m','個','台','箇所','本','枚','ケ','セット','ｍ','㎏','L','基','ｍ²','㎝'];
 function uopts(cur){
@@ -9062,9 +9078,9 @@ function renderVendorMaster(){
         const col=vColor(v.name);
         html+=`<tr style="border-bottom:1px solid var(--tbr)" onmouseover="this.style.background='var(--ti)'" onmouseout="this.style.background=''">
           <td style="padding:5px 8px;text-align:center"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col}"></span></td>
-          <td style="padding:5px 10px;font-weight:700;color:var(--tt)">${esc(v.name)}</td>
+          <td style="padding:5px 10px;font-weight:700;color:var(--tt)">${masterExternalLink(masterWebsiteUrl(v.name,v.website),esc(v.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:11px;color:var(--tm)">${esc(v.category||'')}</td>
-          <td style="padding:5px 10px;font-size:11px;color:var(--tm)">${esc((v.zip?v.zip+' ':'')+v.addr)}</td>
+          <td style="padding:5px 10px;font-size:11px;color:var(--tm)">${masterExternalLink(masterMapUrl(v.name,v.zip,v.addr),v.addr?esc((v.zip?v.zip+' ':'')+v.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:11px;color:var(--tm)">${esc(v.tel||'')}</td>
           <td style="padding:4px 8px;text-align:right">
             <button class="ubtn" onclick="openVendorModal(${i})" style="font-size:10px;padding:2px 8px">編集</button>
@@ -9092,10 +9108,10 @@ function renderVendorMaster(){
         html+=`<div style="background:var(--tc);border:1px solid var(--tbr);border-top:3px solid ${col};border-radius:8px;padding:10px 12px;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
             <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
-            <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.name)}</div>
+            <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${masterExternalLink(masterWebsiteUrl(v.name,v.website),esc(v.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
           </div>
           <div style="font-size:10px;color:var(--tm);line-height:1.6">
-            ${v.addr?`<div>📍 ${esc((v.zip?v.zip+' ':'')+v.addr)}</div>`:''}
+            <div>📍 ${masterExternalLink(masterMapUrl(v.name,v.zip,v.addr),v.addr?esc((v.zip?v.zip+' ':'')+v.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
             ${v.tel?`<div>📞 ${esc(v.tel)}</div>`:''}
           </div>
           <button class="ubtn" onclick="openVendorModal(${i})" style="font-size:10px;padding:2px 10px;margin-top:6px;width:100%;border-color:${col};color:${col}">✏ 編集</button>
@@ -9111,7 +9127,7 @@ function renderVendorMaster(){
 
 function openVendorModal(idx){
   const isNew = idx<0;
-  const v = isNew ? {name:'',category:'',invoiceNo:'',email:'',zip:'',addr:'',tel:'',fax:'',contact:'',note:''} : vendorDetails[idx];
+  const v = isNew ? {name:'',category:'',invoiceNo:'',email:'',website:'',zip:'',addr:'',tel:'',fax:'',contact:'',note:''} : vendorDetails[idx];
   const categories=['内装','畳','塗装','清掃','建具','外注','大工','設備','他'];
   const categorySelect=`<div><label style="${fl_style}">カテゴリ</label><select id="vm-cat" style="${fi_style}">
     ${categories.map(c=>`<option value="${c}"${c===(v.category||'他')?' selected':''}>${c}</option>`).join('')}
@@ -9125,6 +9141,7 @@ function openVendorModal(idx){
     mrow('1fr','1fr') +
     mf('適格請求書発行事業者番号','vm-invoice','T＋13桁',undefined,v.invoiceNo||v.invoice_reg_no) +
     mf('通知先メール','vm-email','vendor@example.jp',undefined,v.email) + '</div>' +
+    mf('Webサイト','vm-website','https://',undefined,v.website||'') +
     mf('住所','vm-addr','東京都…',undefined,v.addr) +
     mrow('1fr','1fr') +
     mf('FAX','vm-fax','',undefined,v.fax) +
@@ -9136,7 +9153,7 @@ function openVendorModal(idx){
       const existing=isNew?null:vendorDetails[idx];
       const updated = {
         name:mfi('vm-name'), category:mfi('vm-cat'),
-        invoiceNo:mfi('vm-invoice').toUpperCase(), email:mfi('vm-email'),
+        invoiceNo:mfi('vm-invoice').toUpperCase(), email:mfi('vm-email'), website:mfi('vm-website'),
         zip:mfi('vm-zip'), addr:mfi('vm-addr'),
         tel:mfi('vm-tel'), fax:mfi('vm-fax'),
         contact:mfi('vm-contact'), note:mfi('vm-note')
@@ -9204,10 +9221,10 @@ function renderClientMaster(){
         const i=clientList2.indexOf(c);
         return `<tr style="border-bottom:1px solid var(--tbr)" onmouseover="this.style.background='var(--ti)'" onmouseout="this.style.background=''">
           <td style="padding:5px 8px;width:20px;text-align:center"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${vColor(c.name)}"></span></td>
-          <td style="padding:5px 10px;font-weight:700;white-space:nowrap">${esc(c.name)}</td>
+          <td style="padding:5px 10px;font-weight:700;white-space:nowrap">${masterExternalLink(masterWebsiteUrl(c.name,c.website),esc(c.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:11px;white-space:nowrap">${esc([c.dept,c.person].filter(Boolean).join(' ')||'')}</td>
           <td style="padding:5px 10px;font-size:11px;white-space:nowrap">${esc(c.zip||'')}</td>
-          <td style="padding:5px 10px;font-size:11px">${esc(c.addr||'')}</td>
+          <td style="padding:5px 10px;font-size:11px">${masterExternalLink(masterMapUrl(c.name,c.zip,c.addr),c.addr?esc(c.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:11px;white-space:nowrap">${esc(c.tel||'')}</td>
           <td style="padding:5px 10px;font-size:11px;white-space:nowrap">${esc(c.fax||'')}</td>
           <td style="padding:4px 8px;text-align:right">
@@ -9230,10 +9247,10 @@ function renderClientMaster(){
         ondragend="masterDragEnd(event)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <div style="width:10px;height:10px;border-radius:50%;background:${cCol};flex-shrink:0"></div>
-          <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(c.name)}">${esc(c.name)}</div>
+          <div style="font-size:12px;font-weight:800;color:var(--tt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${escAttr(c.name)}">${masterExternalLink(masterWebsiteUrl(c.name,c.website),esc(c.name),'会社情報を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
         </div>
         <div style="font-size:10px;color:var(--tm);line-height:1.8">
-          ${c.zip||c.addr?`<div>📍 〒${esc(c.zip||'')} ${esc(c.addr||'')}</div>`:''}
+          <div>📍 ${masterExternalLink(masterMapUrl(c.name,c.zip,c.addr),c.zip||c.addr?`〒${esc(c.zip||'')} ${esc(c.addr||'')}`:'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
           ${c.tel?`<div>📞 ${esc(c.tel)}</div>`:''}
           ${c.fax?`<div>📠 ${esc(c.fax)}</div>`:''}
           ${c.dept||c.person?`<div>👤 ${esc([c.dept,c.person].filter(Boolean).join(' '))}</div>`:''}
@@ -9316,9 +9333,9 @@ function renderPropertyMaster(){
       list.map(p=>{
         const i=propertyList.indexOf(p);
         return `<tr style="border-bottom:1px solid var(--tbr)" onmouseover="this.style.background='var(--ti)'" onmouseout="this.style.background=''">
-          <td style="padding:5px 10px;font-weight:700;white-space:nowrap">${esc(p.name)}</td>
+          <td style="padding:5px 10px;font-weight:700;white-space:nowrap">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),esc(p.name),'Googleマップで物件を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:10px;color:var(--tm);white-space:nowrap">${esc(p.mgmt||'')}</td>
-          <td style="padding:5px 10px;font-size:10px">${esc((p.zip?p.zip+' ':'')+p.addr)}</td>
+          <td style="padding:5px 10px;font-size:10px">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),p.addr?esc((p.zip?p.zip+' ':'')+p.addr):'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</td>
           <td style="padding:5px 10px;font-size:10px">${esc(p.person||'')}</td>
           <td style="padding:5px 10px;font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.key||'')}">${esc(p.key||'')}</td>
           <td style="padding:4px 8px;text-align:right">
@@ -9338,10 +9355,10 @@ function renderPropertyMaster(){
         ondragover="masterDragOver(event)"
         ondrop="masterDrop(event,'prop',${i})"
         ondragend="masterDragEnd(event)">
-        <div style="font-size:12px;font-weight:800;color:var(--tt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</div>
+        <div style="font-size:12px;font-weight:800;color:var(--tt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),esc(p.name),'Googleマップで物件を開く','color:var(--ta);text-decoration:underline;text-underline-offset:2px')}</div>
         <div style="font-size:10px;color:var(--ta);margin-bottom:5px;font-weight:700">${esc(p.mgmt||'')}</div>
         <div style="font-size:10px;color:var(--tm);line-height:1.7">
-          ${p.addr?`<div>📍 〒${p.zip} ${esc(p.addr)}</div>`:''}
+          <div>📍 ${masterExternalLink(masterMapUrl(p.name,p.zip,p.addr),p.addr?`〒${esc(p.zip||'')} ${esc(p.addr)}`:'地図で検索','Googleマップで開く','color:var(--tm);text-decoration:underline;text-underline-offset:2px')}</div>
           ${p.person?`<div>👤 担当：${esc(p.person)}</div>`:''}
           ${p.client?`<div>🏢 ${esc(p.client)}</div>`:''}
           ${p.key?`<div>🔑 ${esc(p.key.slice(0,35))}${p.key.length>35?'…':''}</div>`:''}
