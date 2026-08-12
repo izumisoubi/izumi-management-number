@@ -12,7 +12,6 @@
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260807-RECON63"></script>
 <script src="自社原価共通.js?v=20260803-IME61"></script>
-<script src="バックアップ共通.js?v=20260811-AUDIT01"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--tb:#1e2433;--tc:#252d42;--tbr:#3a4460;--ta:#4f8ef7;--ta2:#7c5cf7;--tg:#2ecfa0;--to:#f0a33a;--tr:#f05252;--tt:#e8ecf4;--tm:#8892aa;--ti:#111820;}
@@ -75,6 +74,11 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 #sc-basic .fg>input,#sc-basic .fg>textarea,#sc-basic .fg>select{width:100%;max-width:620px;}
 #sc-basic .fg>.date-actions{width:315px;}
 #sc-basic .fg>.date-actions input{width:145px!important;}
+.date-actions{position:relative;}
+.date-lock-help{position:relative;}
+.date-lock-help::after{content:attr(data-help);position:absolute;left:50%;bottom:calc(100% + 9px);z-index:1200;width:260px;max-width:min(260px,72vw);padding:9px 11px;border:1px solid var(--tbr);border-radius:8px;background:var(--tc);color:var(--tt);box-shadow:0 8px 24px rgba(0,0,0,.28);font:600 11px/1.55 'Helvetica Neue','Hiragino Sans',sans-serif;white-space:normal;text-align:left;opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .15s,transform .15s,visibility .15s;pointer-events:none;}
+.date-lock-help:hover::after,.date-lock-help:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0);}
+@media print{.date-lock-help::after{display:none!important}}
 #ordInfoPanel{background:var(--tb);border:1px solid var(--tbr);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:11px}
 .ord-info-title{font-size:10px;font-weight:800;color:var(--tm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
 .ord-info-grid,.ord-info-bottom{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
@@ -565,33 +569,10 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 @media(min-width:901px) and (max-width:1100px){
   .ord-left{flex:0 0 200px;width:200px;}
 }
-/* 発注テーブルの業者セル：一覧表示と文字絞り込みを両立する検索式コンボボックス */
-.ord-vendor-combo{position:relative;display:flex;align-items:center;width:100%;min-width:150px;}
-.ord-vendor-sel{background:transparent;border:none;width:100%;color:var(--tt);font-size:10px;padding:4px 23px 4px 5px;font-family:'Helvetica Neue',sans-serif;outline:none;}
-.ord-vendor-sel:focus{background:rgba(247,168,79,.09);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--to) 45%,transparent);}
-.ord-vendor-toggle{position:absolute;right:1px;top:50%;transform:translateY(-50%);width:22px;height:22px;padding:0;border:0;background:transparent;color:var(--tm);font-size:13px;line-height:1;cursor:pointer;border-radius:4px;}
-.ord-vendor-toggle:hover{background:rgba(247,168,79,.12);color:var(--to);}
-.order-vendor-suggest{position:fixed;z-index:12500;min-width:260px;max-width:min(430px,calc(100vw - 20px));max-height:300px;overflow:auto;background:var(--tc);border:1px solid color-mix(in srgb,var(--to) 55%,var(--tbr));border-radius:9px;box-shadow:0 14px 34px rgba(0,0,0,.25);padding:5px;}
-.order-vendor-suggest[hidden]{display:none;}
-.order-vendor-suggest button{display:block;width:100%;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--tt);font:600 11px/1.35 'Helvetica Neue',sans-serif;text-align:left;cursor:pointer;white-space:normal;}
-.order-vendor-suggest button:hover,.order-vendor-suggest button.is-active{background:color-mix(in srgb,var(--to) 13%,var(--ti));color:var(--tt);outline:none;}
-.order-vendor-suggest .ovs-empty{padding:12px 10px;color:var(--tm);font-size:10.5px;line-height:1.6;}
-.ord-price-master-notice{display:flex;align-items:center;gap:9px;margin:8px 0 5px;padding:9px 12px;border:1px solid color-mix(in srgb,var(--to) 68%,var(--tbr));border-left:5px solid var(--to);border-radius:8px;background:color-mix(in srgb,var(--to) 10%,var(--tc));color:var(--tt);font-size:11px;line-height:1.55;}
-.ord-price-master-notice strong{color:var(--to);font-size:11.5px;white-space:nowrap;}
-.vendor-price-reference{position:fixed;z-index:12600;width:min(350px,calc(100vw - 20px));max-height:235px;overflow:auto;padding:9px;background:var(--tc);border:1px solid color-mix(in srgb,var(--to) 60%,var(--tbr));border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.25);color:var(--tt);}
-.vendor-price-reference[hidden]{display:none;}
-.vpr-head{display:flex;align-items:center;gap:7px;margin-bottom:6px;padding:0 1px 6px;border-bottom:1px solid var(--tbr);}
-.vpr-head strong{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;}
-.vpr-head span{color:var(--to);font-size:9.5px;font-weight:800;white-space:nowrap;}
-.vpr-close{width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--tm);cursor:pointer;font-size:14px;line-height:20px;}
-.vpr-close:hover{background:var(--ti);color:var(--tt);}
-.vpr-list{display:grid;gap:3px;}
-.vpr-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:6px 7px;border-radius:6px;background:var(--ti);font-size:10px;}
-.vpr-item.is-match{box-shadow:inset 3px 0 var(--to);background:color-mix(in srgb,var(--to) 10%,var(--ti));}
-.vpr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
-.vpr-price{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--to);font-size:11.5px;font-weight:800;white-space:nowrap;}
-.vpr-meta{color:var(--tm);font-size:9px;}
-.vpr-empty{padding:8px 5px;color:var(--tm);font-size:10px;line-height:1.5;}
+/* 発注テーブルの業者セル */
+.ord-vendor-sel{background:transparent;border:none;width:100%;color:var(--tt);font-size:10px;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.ord-vendor-sel:focus{background:rgba(247,168,79,.09);}
+.ord-vendor-sel option{background:var(--tc);}
 .ord-order-inp{background:transparent;border:none;width:100%;color:var(--to);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
 .ord-order-inp:focus{background:color-mix(in srgb,var(--to) 8%,transparent);}
 .ctbl .ord-has-vendor{background:rgba(46,207,160,.03)!important;}
@@ -693,7 +674,6 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
     <button class="ubtn" onclick="duplicateProject()" title="内容を複製し、管理番号・請求日・完工日・部屋番号をクリア">⧉ 複製</button>
     <button class="ubtn" onclick="saveAll()" title="入力内容は自動保存されます。このボタンは直ちに保存したい場合に使用します（⌘/Ctrl＋S）">💾 今すぐ保存</button>
     <span id="onlineSaveStatus" title="管理番号がある案件は、入力が止まると自動でクラウド保存されます" style="font-size:10px;color:var(--tm);white-space:nowrap">自動保存：待機</span>
-    <span id="onlineEditorsStatus" hidden style="font-size:10px;font-weight:700;color:#b45309;white-space:nowrap;padding:3px 7px;border:1px solid #f0b35a;border-radius:999px;background:#fff8e8" title="同じ案件を別の社員も開いています。保存時は版競合を検出し、こちらの入力を端末内へ退避します。"></span>
     <button class="ubtn" id="conflictDraftButton" onclick="restoreConflictDraft()" style="display:none;color:#b45309;border-color:#b45309" title="同時編集の競合時に退避した入力を確認します">⚠ 競合退避を確認</button>
     <button class="ubtn" onclick="openProjectOnline()" title="クラウドに保存済みの案件一覧から選んで開きます">📂 保存済み案件を開く</button>
     <button class="ubtn" onclick="saveBackupToPc()" title="障害・復旧に備え、現在の案件をJSONファイルとしてこのPCへ保存します">📦 PCへバックアップ</button>
@@ -1140,8 +1120,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
 
-      <div class="ord-price-master-notice"><strong>重要｜単価は双方向連動</strong><span>見積原価 → 発注単価へ反映。発注タブで単価を直して確定すると、<b>その案件の見積原価へ戻し</b>、同時に「業者・工事項目・単位」別の共有正式単価として保存します。</span></div>
-      <div class="paste-hint">💡 「業者」列で各行に業者を割り当て。業者を選ぶと登録単価を参考表示します。<strong>青い発注単価を変更して欄外へ移動すると正式単価として確定</strong>し、次回以降の同じ業者・工事項目・単位へ自動反映します。</div>
+      <div class="paste-hint">💡 「業者」列で各行に業者を割り当て。<strong>発注単価</strong>は見積原価から自動更新（緑）。発注側で個別変更した単価（青）は、見積から再取込しても保持します。</div>
       <div class="paste-hint" id="ordPasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　発注単価　備考</strong>（既存行を上書き・不足分は自動追加）。ドラッグで範囲選択→Ctrl+Cでコピー。</div>
       <div style="overflow-x:auto">
         <table class="sync-tbl ctbl" id="ordtbl" style="table-layout:fixed;width:1182px;min-width:1182px">
@@ -1537,7 +1516,7 @@ function saveBasic(){
   try{const data={};BASIC_FIELDS.forEach(id=>{const el=document.getElementById(id);if(el)data[id]=el.value;});localStorage.setItem(LS_BASIC,JSON.stringify(data));}catch(e){}
 }
 function loadBasic(){
-  try{const s=localStorage.getItem(LS_BASIC);if(s){const d=JSON.parse(s);BASIC_FIELDS.forEach(id=>{const el=document.getElementById(id);if(el&&d[id]!==undefined)el.value=d[id];});syncKeijoSelect();syncCompletedDate('basic');}}catch(e){}
+  try{const s=localStorage.getItem(LS_BASIC);if(s){const d=JSON.parse(s);BASIC_FIELDS.forEach(id=>{const el=document.getElementById(id);if(el&&d[id]!==undefined)el.value=d[id];});syncKeijoSelect();syncCompletedDate('basic');}const honorific=document.getElementById('b-honorific');if(honorific&&!honorific.value&&!(s&&Object.hasOwn(JSON.parse(s),'b-honorific')))honorific.value='御中';}catch(e){const honorific=document.getElementById('b-honorific');if(honorific)honorific.value='御中';}
 }
 function syncKeijoSelect(){
   const select=document.getElementById('b-keijo-sel');
@@ -1574,7 +1553,6 @@ function duplicateProject(){
   if(onlineProjectRealtimeChannel)managementDb.removeChannel(onlineProjectRealtimeChannel);
   onlineProjectRealtimeChannel=null;
   onlineProjectRealtimeManagementNumber='';
-  stopOnlineEditorPresence();
   cancelOnlineAutosave();
   setOnlineSaveStatus('自動保存：管理番号取得後');
   history.replaceState(null,'',location.pathname);
@@ -1602,7 +1580,9 @@ function setupDateActions(){
     const todayButton=document.createElement('button'); todayButton.type='button'; todayButton.textContent='本日';
     const lockButton=document.createElement('button'); lockButton.type='button';
     [todayButton,lockButton].forEach(button=>button.style.cssText='border:1px solid var(--tbr);background:var(--tb);color:var(--tt);border-radius:4px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer;flex:none;');
-    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付固定';lockButton.title='入力値はこの操作をしなくても自動保存・台帳転記されます。これは誤変更防止だけの機能です。';};
+    lockButton.classList.add('date-lock-help');
+    lockButton.dataset.help='日付固定は、入力済みの日付を誤って変えないためのロックです。保存や台帳への反映は自動なので、固定しなくても問題ありません。';
+    const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付固定';lockButton.title='日付固定の説明';lockButton.setAttribute('aria-label',(locked?'ロック解除。':'日付固定。')+lockButton.dataset.help);};
     todayButton.onclick=()=>{input.value=new Date().toISOString().slice(0,10);input.dispatchEvent(new Event('input',{bubbles:true}));scheduleOnlineAutosave(250);};
     lockButton.onclick=()=>{locks[id]=!locks[id];saveDateLocks(locks);update();};
     input.addEventListener('input',()=>{if(locks[id]){locks[id]=false;saveDateLocks(locks);update();}});
@@ -2740,9 +2720,9 @@ function renderCost(){
           <td><button type="button" class="row-number-toggle" onclick="toggleEstimateRowNumber(${r.id})" title="クリックで見積書の番号を表示／非表示"></button></td>
           <td><input data-f="name" placeholder="名称" style="min-width:80px" oninput="sf(${r.id},'name',this.value);scheduleUnitPriceSuggest(event,'estimate',${r.id})" onblur="hideUnitPriceSuggestSoon()" autocomplete="off"></td>
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
-          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'qty',this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
+          <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalc(${r.id},'qty',this.value,this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
           <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="sf(${r.id},'unit',this.value)" autocomplete="off"></td>
-          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="commitEstimateCostToOrder(${r.id})"></td>
+          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
           <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':'var(--ta)'};font-weight:700;" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
@@ -3821,41 +3801,7 @@ document.addEventListener('keydown',event=>{
   const key=String(event.key||'').toLowerCase();
   const modifier=event.ctrlKey||event.metaKey;
   const nativeEditingShortcut=modifier&&['a','z','y'].includes(key);
-  // Home / End はセル移動ではなく、セル内の先頭・末尾へキャレットを
-  // 動かす操作として扱う。入力後の再描画で input 要素が入れ替わっても、
-  // このキーを押した時点で確実に文字編集モードへ戻す。
-  if(nativeEditingShortcut||event.key==='F2'||event.key==='Home'||event.key==='End')beginSpreadsheetTextEdit(event.target);
-  if((event.key==='Home'||event.key==='End')&&(event.target.tagName==='INPUT'||event.target.tagName==='TEXTAREA')){
-    const control=event.target;
-    const length=String(control.value??'').length;
-    const start=Number.isInteger(control.selectionStart)?control.selectionStart:0;
-    const end=Number.isInteger(control.selectionEnd)?control.selectionEnd:start;
-    event.preventDefault();
-    if(event.key==='Home')control.setSelectionRange(0,event.shiftKey?end:0,'backward');
-    else control.setSelectionRange(event.shiftKey?start:length,length,'forward');
-    event.stopImmediatePropagation();
-    return;
-  }
-  if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&isSpreadsheetTextEditMode(event.target)
-    &&(event.target.tagName==='INPUT'||event.target.tagName==='TEXTAREA')){
-    const control=event.target;
-    const length=String(control.value??'').length;
-    const start=Number.isInteger(control.selectionStart)?control.selectionStart:0;
-    const end=Number.isInteger(control.selectionEnd)?control.selectionEnd:start;
-    const backward=control.selectionDirection==='backward';
-    const anchor=backward?end:start;
-    const focus=backward?start:end;
-    event.preventDefault();
-    if(event.shiftKey){
-      const next=Math.max(0,Math.min(length,focus+(event.key==='ArrowLeft'?-1:1)));
-      control.setSelectionRange(Math.min(anchor,next),Math.max(anchor,next),next<anchor?'backward':'forward');
-    }else{
-      const next=start!==end?(event.key==='ArrowLeft'?start:end):Math.max(0,Math.min(length,start+(event.key==='ArrowLeft'?-1:1)));
-      control.setSelectionRange(next,next);
-    }
-    event.stopImmediatePropagation();
-    return;
-  }
+  if(nativeEditingShortcut||event.key==='F2')beginSpreadsheetTextEdit(event.target);
   const nativeSelectionShortcut=hasNativeClipboardSelection(event.target)
     &&((modifier&&['c','x'].includes(key))||['delete','backspace'].includes(key));
   // セル内編集中の左右・Home・Endはキャレット移動。
@@ -5898,17 +5844,13 @@ async function loadImportedCostLinesForEstimate(managementNumber){
 
 async function reconstructEstimateFromImportedCosts(item){
   const importedLines=await loadImportedCostLinesForEstimate(item?.management_number);
+  if(!importedLines.length)return 0;
   const historicalSales=item.sales_estimate_ex_tax
     ??item.invoice_subtotal_ex_tax
     ??item.sales_invoice_ex_tax
     ??'';
-  let reconstructed=window.IzumiEstimateMath.reconstructImportedEstimateRows(importedLines,historicalSales);
-  let restoreMode='cost-lines';
-  if(!reconstructed.length){
-    const totalOnlyRow=window.IzumiEstimateMath.reconstructLedgerTotalEstimateRow(item);
-    reconstructed=totalOnlyRow?[totalOnlyRow]:[];
-    restoreMode=totalOnlyRow?'ledger-total':'basic-only';
-  }
+  const reconstructed=window.IzumiEstimateMath.reconstructImportedEstimateRows(importedLines,historicalSales);
+  if(!reconstructed.length)return 0;
 
   rows=[];rowId=0;
   reconstructed.forEach(source=>{
@@ -5920,37 +5862,7 @@ async function reconstructEstimateFromImportedCosts(item){
   ordRows=[];ordRowId=0;
   renderAll();
   syncOrdFromEst({silent:true});
-  return {count:reconstructed.length,mode:restoreMode};
-}
-
-function managementClientName(item){
-  return String(item?.customer_name||item?.client_name||item?.billing_client_name||'').trim();
-}
-
-function mergeManagementMasterIntoPayload(payload,item){
-  if(!payload||!item)return{payload,changed:false};
-  const merged=structuredClone(payload);
-  const basic=merged.basic||(merged.basic={});
-  let changed=false;
-  const fill=(key,value)=>{
-    if(String(basic[key]??'').trim()||value===undefined||value===null||String(value).trim()==='')return;
-    basic[key]=value;changed=true;
-  };
-  fill('kanri',item.management_number);
-  fill('staff',item.staff_name);
-  fill('uketsuke',item.reception_date);
-  fill('category',item.category);
-  fill('keijo',item.accounting_month);
-  fill('kanko_date',item.scheduled_completion_date);
-  fill('completedOn',item.completed_on);
-  fill('client',managementClientName(item));
-  fill('clientContact',item.customer_contact_name||item.invoice_contact_name);
-  fill('property',item.property_name);
-  fill('room',item.room_number);
-  fill('postal',item.postal_code||item.property_postal_code);
-  fill('place',item.property_address||item.work_address);
-  fill('summary',item.work_name);
-  return{payload:merged,changed};
+  return reconstructed.length;
 }
 
 async function pickManagementMasterItem(index){
@@ -5989,18 +5901,14 @@ async function pickManagementMasterItem(index){
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
   const staff=document.getElementById('b-staff');if(staff&&item.staff_name){let option=[...staff.options].find(o=>o.value===item.staff_name||o.textContent===item.staff_name);if(!option){option=new Option(item.staff_name,item.staff_name);staff.add(option);}staff.value=item.staff_name;}
   const mappedStatus=item.status==='受付'?'見積中':item.status||'見積中';const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mappedStatus);if(!option){option=new Option(mappedStatus,mappedStatus);status.add(option);}status.value=mappedStatus;}
-  const reconstruction=await reconstructEstimateFromImportedCosts(item);
+  const reconstructedCount=await reconstructEstimateFromImportedCosts(item);
   syncKeijoSelect();syncCompletedDate('basic');
   syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);
-  // 明細が無くても台帳に見積合計がある場合は、1式の見積として保存する。
-  // 金額も無い過去案件は、開いただけで0円見積を作らない。
-  if(reconstruction.count)scheduleOnlineAutosave(250);
-  else setOnlineSaveStatus('自動保存：編集後に開始');
-  showToastMsg(reconstruction.mode==='cost-lines'
-    ?`過去原価${reconstruction.count}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
-    :reconstruction.mode==='ledger-total'
-      ?`台帳の見積合計を工事一式として復元しました：${item.management_number}`
-      :'Supabase台帳から基本情報を取り込みました：'+item.management_number);
+  // 固定操作は不要。新規案件も、選択直後に正本へ保存して台帳へ自動反映する。
+  scheduleOnlineAutosave(250);
+  showToastMsg(reconstructedCount
+    ?`過去原価${reconstructedCount}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
+    :'Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
 }
 
 // ===== Supabase 案件本体のオンライン保存・読込 =====
@@ -6014,9 +5922,6 @@ let onlineAutosaveInFlight=false;
 let onlineAutosaveQueued=false;
 let onlineProjectRealtimeChannel=null;
 let onlineProjectRealtimeManagementNumber='';
-let onlinePresenceChannel=null;
-let onlinePresenceManagementNumber='';
-const onlinePresenceTabId=(globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`);
 let onlineProjectId=null;
 let onlineProjectIdManagementNumber='';
 let onlinePurchaseOrderSignature='';
@@ -6026,65 +5931,6 @@ function rememberLastOpenedManagementNumber(managementNumber){
   const value=String(managementNumber||'').trim();
   if(!value)return;
   try{localStorage.setItem(LS_LAST_OPENED_MANAGEMENT_NUMBER,value);}catch(_error){}
-}
-
-function onlineEditorDisplayName(session){
-  const metadata=session?.user?.user_metadata||{};
-  return String(metadata.display_name||metadata.full_name||metadata.name||session?.user?.email?.split('@')[0]||'社員').trim();
-}
-function renderOnlineEditorsStatus(){
-  const status=document.getElementById('onlineEditorsStatus');if(!status)return;
-  if(!onlinePresenceChannel){status.hidden=true;status.textContent='';return;}
-  const state=onlinePresenceChannel.presenceState?.()||{};
-  const others=[];
-  Object.values(state).flat().forEach(item=>{
-    if(!item||item.tab_id===onlinePresenceTabId)return;
-    const name=String(item.display_name||'社員').trim();
-    if(name&&!others.includes(name))others.push(name);
-  });
-  status.hidden=others.length===0;
-  status.textContent=others.length?`同時編集中：${others.join('・')}`:'';
-}
-async function stopOnlineEditorPresence(){
-  const channel=onlinePresenceChannel;
-  onlinePresenceChannel=null;
-  onlinePresenceManagementNumber='';
-  renderOnlineEditorsStatus();
-  if(!channel||!managementDb)return;
-  try{await channel.untrack();}catch(_error){}
-  try{await managementDb.removeChannel(channel);}catch(_error){}
-}
-async function syncOnlineEditorPresence(managementNumber){
-  const value=String(managementNumber||'').trim();
-  if(!managementDb||!/^[0-9]{2}-[0-9]{4}$/.test(value)){
-    await stopOnlineEditorPresence();
-    return;
-  }
-  if(onlinePresenceChannel&&onlinePresenceManagementNumber===value)return;
-  await stopOnlineEditorPresence();
-  const {data:{session}}=await managementDb.auth.getSession();if(!session)return;
-  let displayName=onlineEditorDisplayName(session);
-  try{
-    const {data:profiles}=await managementDb.rpc('get_my_app_profile');
-    displayName=String(profiles?.[0]?.display_name||displayName).trim();
-  }catch(_error){}
-  onlinePresenceManagementNumber=value;
-  const channel=managementDb.channel(`estimate-presence-${value}`,{
-    config:{presence:{key:`${session.user.id}:${onlinePresenceTabId}`}}
-  });
-  onlinePresenceChannel=channel;
-  channel.on('presence',{event:'sync'},renderOnlineEditorsStatus)
-    .on('presence',{event:'join'},renderOnlineEditorsStatus)
-    .on('presence',{event:'leave'},renderOnlineEditorsStatus)
-    .subscribe(async state=>{
-      if(state!=='SUBSCRIBED'||onlinePresenceChannel!==channel)return;
-      await channel.track({
-        user_id:session.user.id,
-        display_name:displayName,
-        tab_id:onlinePresenceTabId,
-        online_at:new Date().toISOString()
-      });
-    });
 }
 function getLastOpenedManagementNumber(){
   try{return String(localStorage.getItem(LS_LAST_OPENED_MANAGEMENT_NUMBER)||'').trim();}catch(_error){return '';}
@@ -6190,7 +6036,6 @@ function mergeLatestBlankBasicFields(latestPayload,targetData=null){
 
 async function subscribeOnlineProjectUpdates(managementNumber){
   if(!managementDb||!managementNumber)return;
-  await syncOnlineEditorPresence(managementNumber);
   if(onlineProjectRealtimeChannel&&onlineProjectRealtimeManagementNumber===managementNumber)return;
   if(onlineProjectRealtimeChannel){
     await managementDb.removeChannel(onlineProjectRealtimeChannel);
@@ -6210,10 +6055,6 @@ async function subscribeOnlineProjectUpdates(managementNumber){
     })
     .subscribe();
 }
-
-window.addEventListener('beforeunload',()=>{
-  if(onlinePresenceChannel)onlinePresenceChannel.untrack().catch(()=>{});
-});
 
 // 別タブの台帳で入力した内容はRealtimeで即時に届くが、PCの復帰や長時間
 // 開きっぱなしの画面では通知を取り逃すことがある。画面へ戻った時だけ、
@@ -6815,12 +6656,8 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
   pendingOnlineManagementNumber=managementNumber;
   const session=await getOnlineSession();if(!session)return;
   pendingOnlineManagementNumber='';
-  const [{data,error},{data:master,error:masterError}]=await Promise.all([
-    managementDb.from('estimate_projects').select('management_number,payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle(),
-    managementDb.from('management_numbers').select('management_number,reception_date,staff_name,property_name,room_number,work_name,client_name,customer_name,billing_client_name,customer_contact_name,invoice_contact_name,category,accounting_month,scheduled_completion_date,completed_on,property_postal_code,property_address,sales_estimate_ex_tax').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle()
-  ]);
+  const {data,error}=await managementDb.from('estimate_projects').select('management_number,payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();
   if(error){if(!silentWhenMissing)showToastMsg('クラウド案件の読込に失敗しました：'+error.message);return false;}
-  if(masterError&&!silentWhenMissing)showToastMsg('台帳基本情報の照合に失敗しました：'+masterError.message);
   if(!data?.payload){
     if(silentWhenMissing){
       try{localStorage.removeItem(LS_LAST_OPENED_MANAGEMENT_NUMBER);}catch(_error){}
@@ -6832,9 +6669,8 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
     if(index>=0)await pickManagementMasterItem(index);
     return false;
   }
-  const merged=mergeManagementMasterIntoPayload(data.payload,master);
-  loadAllFromText(JSON.stringify(merged.payload));
-  activeScheduleId=merged.payload.calendarEventId||'';
+  loadAllFromText(JSON.stringify(data.payload));
+  activeScheduleId=data.payload.calendarEventId||'';
   onlineProjectRevision=data.revision??null;
   onlineProjectId=null;
   onlineProjectIdManagementNumber='';
@@ -6843,10 +6679,9 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
   onlineDraftId='';
   onlineDraftRevision=null;
   await subscribeOnlineProjectUpdates(managementNumber);
-  // 読込だけでは金額・明細を書き戻さない。台帳から補完した客先名などがある
-  // 場合だけ保存し、空の旧見積が台帳金額を0円で上書きする事故を防ぐ。
-  if(merged.changed)scheduleOnlineAutosave(350);
-  else setOnlineSaveStatus('自動保存：待機中');
+  // 既存案件でも、基本情報の派生列（完工予定日・完工日など）を台帳へ自動整合する。
+  // 日付の固定や「今すぐ保存」は不要で、正本を読み込んだ後にだけ安全な保存RPCを通す。
+  scheduleOnlineAutosave(350);
   if(showToast)showToastMsg('☁ クラウド案件を読み込みました：'+managementNumber);
   return true;
 }
@@ -7486,23 +7321,6 @@ function sfnCalc(id,f,v,inputEl){
   _recalcRow(id,!['landlordTaxIn','tenantTaxIn'].includes(f));
   renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);
 }
-async function commitEstimateCostToOrder(id){
-  const estimateRow=rows.find(item=>item.id===id);if(!estimateRow)return;
-  syncEstimateFieldDisplay(id,'cost');
-  const price=Number(estimateRow.cost);
-  if(!Number.isFinite(price))return;
-  const linked=ordRows.filter(orderRow=>orderRow._eid===id);
-  if(!linked.length)return;
-  let changed=false;
-  for(const orderRow of linked){
-    // 見積原価を直した時は発注へ反映する。ただし、発注タブで正式確定済みの
-    // 業者単価は、同じ案件内でも誤って上書きしない。
-    if(orderRow._orderCostManual)continue;
-    orderRow.orderCost=price;orderRow._estimateCost=price;orderRow._vendorUnitPriceAuto=false;changed=true;
-    if(orderRow.vendor)await applyVendorUnitPrice(orderRow);
-  }
-  if(changed){saveOrdRows();renderOrdTable();renderOrdLeft();scheduleOnlineAutosave(250);}
-}
 
 // カーソル位置を保持しながらカンマフォーマット
 function _fmtInput(el){
@@ -7658,7 +7476,7 @@ function buildSaveData(){
     estMemo:document.getElementById('estMemo')?.value||'',
     invMemo:document.getElementById('invMemo')?.value||'',
     ordRows:ordRows, ordRowId:ordRowId,
-    basic:{kanri:vv('b-kanri'),staff:vv('b-staff'),uketsuke:vv('b-uketsuke'),status:vv('b-status'),category:vv('b-category'),keijo:vv('b-keijo'),kanko_date:vv('b-kanko-date'),completedOn:vv('b-completed-on')||vv('r-completed-in'),client:vv('b-client'),clientContact:vv('b-client-contact'),kojiname:vv('b-kojiname'),property:vv('b-property'),room:vv('b-room'),postal:vv('b-postal'),place:vv('b-place'),
+    basic:{kanri:vv('b-kanri'),staff:vv('b-staff'),uketsuke:vv('b-uketsuke'),status:vv('b-status'),category:vv('b-category'),keijo:vv('b-keijo'),kanko_date:vv('b-kanko-date'),completedOn:vv('b-completed-on')||vv('r-completed-in'),client:vv('b-client'),clientContact:vv('b-client-contact'),honorific:vv('b-honorific'),kojiname:vv('b-kojiname'),property:vv('b-property'),room:vv('b-room'),postal:vv('b-postal'),place:vv('b-place'),
       summary:vv('b-summary'),duration:vv('b-duration'),payment:getPayment(),paymentSel:document.getElementById('b-payment-sel')?.value||'',expire:vv('b-expire'),
       cond:vv('b-cond'),date:vv('b-date'),
       invClient:vv('b-inv-client'),invDept:vv('b-inv-dept'),invAddr:vv('b-inv-addr'),invTanto:vv('b-seikyu-tanto'),invDue:vv('b-inv-due'),invNote:vv('b-inv-note')},
@@ -7774,7 +7592,7 @@ function loadAll(input){
 
 function loadAllFromText(text){
   try{
-      const d=window.IzumiBackup.parseAndValidate(text);
+      const d=JSON.parse(text);
       if(d.costTable&&typeof d.costTable==='object'&&!Array.isArray(d.costTable)){
         ctData=window.IzumiSelfCosts.normalize(d.costTable);
         saveCtData(false);
@@ -7804,6 +7622,7 @@ function loadAllFromText(text){
       const im=document.getElementById('invMemo');if(im&&d.invMemo)im.value=d.invMemo;
       if(d.basic){const b=d.basic;
         ['kanri','staff','uketsuke','status','category','keijo','client','kojiname','property','room','postal','place','summary','expire','cond','duration'].forEach(k=>{const el=document.getElementById('b-'+k);if(el&&b[k]!==undefined)el.value=b[k];});
+        const honorific=document.getElementById('b-honorific');if(honorific)honorific.value=Object.hasOwn(b,'honorific')?b.honorific:'御中';
         setBasicValue('b-kanko-date',b.kanko_date??b['kanko-date']);
         setBasicValue('b-completed-on',b.completedOn??b.completed_on);
         setBasicValue('b-client-contact',b.clientContact);
@@ -7852,8 +7671,7 @@ function loadAllFromText(text){
       _invShokaiEdited=false;
       applyEstCo();applyInvCo();syncEst();updateShokai1();updateShokai2();syncInvShokai();renderMemo();renderInvMemo();renderLedgerWritebackHints();
       showToastMsg('✅ 読み込み完了');
-      return true;
-    }catch(err){alert('読み込み失敗: '+err.message);return false;}
+    }catch(err){alert('読み込み失敗: '+err.message);}
 }
 
 // 旧ブラウザ向けフォールバック。通常は末尾のExcel互換処理が先に処理します。
@@ -8088,6 +7906,8 @@ function renderOrdTable(){
   let no=0, prev=null;
   ordRows.forEach(r=>{
     let tr=tbody.querySelector(`tr[data-rid="${r.id}"]`);
+    const unknownVendor=r.vendor&&!vendors.includes(r.vendor)?`<option selected>${esc(r.vendor)}</option>`:'';
+    const vOpts='<option value=""></option>'+vendors.map(v=>`<option${v===r.vendor?' selected':''}>${v}</option>`).join('')+unknownVendor;
     if(!tr){
       tr=document.createElement('tr'); tr.dataset.rid=r.id;
       if(r.type==='section'){
@@ -8100,20 +7920,13 @@ function renderOrdTable(){
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="syncOrderFieldDisplay(${r.id},'qty',this)"></td>
           <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="ordSf(${r.id},'unit',this.value)" autocomplete="off"></td>
-          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="commitOrderCost(${r.id},this)"></td>
+          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="syncOrderFieldDisplay(${r.id},'orderCost',this)"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
-          <td><div class="ord-vendor-combo">
-            <input type="text" class="ord-vendor-sel" data-f="vendor" placeholder="業者名を入力"
-              autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false"
-              onfocus="openOrderVendorSuggest(this,${r.id},true)"
-              onclick="openOrderVendorSuggest(this,${r.id},true)"
-              oninput="filterOrderVendorSuggest(this,${r.id},event)"
-              onkeydown="handleOrderVendorKeydown(event,this,${r.id})"
-              onblur="scheduleOrderVendorCommit(this,${r.id})">
-            <button type="button" class="ord-vendor-toggle" tabindex="-1" aria-label="業者一覧を開く"
-              onmousedown="event.preventDefault()" onclick="openOrderVendorSuggest(this.previousElementSibling,${r.id},true)">⌄</button>
-          </div></td>
+          <td><select class="ord-vendor-sel" data-f="vendor"
+  onchange="setVendor(${r.id},this.value)"
+  onkeydown="if(event.key==='Backspace'||event.key==='Delete'){event.preventDefault();this.value='';setVendor(${r.id},'');}"
+  >${vOpts}</select></td>
           <td class="cdel" onclick="delOrdRow(${r.id})">✕</td>`;
         ['name','spec','qty','orderCost','note'].forEach(f=>{
           tr.querySelector(`[data-f=${f}]`)?.addEventListener('paste', handleOrdPaste);
@@ -8136,13 +7949,13 @@ function renderOrdTable(){
       if(orderCostInput){
         orderCostInput.style.color='var(--to)';
         orderCostInput.title=r._orderCostManual
-          ?'共有の業者別正式単価：確定すると、この案件の見積原価と次回以降へ反映します'
+          ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
           :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';
       }
       const sel=tr.querySelector('[data-f=unit]');
       if(sel&&document.activeElement!==sel) sel.value=r.unit||'';
       const vSel=tr.querySelector('[data-f=vendor]');
-      if(vSel&&document.activeElement!==vSel) vSel.value=r.vendor||'';
+      if(vSel&&document.activeElement!==vSel) vSel.innerHTML=vOpts;
       const td2=tr.querySelector('td:nth-child(2)');
       if(td2) td2.style.borderLeft=r.vendor?`3px solid ${vColor(r.vendor)}`:'';
       tr.className=r.vendor?'ord-has-vendor':'';
@@ -8156,157 +7969,6 @@ function renderOrdTable(){
   initOrdRowDrag();
   setTimeout(function(){if(typeof initOrdFillHandle==='function')initOrdFillHandle();},60);
 }
-
-// ===== 発注業者の検索式コンボボックス =====
-// フォーカス時は全件、入力中は業者名の一部一致で候補を絞る。
-// 入力値は候補外の名称でも保存できるため、臨時業者の運用も妨げない。
-let orderVendorSuggestState={menu:null,input:null,rowId:null,items:[],activeIndex:-1,commitTimer:0};
-function normalizeOrderVendorText(value){
-  return String(value||'').normalize('NFKC').toLocaleLowerCase('ja-JP').replace(/[\s\u3000・･._\-ー]/g,'');
-}
-function ensureOrderVendorSuggest(){
-  if(orderVendorSuggestState.menu?.isConnected)return orderVendorSuggestState.menu;
-  const menu=document.createElement('div');
-  menu.className='order-vendor-suggest';
-  menu.hidden=true;
-  menu.setAttribute('role','listbox');
-  document.body.appendChild(menu);
-  orderVendorSuggestState.menu=menu;
-  return menu;
-}
-function positionOrderVendorSuggest(){
-  const {menu,input}=orderVendorSuggestState;
-  if(!menu||menu.hidden||!input?.isConnected)return;
-  const rect=input.getBoundingClientRect();
-  const width=Math.min(Math.max(rect.width,260),Math.max(260,window.innerWidth-20));
-  menu.style.width=width+'px';
-  let left=Math.min(Math.max(10,rect.left),Math.max(10,window.innerWidth-width-10));
-  let top=rect.bottom+4;
-  if(top+menu.offsetHeight>window.innerHeight-8&&rect.top-menu.offsetHeight-4>=8)top=rect.top-menu.offsetHeight-4;
-  menu.style.left=left+'px';
-  menu.style.top=Math.max(8,top)+'px';
-}
-function renderOrderVendorSuggest(query,showAll){
-  const menu=ensureOrderVendorSuggest();
-  const needle=showAll?'':normalizeOrderVendorText(query);
-  const seen=new Set();
-  const current=String(orderVendorSuggestState.input?.value||'');
-  const list=vendors.filter(name=>{
-    const value=String(name||'').trim();
-    if(!value||seen.has(value))return false;
-    seen.add(value);
-    return !needle||normalizeOrderVendorText(value).includes(needle);
-  });
-  orderVendorSuggestState.items=list;
-  orderVendorSuggestState.activeIndex=list.findIndex(name=>name===current);
-  menu.replaceChildren();
-  if(!list.length){
-    const empty=document.createElement('div');
-    empty.className='ovs-empty';
-    empty.textContent='一致する登録業者がありません。入力した名称のまま保存する場合は Enter を押してください。';
-    menu.appendChild(empty);
-  }else{
-    list.forEach((name,index)=>{
-      const button=document.createElement('button');
-      button.type='button';
-      button.setAttribute('role','option');
-      button.textContent=name;
-      button.classList.toggle('is-active',index===orderVendorSuggestState.activeIndex);
-      button.setAttribute('aria-selected',index===orderVendorSuggestState.activeIndex?'true':'false');
-      button.addEventListener('mousedown',event=>{
-        event.preventDefault();
-        chooseOrderVendor(index);
-      });
-      menu.appendChild(button);
-    });
-  }
-  menu.hidden=false;
-  orderVendorSuggestState.input?.setAttribute('aria-expanded','true');
-  requestAnimationFrame(()=>{
-    positionOrderVendorSuggest();
-    menu.querySelector('.is-active')?.scrollIntoView({block:'nearest'});
-  });
-}
-function openOrderVendorSuggest(input,rowId,showAll=false){
-  clearTimeout(orderVendorSuggestState.commitTimer);
-  orderVendorSuggestState.input=input;
-  orderVendorSuggestState.rowId=rowId;
-  renderOrderVendorSuggest(input.value,showAll);
-}
-function filterOrderVendorSuggest(input,rowId,event){
-  if(event?.isComposing||event?.keyCode===229)return;
-  clearTimeout(orderVendorSuggestState.commitTimer);
-  orderVendorSuggestState.input=input;
-  orderVendorSuggestState.rowId=rowId;
-  renderOrderVendorSuggest(input.value,false);
-}
-function hideOrderVendorSuggest(){
-  const {menu,input}=orderVendorSuggestState;
-  if(menu)menu.hidden=true;
-  if(input)input.setAttribute('aria-expanded','false');
-  orderVendorSuggestState.activeIndex=-1;
-}
-function highlightOrderVendorSuggest(index){
-  const {menu,items}=orderVendorSuggestState;
-  if(!items.length)return;
-  const next=(index+items.length)%items.length;
-  orderVendorSuggestState.activeIndex=next;
-  menu?.querySelectorAll('button').forEach((button,i)=>{
-    button.classList.toggle('is-active',i===next);
-    button.setAttribute('aria-selected',i===next?'true':'false');
-  });
-  menu?.querySelectorAll('button')[next]?.scrollIntoView({block:'nearest'});
-}
-async function chooseOrderVendor(index){
-  const {input,rowId,items}=orderVendorSuggestState;
-  const name=items[index];
-  if(!input||name===undefined)return;
-  clearTimeout(orderVendorSuggestState.commitTimer);
-  input.value=name;
-  hideOrderVendorSuggest();
-  await setVendor(rowId,name);
-  showVendorPriceReference(input,rowId,name);
-  input.focus({preventScroll:true});
-}
-async function commitOrderVendorInput(input,rowId){
-  if(!input?.isConnected)return;
-  const name=String(input.value||'').trim();
-  await setVendor(rowId,name);
-  hideOrderVendorSuggest();
-  if(name)showVendorPriceReference(input,rowId,name);
-}
-function scheduleOrderVendorCommit(input,rowId){
-  clearTimeout(orderVendorSuggestState.commitTimer);
-  orderVendorSuggestState.commitTimer=setTimeout(()=>commitOrderVendorInput(input,rowId),140);
-}
-function handleOrderVendorKeydown(event,input,rowId){
-  if(event.isComposing||event.keyCode===229)return;
-  const menu=ensureOrderVendorSuggest();
-  if(event.key==='ArrowDown'||event.key==='ArrowUp'){
-    event.preventDefault();
-    event.stopPropagation();
-    if(menu.hidden)openOrderVendorSuggest(input,rowId,false);
-    const delta=event.key==='ArrowDown'?1:-1;
-    const start=orderVendorSuggestState.activeIndex<0?(delta>0?-1:0):orderVendorSuggestState.activeIndex;
-    highlightOrderVendorSuggest(start+delta);
-  }else if(event.key==='Enter'){
-    event.preventDefault();
-    event.stopPropagation();
-    if(!menu.hidden&&orderVendorSuggestState.activeIndex>=0)chooseOrderVendor(orderVendorSuggestState.activeIndex);
-    else commitOrderVendorInput(input,rowId);
-  }else if(event.key==='Escape'){
-    event.preventDefault();
-    event.stopPropagation();
-    hideOrderVendorSuggest();
-  }
-}
-window.addEventListener('resize',positionOrderVendorSuggest);
-window.addEventListener('scroll',positionOrderVendorSuggest,true);
-document.addEventListener('pointerdown',event=>{
-  const {menu,input,rowId}=orderVendorSuggestState;
-  if(!menu||menu.hidden||event.target===input||menu.contains(event.target)||event.target?.closest?.('.ord-vendor-toggle'))return;
-  if(input)commitOrderVendorInput(input,rowId);
-});
 
 function ordSf(id,f,v){ const r=ordRows.find(x=>x.id===id);if(!r)return;pushOrdUndo();r[f]=v;renderOrdLeft(); }
 function ordSfNum(id,f,v,el){
@@ -8344,11 +8006,6 @@ document.addEventListener('compositionend',event=>{
   unitPriceImeComposing=false;
   // 変換確定後にだけ候補検索を開始する。変換途中の文字列は候補対象にしない。
   const input=event.target;
-  if(input?.dataset?.f==='vendor'&&input.closest?.('#ordtbody')){
-    const row=input.closest('tr[data-rid]');
-    if(row)filterOrderVendorSuggest(input,Number(row.dataset.rid));
-    return;
-  }
   const row=input?.closest?.('#ctbody tr[data-rid],#ordtbody tr[data-rid]');
   if(input?.dataset?.f==='name'&&row){
     const kind=input.closest('#ordtbody')?'order':'estimate';
@@ -8392,75 +8049,6 @@ async function loadVendorUnitPriceList(vendorName){
     }).catch(error=>{console.warn('業者単価候補を取得できません',error);return [];});
   vendorUnitPriceListCache.set(key,request);
   return request;
-}
-let vendorPriceReferenceTimer=0;
-function vendorPriceReferenceBox(){
-  let box=document.getElementById('vendorPriceReference');
-  if(!box){
-    box=document.createElement('aside');
-    box.id='vendorPriceReference';
-    box.className='vendor-price-reference';
-    box.hidden=true;
-    document.body.appendChild(box);
-  }
-  return box;
-}
-function hideVendorPriceReference(){
-  clearTimeout(vendorPriceReferenceTimer);
-  const box=document.getElementById('vendorPriceReference');
-  if(box)box.hidden=true;
-}
-function positionVendorPriceReference(anchor){
-  const box=vendorPriceReferenceBox();
-  if(box.hidden||!anchor?.isConnected)return;
-  const rect=anchor.getBoundingClientRect();
-  const width=Math.min(350,Math.max(280,window.innerWidth-20));
-  box.style.width=width+'px';
-  let left=Math.min(Math.max(10,rect.right-width),Math.max(10,window.innerWidth-width-10));
-  let top=rect.bottom+5;
-  if(top+box.offsetHeight>window.innerHeight-8&&rect.top-box.offsetHeight-5>=8)top=rect.top-box.offsetHeight-5;
-  box.style.left=left+'px';
-  box.style.top=Math.max(8,top)+'px';
-}
-async function showVendorPriceReference(anchor,rowId,vendorName){
-  const vendor=String(vendorName||'').trim();
-  if(!vendor)return hideVendorPriceReference();
-  const row=ordRows.find(item=>item.id===rowId);
-  const box=vendorPriceReferenceBox();
-  box.replaceChildren();
-  const head=document.createElement('div');head.className='vpr-head';
-  const title=document.createElement('strong');title.textContent=vendor;
-  const caption=document.createElement('span');caption.textContent='登録単価（参考）';
-  const close=document.createElement('button');close.type='button';close.className='vpr-close';close.textContent='×';close.title='閉じる';close.onclick=hideVendorPriceReference;
-  head.append(title,caption,close);box.appendChild(head);
-  const loading=document.createElement('div');loading.className='vpr-empty';loading.textContent='単価を確認中…';box.appendChild(loading);
-  box.hidden=false;positionVendorPriceReference(anchor);
-  const all=await loadVendorUnitPriceList(vendor);
-  if(box.hidden)return;
-  const rowName=normalizedUnitPriceText(row?.name);
-  const rowUnit=String(row?.unit||'');
-  const ranked=all.map(item=>{
-    const exact=normalizedUnitPriceText(item.name)===rowName&&String(item.unit||'')===rowUnit;
-    const vendorSpecific=item.override_price!==null&&item.override_price!==undefined;
-    return {item,exact,vendorSpecific,rank:(exact?100:0)+(vendorSpecific?10:0)};
-  }).filter(entry=>entry.exact||entry.vendorSpecific).sort((a,b)=>b.rank-a.rank||String(a.item.name).localeCompare(String(b.item.name),'ja')).slice(0,6);
-  loading.remove();
-  if(!ranked.length){
-    const empty=document.createElement('div');empty.className='vpr-empty';empty.textContent='この業者の個別登録単価はまだありません。発注単価を直して確定すると、ここへ登録されます。';box.appendChild(empty);
-  }else{
-    const list=document.createElement('div');list.className='vpr-list';
-    ranked.forEach(({item,exact,vendorSpecific})=>{
-      const line=document.createElement('div');line.className='vpr-item'+(exact?' is-match':'');
-      const name=document.createElement('div');name.className='vpr-name';name.textContent=item.name;
-      const price=document.createElement('div');price.className='vpr-price';price.textContent=yen(Number(item.effective_price)||0);
-      const meta=document.createElement('div');meta.className='vpr-meta';meta.textContent=`${item.unit||'式'}・${vendorSpecific?'業者別正式単価':'共通単価'}${exact?'・現在行':''}`;
-      line.append(name,price,meta);list.appendChild(line);
-    });
-    box.appendChild(list);
-  }
-  positionVendorPriceReference(anchor);
-  clearTimeout(vendorPriceReferenceTimer);
-  vendorPriceReferenceTimer=setTimeout(hideVendorPriceReference,9000);
 }
 async function loadClientUnitPriceList(clientName){
   const key=String(clientName||'').trim();
@@ -8588,15 +8176,7 @@ async function setVendor(id,v){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
   if(r.vendor===v)return;
   pushOrdUndo();
-  const previousVendor=r.vendor;
   r.vendor=v;
-  // A業者向けに固定した単価を、B業者へ切り替えた後まで誤って持ち越さない。
-  if(previousVendor&&previousVendor!==v){
-    r._orderCostManual=false;
-    r._vendorUnitPriceAuto=false;
-    r._officialVendorPriceSignature='';
-    r.orderCost=r._estimateCost!==undefined?r._estimateCost:'';
-  }
   if(v&&!r.orderCost) r.orderCost='';
   const td2=document.querySelector(`#ordtbody tr[data-rid="${id}"] td:nth-child(2)`);
   if(td2) td2.style.borderLeft=v?`3px solid ${vColor(v)}`:'';
@@ -8606,7 +8186,6 @@ async function setVendor(id,v){
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
   if(v&&!r._orderCostManual)await applyVendorUnitPrice(r);
-  else if(v&&r._orderCostManual)await saveOrderCostAsOfficialPrice(r,{quiet:true});
 }
 function setOrderCost(id,val){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
@@ -8623,7 +8202,7 @@ function setOrderCost(id,val){
   if(orderCostInput){
     orderCostInput.style.color='var(--to)';
     orderCostInput.title=r._orderCostManual
-      ?'共有の業者別正式単価：確定すると、この案件の見積原価と次回以降へ反映します'
+      ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
       :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';
   }
   const qa=document.querySelector(`#ordtbody tr[data-rid="${id}"] .oamt`);
@@ -8632,105 +8211,6 @@ function setOrderCost(id,val){
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
   if(!r._orderCostManual&&r.vendor)applyVendorUnitPrice(r);
-}
-
-function sameOfficialVendorPriceKey(a,b){
-  return normalizeOrderVendorText(a?.vendor)===normalizeOrderVendorText(b?.vendor)
-    &&normalizedUnitPriceText(a?.name)===normalizedUnitPriceText(b?.name)
-    &&String(a?.unit||'').trim()===String(b?.unit||'').trim();
-}
-function estimateRowsLinkedFromOrder(orderRow){
-  const direct=orderRow?rows.find(item=>item.id===orderRow._eid):null;
-  if(direct)return [direct];
-  const matches=rows.filter(item=>item.type!=='section'
-    &&normalizedUnitPriceText(item.name)===normalizedUnitPriceText(orderRow?.name)
-    &&String(item.unit||'').trim()===String(orderRow?.unit||'').trim());
-  return matches.length===1?matches:[];
-}
-function syncOfficialOrderPriceToEstimate(orderRows,price){
-  const targets=new Set();
-  orderRows.forEach(orderRow=>estimateRowsLinkedFromOrder(orderRow).forEach(item=>targets.add(item)));
-  targets.forEach(item=>{
-    item.cost=price;
-    item._costManual=true;
-    item._vendorOrderCostSync=true;
-    const input=document.querySelector(`#ctbody tr[data-rid="${item.id}"] [data-f="cost"]`);
-    if(input)input.value=fmtNum(price);
-    _recalcRow(item.id);
-  });
-  if(targets.size){renderCost();renderPrint();renderTotals();syncInv();}
-  return targets.size;
-}
-async function ensureOfficialWorkItem(orderRow,price){
-  const masters=await loadUnitPriceMaster();
-  const exact=masters.find(item=>normalizedUnitPriceText(item.name)===normalizedUnitPriceText(orderRow.name)
-    &&String(item.unit||'').trim()===String(orderRow.unit||'').trim());
-  if(exact)return exact;
-  const linked=estimateRowsLinkedFromOrder(orderRow)[0];
-  const common=Number(linked?.cost);
-  const result=await managementDb.rpc('save_work_item',{
-    p_id:null,p_expected_revision:0,p_name:String(orderRow.name||'').trim(),p_unit:String(orderRow.unit||'式').trim()||'式',p_common_price:Number.isFinite(common)?common:price
-  });
-  if(result.error)throw result.error;
-  const saved=Array.isArray(result.data)?result.data[0]:result.data;
-  if(!saved?.id)throw new Error('工事項目の共有登録結果を確認できませんでした');
-  const created={id:saved.id,name:String(orderRow.name||'').trim(),unit:String(orderRow.unit||'式').trim()||'式',common_price:Number.isFinite(common)?common:price};
-  if(unitPriceMasterCache)unitPriceMasterCache.push(created);
-  return created;
-}
-async function saveOfficialVendorOverride(vendorName,workItemId,price){
-  const vendorResult=await managementDb.from('vendors').select('id,name').eq('name',vendorName).eq('active',true).is('deleted_at',null).limit(1).maybeSingle();
-  if(vendorResult.error)throw vendorResult.error;
-  if(!vendorResult.data?.id)throw new Error('業者マスタに一致する業者がありません');
-  const readRevision=async()=>{
-    const result=await managementDb.from('vendor_unit_prices').select('revision').eq('vendor_id',vendorResult.data.id).eq('work_item_id',workItemId).is('deleted_at',null).limit(1).maybeSingle();
-    if(result.error)throw result.error;
-    return Number(result.data?.revision||0);
-  };
-  let revision=await readRevision();
-  let result=await managementDb.rpc('save_vendor_unit_price',{p_vendor_id:vendorResult.data.id,p_work_item_id:workItemId,p_expected_revision:revision,p_override_price:price});
-  if(result.error&&/競合|別の端末|revision/i.test(result.error.message||'')){
-    revision=await readRevision();
-    result=await managementDb.rpc('save_vendor_unit_price',{p_vendor_id:vendorResult.data.id,p_work_item_id:workItemId,p_expected_revision:revision,p_override_price:price});
-  }
-  if(result.error)throw result.error;
-  return true;
-}
-async function saveOrderCostAsOfficialPrice(orderRow,{quiet=false}={}){
-  if(!orderRow||orderRow.type==='section'||!orderRow._orderCostManual)return false;
-  const price=Number(orderRow.orderCost);
-  if(!Number.isFinite(price))return false;
-  const sameRows=ordRows.filter(item=>item.type!=='section'&&sameOfficialVendorPriceKey(item,orderRow));
-  sameRows.forEach(item=>{item.orderCost=price;item._orderCostManual=true;item._vendorUnitPriceAuto=false;});
-  sameRows.forEach(item=>{item._estimateCost=price;});
-  const estimateCount=syncOfficialOrderPriceToEstimate(sameRows.length?sameRows:[orderRow],price);
-  saveOrdRows();renderOrdTable();renderOrdLeft();scheduleOnlineAutosave(250);
-  if(!orderRow.vendor||!String(orderRow.name||'').trim()){
-    if(!quiet)showToastMsg(`見積原価へ反映しました${orderRow.vendor?'':'（業者未選択のため共有単価は未登録）'}`);
-    return estimateCount>0;
-  }
-  const signature=[orderRow.vendor,orderRow.name,orderRow.unit||'',price].join('\u0001');
-  if(orderRow._officialVendorPriceSignature===signature)return true;
-  try{
-    const workItem=await ensureOfficialWorkItem(orderRow,price);
-    await saveOfficialVendorOverride(orderRow.vendor,workItem.id,price);
-    sameRows.forEach(item=>item._officialVendorPriceSignature=signature);
-    vendorUnitPriceListCache.delete(String(orderRow.vendor).trim());
-    vendorUnitPriceCache.delete([orderRow.vendor,orderRow.name,orderRow.unit||''].join('\u0001'));
-    saveOrdRows();scheduleOnlineAutosave(250);
-    if(!quiet)showToastMsg(`${orderRow.vendor} の正式単価を共有し、見積原価へ反映しました`);
-    return true;
-  }catch(error){
-    console.warn('業者別正式単価を共有できません',error);
-    if(!quiet)showToastMsg(`見積原価へ反映済み／共有単価は保存できません：${error?.message||'接続を確認してください'}`);
-    return false;
-  }
-}
-async function commitOrderCost(id,el){
-  const row=ordRows.find(item=>item.id===id);
-  if(!row||!el)return;
-  syncOrderFieldDisplay(id,'orderCost',el);
-  if(row._orderCostManual)await saveOrderCostAsOfficialPrice(row);
 }
 
 function handleOrdPaste(e){
@@ -9442,7 +8922,7 @@ let _vendorNames = []; // vendors[] と同期
 
 function loadAllMasters(){
   try{ clientList2  = JSON.parse(localStorage.getItem(LS_CLIENTS2)||'null') || JSON.parse(JSON.stringify(INIT_CLIENTS)); }catch(e){ clientList2=JSON.parse(JSON.stringify(INIT_CLIENTS)); }
-  clientList2=dedupeClientMasterRows(clientList2.filter(client=>!isPersonalClientMasterName(client.name)));
+  clientList2=clientList2.filter(client=>!isPersonalClientMasterName(client.name));
   try{ vendorDetails = JSON.parse(localStorage.getItem(LS_VENDORS2)||'null') || JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }catch(e){ vendorDetails=JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }
   try{ employeeList  = JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'null') || INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }catch(e){ employeeList=INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }
   let employeeStampsUpdated=false;
@@ -9489,46 +8969,30 @@ function isNonPropertyMasterName(name){
   return /^(?:19|20)\d{2}年\d{1,2}月(?:解約立会業務|解約立会手数料)$/.test(value)
     || /^解約立会手数料(?:19|20)\d{2}[.年/-]?\d{1,2}月?$/.test(value);
 }
-const COMPANY_NAME_ALIASES={
-  'TAKUTO':'株式会社TAKUTO',
-  'ベスト・プロパティ':'株式会社ベスト・プロパティ',
-  'リロケーション・ジャパン':'株式会社リロケーション・ジャパン',
-  'ワールドレジデンシャル':'株式会社ワールドレジデンシャル',
-  '集住企画':'株式会社集住企画',
-  '毎日コムネット':'株式会社毎日コムネット',
-  'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ',
-  '第一プレイス':'有限会社第一プレイス',
-  'ライズ・リース':'株式会社ライズ・リース',
-  'ライズ・リーズ':'株式会社ライズ・リース',
-  '個人(管理会社なし)':'個人（管理会社なし）'
-};
-function canonicalCompanyName(value){
-  const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
-  if(/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company))return '東京建物不動産販売株式会社';
-  return COMPANY_NAME_ALIASES[company]||company;
-}
-function dedupeClientMasterRows(rows){
-  const byName=new Map();
-  (rows||[]).forEach(source=>{
-    const row={...(source||{}),name:canonicalCompanyName(source?.name)};
-    if(!row.name)return;
-    const previous=byName.get(row.name);
-    if(!previous){byName.set(row.name,row);return;}
-    const score=value=>Object.entries(value||{}).filter(([key,item])=>key!=='_cloudId'&&item!==''&&item!==null&&item!==undefined).length;
-    const preferred=score(row)>score(previous)?row:previous;
-    const fallback=preferred===row?previous:row;
-    const merged={...fallback,...preferred,name:row.name};
-    Object.keys(fallback).forEach(key=>{if((merged[key]===''||merged[key]===null||merged[key]===undefined)&&fallback[key]!==''&&fallback[key]!==null&&fallback[key]!==undefined)merged[key]=fallback[key]});
-    byName.set(row.name,merged);
-  });
-  return [...byName.values()];
-}
 function normalizePropertyCompany(property){
   const row={...(property||{})};
   const name=String(row.name||'').normalize('NFKC');
+  const companyAliases={
+    'TAKUTO':'株式会社TAKUTO',
+    'ベスト・プロパティ':'株式会社ベスト・プロパティ',
+    'リロケーション・ジャパン':'株式会社リロケーション・ジャパン',
+    'ワールドレジデンシャル':'株式会社ワールドレジデンシャル',
+    '集住企画':'株式会社集住企画',
+    '毎日コムネット':'株式会社毎日コムネット',
+    'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ',
+    '第一プレイス':'有限会社第一プレイス',
+    'ライズ・リース':'株式会社ライズ・リース',
+    'ライズ・リーズ':'株式会社ライズ・リース',
+    '個人(管理会社なし)':'個人（管理会社なし）'
+  };
+  const canonicalCompany=value=>{
+    const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
+    if(/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company))return '東京建物不動産販売株式会社';
+    return companyAliases[company]||company;
+  };
   const isBrillia=/(?:brillia|briria|ブリリア)/i.test(name);
-  row.mgmt=canonicalCompanyName(row.mgmt);
-  row.client=canonicalCompanyName(row.client);
+  row.mgmt=canonicalCompany(row.mgmt);
+  row.client=canonicalCompany(row.client);
   if(isBrillia){row.mgmt='東京建物不動産販売株式会社';row.client='東京建物不動産販売株式会社';}
   return row;
 }
@@ -9539,8 +9003,8 @@ function loadProperties(){
   try{
     const s=localStorage.getItem(LS_PROPS2)||localStorage.getItem('izumi_properties_v1');
     const parsed = s?JSON.parse(s):null;
-    // 保存済みの空配列は「全件削除済み」という有効な状態。未保存時だけ初期値を使う。
-    propertyList=validPropertyMasterRows(Array.isArray(parsed)?parsed:JSON.parse(JSON.stringify(INIT_PROPERTIES)));
+    // 空配列や破損データの場合もINIT_PROPERTIESに戻す
+    propertyList=validPropertyMasterRows((parsed&&parsed.length>0)?parsed:JSON.parse(JSON.stringify(INIT_PROPERTIES)));
   }catch(e){ propertyList=validPropertyMasterRows(JSON.parse(JSON.stringify(INIT_PROPERTIES))); }
 }
 function saveProperties(){ try{localStorage.setItem(LS_PROPS2,JSON.stringify(propertyList));}catch(e){} }
@@ -9548,26 +9012,33 @@ function saveProperties(){ try{localStorage.setItem(LS_PROPS2,JSON.stringify(pro
 // ===== 全社員共通マスタ（クラウド正本） =====
 let sharedMasterAdmin=false,sharedMastersReady=false;
 let employeeStampRevisions={};
+function masterRecordsForSeed(){
+  const clean=data=>{const copy={...data};delete copy._cloudId;return copy};
+  return [
+    ...vendorDetails.map(data=>({master_type:'vendor',data:clean(data)})),
+    ...clientList2.map(data=>({master_type:'client',data:clean(data)})),
+    ...propertyList.map(data=>({master_type:'property',data:clean(data)}))
+  ];
+}
 function applySharedMasterRows(records){
   const grouped={vendor:[],client:[],property:[]};
-  (records||[]).forEach(record=>{
-    if(!grouped[record.master_type]||(record.master_type==='client'&&isPersonalClientMasterName(record.name)))return;
-    const row={...record.data,name:record.name,_cloudId:record.id};
-    grouped[record.master_type].push(record.master_type==='client'?{...row,name:canonicalCompanyName(row.name)}:row);
-  });
-  // ログイン中のオンライン版ではクラウドが正本。0件も「全件削除済み」という正しい状態として反映する。
-  vendorDetails=grouped.vendor;
-  clientList2=dedupeClientMasterRows(grouped.client);
-  propertyList=validPropertyMasterRows(grouped.property);
+  (records||[]).forEach(record=>{if(grouped[record.master_type]&&!(record.master_type==='client'&&isPersonalClientMasterName(record.name)))grouped[record.master_type].push({...record.data,name:record.name,_cloudId:record.id})});
+  if(grouped.vendor.length)vendorDetails=grouped.vendor;
+  if(grouped.client.length)clientList2=grouped.client;
+  if(grouped.property.length)propertyList=validPropertyMasterRows(grouped.property);
   saveVendors();saveClients2();saveProperties();rebuildVendorSel();rebuildStaffSelect();
 }
 async function loadSharedMastersFromCloud(){
   if(!managementDb)return false;
   const {data:{session}}=await managementDb.auth.getSession();if(!session)return false;
   const adminResult=await managementDb.rpc('is_management_admin');sharedMasterAdmin=adminResult.data===true;
-  const result=await managementDb.rpc('list_shared_master_records');
+  let result=await managementDb.rpc('list_shared_master_records');
   if(result.error){console.warn('共通マスタを読み込めません',result.error);return false}
-  // 本番データへコード同梱の初期値を自動投入しない。削除済みマスタの復活を防ぐ。
+  if(!(result.data||[]).length&&sharedMasterAdmin){
+    const seed=await managementDb.rpc('seed_shared_master_records',{p_records:masterRecordsForSeed()});
+    if(seed.error){console.warn('共通マスタの初期移行に失敗しました',seed.error);return false}
+    result=await managementDb.rpc('list_shared_master_records');
+  }
   const personalClientRecords=(result.data||[]).filter(record=>record.master_type==='client'&&isPersonalClientMasterName(record.name));
   if(sharedMasterAdmin&&personalClientRecords.length){
     for(let offset=0;offset<personalClientRecords.length;offset+=15){
@@ -9588,7 +9059,6 @@ async function loadSharedMastersFromCloud(){
 async function saveSharedMasterRecord(type,existing,updated){
   if(!managementDb)return{error:{message:'クラウドへ接続できません'}};
   const data={...updated};delete data._cloudId;
-  if(type==='client')data.name=canonicalCompanyName(data.name);
   if(type==='property')Object.assign(data,normalizePropertyCompany(data));
   if(type==='property'&&isNonPropertyMasterName(data.name)){
     return{error:{message:'「解約立会業務」などの業務名は物件マスタへ登録できません。物件名を入力してください'}};
@@ -9909,10 +9379,7 @@ function openClientModal(idx){
   openMasterModal(isNew?'取引先追加':'取引先編集',body,
     async ()=>{
       if(!mfi('cm-name')){alert('会社名は必須です');return;}
-      const canonicalName=canonicalCompanyName(mfi('cm-name'));
-      const duplicate=clientList2.find((client,index)=>index!==idx&&canonicalCompanyName(client.name)===canonicalName);
-      if(duplicate){alert(`「${canonicalName}」は既に登録されています。既存の取引先を編集してください。`);return;}
-      const updated={name:canonicalName,dept:mfi('cm-dept'),zip:mfi('cm-zip'),addr:mfi('cm-addr'),billingName:mfi('cm-billing-name'),billingDept:mfi('cm-billing-dept'),billingPerson:mfi('cm-billing-person'),billingZip:mfi('cm-billing-zip'),billingAddr:mfi('cm-billing-addr'),billingTel:mfi('cm-billing-tel'),billingFax:mfi('cm-billing-fax'),tel:mfi('cm-tel'),fax:mfi('cm-fax'),person:mfi('cm-person'),email:mfi('cm-email'),website:mfi('cm-website'),invoiceNo:mfi('cm-invoice'),note:mfi('cm-note')};
+      const updated={name:mfi('cm-name'),dept:mfi('cm-dept'),zip:mfi('cm-zip'),addr:mfi('cm-addr'),billingName:mfi('cm-billing-name'),billingDept:mfi('cm-billing-dept'),billingPerson:mfi('cm-billing-person'),billingZip:mfi('cm-billing-zip'),billingAddr:mfi('cm-billing-addr'),billingTel:mfi('cm-billing-tel'),billingFax:mfi('cm-billing-fax'),tel:mfi('cm-tel'),fax:mfi('cm-fax'),person:mfi('cm-person'),email:mfi('cm-email'),website:mfi('cm-website'),invoiceNo:mfi('cm-invoice'),note:mfi('cm-note')};
       const saved=await saveSharedMasterRecord('client',isNew?null:clientList2[idx],updated);
       if(saved.error){alert('取引先を保存できません：'+saved.error.message);return;}
       await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();
@@ -11517,7 +10984,7 @@ init();
 
 </script>
 
-<script src="common-nav.js?v=20260812-SEARCHSELECT1"></script>
+<script src="common-nav.js?v=20260801-MOBILE4"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>
