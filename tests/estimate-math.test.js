@@ -24,6 +24,17 @@ const cases = [
       {item_name: 'B', cost_amount_ex_tax: 200}
     ], 1000);
     assert.equal(rows.reduce((sum, row) => sum + Number(row.sellOverride || 0), 0), 1000);
+  }],
+  ['ledger total fallback preserves the aggregate estimate', () => {
+    const row = math.reconstructLedgerTotalEstimateRow({work_name: '内装工事', sales_estimate_ex_tax: 63000});
+    assert.equal(row.name, '内装工事');
+    assert.equal(row.qty, 1);
+    assert.equal(row.unit, '式');
+    assert.equal(row.sellOverride, 63000);
+    assert.equal(row.cost, '');
+  }],
+  ['ledger total fallback does not invent a zero-yen line', () => {
+    assert.equal(math.reconstructLedgerTotalEstimateRow({work_name: '工事', sales_estimate_ex_tax: 0}), null);
   }]
 ];
 

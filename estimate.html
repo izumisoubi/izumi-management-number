@@ -5874,13 +5874,17 @@ async function loadImportedCostLinesForEstimate(managementNumber){
 
 async function reconstructEstimateFromImportedCosts(item){
   const importedLines=await loadImportedCostLinesForEstimate(item?.management_number);
-  if(!importedLines.length)return 0;
   const historicalSales=item.sales_estimate_ex_tax
     ??item.invoice_subtotal_ex_tax
     ??item.sales_invoice_ex_tax
     ??'';
-  const reconstructed=window.IzumiEstimateMath.reconstructImportedEstimateRows(importedLines,historicalSales);
-  if(!reconstructed.length)return 0;
+  let reconstructed=window.IzumiEstimateMath.reconstructImportedEstimateRows(importedLines,historicalSales);
+  let restoreMode='cost-lines';
+  if(!reconstructed.length){
+    const totalOnlyRow=window.IzumiEstimateMath.reconstructLedgerTotalEstimateRow(item);
+    reconstructed=totalOnlyRow?[totalOnlyRow]:[];
+    restoreMode=totalOnlyRow?'ledger-total':'basic-only';
+  }
 
   rows=[];rowId=0;
   reconstructed.forEach(source=>{
@@ -5892,7 +5896,7 @@ async function reconstructEstimateFromImportedCosts(item){
   ordRows=[];ordRowId=0;
   renderAll();
   syncOrdFromEst({silent:true});
-  return reconstructed.length;
+  return {count:reconstructed.length,mode:restoreMode};
 }
 
 function managementClientName(item){
@@ -5961,16 +5965,18 @@ async function pickManagementMasterItem(index){
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
   const staff=document.getElementById('b-staff');if(staff&&item.staff_name){let option=[...staff.options].find(o=>o.value===item.staff_name||o.textContent===item.staff_name);if(!option){option=new Option(item.staff_name,item.staff_name);staff.add(option);}staff.value=item.staff_name;}
   const mappedStatus=item.status==='受付'?'見積中':item.status||'見積中';const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mappedStatus);if(!option){option=new Option(mappedStatus,mappedStatus);status.add(option);}status.value=mappedStatus;}
-  const reconstructedCount=await reconstructEstimateFromImportedCosts(item);
+  const reconstruction=await reconstructEstimateFromImportedCosts(item);
   syncKeijoSelect();syncCompletedDate('basic');
   syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);
-  // 明細を復元できない過去案件は、開いただけで「0円の空見積」を正本へ
-  // 保存しない。台帳に残る過去金額を消さず、実際に編集された時だけ保存する。
-  if(reconstructedCount)scheduleOnlineAutosave(250);
+  // 明細が無くても台帳に見積合計がある場合は、1式の見積として保存する。
+  // 金額も無い過去案件は、開いただけで0円見積を作らない。
+  if(reconstruction.count)scheduleOnlineAutosave(250);
   else setOnlineSaveStatus('自動保存：編集後に開始');
-  showToastMsg(reconstructedCount
-    ?`過去原価${reconstructedCount}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
-    :'Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
+  showToastMsg(reconstruction.mode==='cost-lines'
+    ?`過去原価${reconstruction.count}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
+    :reconstruction.mode==='ledger-total'
+      ?`台帳の見積合計を工事一式として復元しました：${item.management_number}`
+      :'Supabase台帳から基本情報を取り込みました：'+item.management_number);
 }
 
 // ===== Supabase 案件本体のオンライン保存・読込 =====
