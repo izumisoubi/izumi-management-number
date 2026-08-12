@@ -2742,7 +2742,7 @@ function renderCost(){
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="sf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="sfnCalcFmt(${r.id},'qty',this)" onblur="syncEstimateFieldDisplay(${r.id},'qty')"></td>
           <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="sf(${r.id},'unit',this.value)" autocomplete="off"></td>
-          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="syncEstimateFieldDisplay(${r.id},'cost')"></td>
+          <td><input type="text" inputmode="decimal" data-f="cost" placeholder="原価単価" style="text-align:right;width:100%;${r.type==='discount'?'color:var(--tr);font-weight:700':''}" oninput="sfnCalcFmt(${r.id},'cost',this)" onblur="commitEstimateCostToOrder(${r.id})"></td>
           <td class="ca cca" style="white-space:nowrap"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="sf(${r.id},'note',this.value)" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();event.stopPropagation();}"></td>
           <td><input type="text" data-f="sellOverride" placeholder="" style="text-align:right;width:100%;color:${r.type==='discount'?'var(--tr)':'var(--ta)'};font-weight:700;" oninput="sfSellOverrideFmt(${r.id},this)" onblur="syncEstimateFieldDisplay(${r.id},'sellOverride')"></td>
@@ -7485,6 +7485,23 @@ function sfnCalc(id,f,v,inputEl){
   }
   _recalcRow(id,!['landlordTaxIn','tenantTaxIn'].includes(f));
   renderPrint();renderTotals();syncInv();requestAnimationFrame(syncHeights);
+}
+async function commitEstimateCostToOrder(id){
+  const estimateRow=rows.find(item=>item.id===id);if(!estimateRow)return;
+  syncEstimateFieldDisplay(id,'cost');
+  const price=Number(estimateRow.cost);
+  if(!Number.isFinite(price))return;
+  const linked=ordRows.filter(orderRow=>orderRow._eid===id);
+  if(!linked.length)return;
+  let changed=false;
+  for(const orderRow of linked){
+    // 見積原価を直した時は発注へ反映する。ただし、発注タブで正式確定済みの
+    // 業者単価は、同じ案件内でも誤って上書きしない。
+    if(orderRow._orderCostManual)continue;
+    orderRow.orderCost=price;orderRow._estimateCost=price;orderRow._vendorUnitPriceAuto=false;changed=true;
+    if(orderRow.vendor)await applyVendorUnitPrice(orderRow);
+  }
+  if(changed){saveOrdRows();renderOrdTable();renderOrdLeft();scheduleOnlineAutosave(250);}
 }
 
 // カーソル位置を保持しながらカンマフォーマット
