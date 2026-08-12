@@ -9442,7 +9442,7 @@ let _vendorNames = []; // vendors[] と同期
 
 function loadAllMasters(){
   try{ clientList2  = JSON.parse(localStorage.getItem(LS_CLIENTS2)||'null') || JSON.parse(JSON.stringify(INIT_CLIENTS)); }catch(e){ clientList2=JSON.parse(JSON.stringify(INIT_CLIENTS)); }
-  clientList2=clientList2.filter(client=>!isPersonalClientMasterName(client.name));
+  clientList2=dedupeClientMasterRows(clientList2.filter(client=>!isPersonalClientMasterName(client.name)));
   try{ vendorDetails = JSON.parse(localStorage.getItem(LS_VENDORS2)||'null') || JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }catch(e){ vendorDetails=JSON.parse(JSON.stringify(INIT_VENDORS_FULL)); }
   try{ employeeList  = JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'null') || INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }catch(e){ employeeList=INIT_EMPLOYEES.map(n=>({name:n,stamp:BUNDLED_EMPLOYEE_STAMPS[n]||''})); }
   let employeeStampsUpdated=false;
@@ -9489,30 +9489,46 @@ function isNonPropertyMasterName(name){
   return /^(?:19|20)\d{2}年\d{1,2}月(?:解約立会業務|解約立会手数料)$/.test(value)
     || /^解約立会手数料(?:19|20)\d{2}[.年/-]?\d{1,2}月?$/.test(value);
 }
+const COMPANY_NAME_ALIASES={
+  'TAKUTO':'株式会社TAKUTO',
+  'ベスト・プロパティ':'株式会社ベスト・プロパティ',
+  'リロケーション・ジャパン':'株式会社リロケーション・ジャパン',
+  'ワールドレジデンシャル':'株式会社ワールドレジデンシャル',
+  '集住企画':'株式会社集住企画',
+  '毎日コムネット':'株式会社毎日コムネット',
+  'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ',
+  '第一プレイス':'有限会社第一プレイス',
+  'ライズ・リース':'株式会社ライズ・リース',
+  'ライズ・リーズ':'株式会社ライズ・リース',
+  '個人(管理会社なし)':'個人（管理会社なし）'
+};
+function canonicalCompanyName(value){
+  const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
+  if(/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company))return '東京建物不動産販売株式会社';
+  return COMPANY_NAME_ALIASES[company]||company;
+}
+function dedupeClientMasterRows(rows){
+  const byName=new Map();
+  (rows||[]).forEach(source=>{
+    const row={...(source||{}),name:canonicalCompanyName(source?.name)};
+    if(!row.name)return;
+    const previous=byName.get(row.name);
+    if(!previous){byName.set(row.name,row);return;}
+    const score=value=>Object.entries(value||{}).filter(([key,item])=>key!=='_cloudId'&&item!==''&&item!==null&&item!==undefined).length;
+    const preferred=score(row)>score(previous)?row:previous;
+    const fallback=preferred===row?previous:row;
+    const merged={...fallback,...preferred,name:row.name};
+    Object.keys(fallback).forEach(key=>{if((merged[key]===''||merged[key]===null||merged[key]===undefined)&&fallback[key]!==''&&fallback[key]!==null&&fallback[key]!==undefined)merged[key]=fallback[key]});
+    byName.set(row.name,merged);
+  });
+  return [...byName.values()];
+}
 function normalizePropertyCompany(property){
   const row={...(property||{})};
   const name=String(row.name||'').normalize('NFKC');
-  const companyAliases={
-    'TAKUTO':'株式会社TAKUTO',
-    'ベスト・プロパティ':'株式会社ベスト・プロパティ',
-    'リロケーション・ジャパン':'株式会社リロケーション・ジャパン',
-    'ワールドレジデンシャル':'株式会社ワールドレジデンシャル',
-    '集住企画':'株式会社集住企画',
-    '毎日コムネット':'株式会社毎日コムネット',
-    'トーセイアセットアドバイザーズ':'トーセイ・アセット・アドバイザーズ',
-    '第一プレイス':'有限会社第一プレイス',
-    'ライズ・リース':'株式会社ライズ・リース',
-    'ライズ・リーズ':'株式会社ライズ・リース',
-    '個人(管理会社なし)':'個人（管理会社なし）'
-  };
-  const canonicalCompany=value=>{
-    const company=String(value||'').normalize('NFKC').replace(/\s+/g,'').replace(/[（(]株[）)]$/,'株式会社');
-    if(/^東京建物(?:不動産販売(?:株式会社)?)?$/.test(company))return '東京建物不動産販売株式会社';
-    return companyAliases[company]||company;
-  };
   const isBrillia=/(?:brillia|briria|ブリリア)/i.test(name);
-  row.mgmt=canonicalCompany(row.mgmt);
-  row.client=canonicalCompany(row.client);
+  row.mgmt=canonicalCompanyName(row.mgmt);
+  row.client=canonicalCompanyName(row.client);
   if(isBrillia){row.mgmt='東京建物不動産販売株式会社';row.client='東京建物不動産販売株式会社';}
   return row;
 }
@@ -9523,8 +9539,8 @@ function loadProperties(){
   try{
     const s=localStorage.getItem(LS_PROPS2)||localStorage.getItem('izumi_properties_v1');
     const parsed = s?JSON.parse(s):null;
-    // 空配列や破損データの場合もINIT_PROPERTIESに戻す
-    propertyList=validPropertyMasterRows((parsed&&parsed.length>0)?parsed:JSON.parse(JSON.stringify(INIT_PROPERTIES)));
+    // 保存済みの空配列は「全件削除済み」という有効な状態。未保存時だけ初期値を使う。
+    propertyList=validPropertyMasterRows(Array.isArray(parsed)?parsed:JSON.parse(JSON.stringify(INIT_PROPERTIES)));
   }catch(e){ propertyList=validPropertyMasterRows(JSON.parse(JSON.stringify(INIT_PROPERTIES))); }
 }
 function saveProperties(){ try{localStorage.setItem(LS_PROPS2,JSON.stringify(propertyList));}catch(e){} }
@@ -9532,33 +9548,26 @@ function saveProperties(){ try{localStorage.setItem(LS_PROPS2,JSON.stringify(pro
 // ===== 全社員共通マスタ（クラウド正本） =====
 let sharedMasterAdmin=false,sharedMastersReady=false;
 let employeeStampRevisions={};
-function masterRecordsForSeed(){
-  const clean=data=>{const copy={...data};delete copy._cloudId;return copy};
-  return [
-    ...vendorDetails.map(data=>({master_type:'vendor',data:clean(data)})),
-    ...clientList2.map(data=>({master_type:'client',data:clean(data)})),
-    ...propertyList.map(data=>({master_type:'property',data:clean(data)}))
-  ];
-}
 function applySharedMasterRows(records){
   const grouped={vendor:[],client:[],property:[]};
-  (records||[]).forEach(record=>{if(grouped[record.master_type]&&!(record.master_type==='client'&&isPersonalClientMasterName(record.name)))grouped[record.master_type].push({...record.data,name:record.name,_cloudId:record.id})});
-  if(grouped.vendor.length)vendorDetails=grouped.vendor;
-  if(grouped.client.length)clientList2=grouped.client;
-  if(grouped.property.length)propertyList=validPropertyMasterRows(grouped.property);
+  (records||[]).forEach(record=>{
+    if(!grouped[record.master_type]||(record.master_type==='client'&&isPersonalClientMasterName(record.name)))return;
+    const row={...record.data,name:record.name,_cloudId:record.id};
+    grouped[record.master_type].push(record.master_type==='client'?{...row,name:canonicalCompanyName(row.name)}:row);
+  });
+  // ログイン中のオンライン版ではクラウドが正本。0件も「全件削除済み」という正しい状態として反映する。
+  vendorDetails=grouped.vendor;
+  clientList2=dedupeClientMasterRows(grouped.client);
+  propertyList=validPropertyMasterRows(grouped.property);
   saveVendors();saveClients2();saveProperties();rebuildVendorSel();rebuildStaffSelect();
 }
 async function loadSharedMastersFromCloud(){
   if(!managementDb)return false;
   const {data:{session}}=await managementDb.auth.getSession();if(!session)return false;
   const adminResult=await managementDb.rpc('is_management_admin');sharedMasterAdmin=adminResult.data===true;
-  let result=await managementDb.rpc('list_shared_master_records');
+  const result=await managementDb.rpc('list_shared_master_records');
   if(result.error){console.warn('共通マスタを読み込めません',result.error);return false}
-  if(!(result.data||[]).length&&sharedMasterAdmin){
-    const seed=await managementDb.rpc('seed_shared_master_records',{p_records:masterRecordsForSeed()});
-    if(seed.error){console.warn('共通マスタの初期移行に失敗しました',seed.error);return false}
-    result=await managementDb.rpc('list_shared_master_records');
-  }
+  // 本番データへコード同梱の初期値を自動投入しない。削除済みマスタの復活を防ぐ。
   const personalClientRecords=(result.data||[]).filter(record=>record.master_type==='client'&&isPersonalClientMasterName(record.name));
   if(sharedMasterAdmin&&personalClientRecords.length){
     for(let offset=0;offset<personalClientRecords.length;offset+=15){
@@ -9579,6 +9588,7 @@ async function loadSharedMastersFromCloud(){
 async function saveSharedMasterRecord(type,existing,updated){
   if(!managementDb)return{error:{message:'クラウドへ接続できません'}};
   const data={...updated};delete data._cloudId;
+  if(type==='client')data.name=canonicalCompanyName(data.name);
   if(type==='property')Object.assign(data,normalizePropertyCompany(data));
   if(type==='property'&&isNonPropertyMasterName(data.name)){
     return{error:{message:'「解約立会業務」などの業務名は物件マスタへ登録できません。物件名を入力してください'}};
@@ -9899,7 +9909,10 @@ function openClientModal(idx){
   openMasterModal(isNew?'取引先追加':'取引先編集',body,
     async ()=>{
       if(!mfi('cm-name')){alert('会社名は必須です');return;}
-      const updated={name:mfi('cm-name'),dept:mfi('cm-dept'),zip:mfi('cm-zip'),addr:mfi('cm-addr'),billingName:mfi('cm-billing-name'),billingDept:mfi('cm-billing-dept'),billingPerson:mfi('cm-billing-person'),billingZip:mfi('cm-billing-zip'),billingAddr:mfi('cm-billing-addr'),billingTel:mfi('cm-billing-tel'),billingFax:mfi('cm-billing-fax'),tel:mfi('cm-tel'),fax:mfi('cm-fax'),person:mfi('cm-person'),email:mfi('cm-email'),website:mfi('cm-website'),invoiceNo:mfi('cm-invoice'),note:mfi('cm-note')};
+      const canonicalName=canonicalCompanyName(mfi('cm-name'));
+      const duplicate=clientList2.find((client,index)=>index!==idx&&canonicalCompanyName(client.name)===canonicalName);
+      if(duplicate){alert(`「${canonicalName}」は既に登録されています。既存の取引先を編集してください。`);return;}
+      const updated={name:canonicalName,dept:mfi('cm-dept'),zip:mfi('cm-zip'),addr:mfi('cm-addr'),billingName:mfi('cm-billing-name'),billingDept:mfi('cm-billing-dept'),billingPerson:mfi('cm-billing-person'),billingZip:mfi('cm-billing-zip'),billingAddr:mfi('cm-billing-addr'),billingTel:mfi('cm-billing-tel'),billingFax:mfi('cm-billing-fax'),tel:mfi('cm-tel'),fax:mfi('cm-fax'),person:mfi('cm-person'),email:mfi('cm-email'),website:mfi('cm-website'),invoiceNo:mfi('cm-invoice'),note:mfi('cm-note')};
       const saved=await saveSharedMasterRecord('client',isNew?null:clientList2[idx],updated);
       if(saved.error){alert('取引先を保存できません：'+saved.error.message);return;}
       await loadSharedMastersFromCloud();closeMasterModal();refreshSharedMasterScreens();

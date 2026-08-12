@@ -62,6 +62,10 @@ if(!failures.length){
   expect(estimate.includes('表入力共通.js')&&estimate.includes('window.IzumiGridCore'),`見積・請求・発注表が共通表入力へ接続されていません`);
   expect(estimate.includes("sfnCalcFmt(${r.id},'qty',this)")&&estimate.includes('Home / End はセル移動ではなく'),`数量の全角・小数・数式入力またはセル内文字編集の保護が見つかりません`);
   expect(estimate.includes('バックアップ共通.js')&&estimate.includes('window.IzumiBackup.parseAndValidate'),`JSONバックアップの事前検証が見積システムへ接続されていません`);
+  expect(!estimate.includes('seed_shared_master_records'),`オンラインの共通マスタへコード同梱データを自動再投入する処理が残っています`);
+  ['vendorDetails=grouped.vendor;','clientList2=dedupeClientMasterRows(grouped.client);','propertyList=validPropertyMasterRows(grouped.property);'].forEach(text=>expect(estimate.includes(text),`オンライン共通マスタの0件状態を正本として扱う契約が見つかりません: ${text}`));
+  expect(estimate.includes('Array.isArray(parsed)?parsed:JSON.parse(JSON.stringify(INIT_PROPERTIES))'),`空の物件マスタがコード同梱の初期値へ戻る可能性があります`);
+  expect(estimate.includes("if(type==='client')data.name=canonicalCompanyName(data.name)")&&estimate.includes('は既に登録されています。既存の取引先を編集してください。'),`取引先名の正規化または重複登録防止が見つかりません`);
   ['parseAndValidate','validateRow','data[key].length>10000'].forEach(text=>expect(backupCore.includes(text),`JSONバックアップ検証の契約が見つかりません: ${text}`));
   expect(estimate.includes('見積計算共通.js')&&estimate.includes('window.IzumiEstimateMath'),`見積表が共通計算へ接続されていません`);
   ['work_items','client_unit_prices','vendor_effective_unit_prices','候補選択は「自動単価」'].forEach(text=>expect(estimate.includes(text),`推奨単価マスタ連動が見つかりません: ${text}`));
