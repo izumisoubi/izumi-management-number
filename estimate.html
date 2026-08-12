@@ -576,6 +576,22 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .order-vendor-suggest button{display:block;width:100%;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--tt);font:600 11px/1.35 'Helvetica Neue',sans-serif;text-align:left;cursor:pointer;white-space:normal;}
 .order-vendor-suggest button:hover,.order-vendor-suggest button.is-active{background:color-mix(in srgb,var(--to) 13%,var(--ti));color:var(--tt);outline:none;}
 .order-vendor-suggest .ovs-empty{padding:12px 10px;color:var(--tm);font-size:10.5px;line-height:1.6;}
+.ord-price-master-notice{display:flex;align-items:center;gap:9px;margin:8px 0 5px;padding:9px 12px;border:1px solid color-mix(in srgb,var(--to) 68%,var(--tbr));border-left:5px solid var(--to);border-radius:8px;background:color-mix(in srgb,var(--to) 10%,var(--tc));color:var(--tt);font-size:11px;line-height:1.55;}
+.ord-price-master-notice strong{color:var(--to);font-size:11.5px;white-space:nowrap;}
+.vendor-price-reference{position:fixed;z-index:12600;width:min(350px,calc(100vw - 20px));max-height:235px;overflow:auto;padding:9px;background:var(--tc);border:1px solid color-mix(in srgb,var(--to) 60%,var(--tbr));border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.25);color:var(--tt);}
+.vendor-price-reference[hidden]{display:none;}
+.vpr-head{display:flex;align-items:center;gap:7px;margin-bottom:6px;padding:0 1px 6px;border-bottom:1px solid var(--tbr);}
+.vpr-head strong{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;}
+.vpr-head span{color:var(--to);font-size:9.5px;font-weight:800;white-space:nowrap;}
+.vpr-close{width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--tm);cursor:pointer;font-size:14px;line-height:20px;}
+.vpr-close:hover{background:var(--ti);color:var(--tt);}
+.vpr-list{display:grid;gap:3px;}
+.vpr-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:6px 7px;border-radius:6px;background:var(--ti);font-size:10px;}
+.vpr-item.is-match{box-shadow:inset 3px 0 var(--to);background:color-mix(in srgb,var(--to) 10%,var(--ti));}
+.vpr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.vpr-price{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--to);font-size:11.5px;font-weight:800;white-space:nowrap;}
+.vpr-meta{color:var(--tm);font-size:9px;}
+.vpr-empty{padding:8px 5px;color:var(--tm);font-size:10px;line-height:1.5;}
 .ord-order-inp{background:transparent;border:none;width:100%;color:var(--to);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
 .ord-order-inp:focus{background:color-mix(in srgb,var(--to) 8%,transparent);}
 .ctbl .ord-has-vendor{background:rgba(46,207,160,.03)!important;}
@@ -1124,7 +1140,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
         </div>
       </div>
 
-      <div class="paste-hint">💡 「業者」列で各行に業者を割り当て。<strong>発注単価</strong>は見積原価から自動更新（緑）。発注側で個別変更した単価（青）は、見積から再取込しても保持します。</div>
+      <div class="ord-price-master-notice"><strong>重要｜単価は双方向連動</strong><span>見積原価 → 発注単価へ反映。発注タブで単価を直して確定すると、<b>その案件の見積原価へ戻し</b>、同時に「業者・工事項目・単位」別の共有正式単価として保存します。</span></div>
+      <div class="paste-hint">💡 「業者」列で各行に業者を割り当て。業者を選ぶと登録単価を参考表示します。<strong>青い発注単価を変更して欄外へ移動すると正式単価として確定</strong>し、次回以降の同じ業者・工事項目・単位へ自動反映します。</div>
       <div class="paste-hint" id="ordPasteHint">💡 <strong>「明細貼付」は押さなくても大丈夫です。</strong>表の任意セルを選び、Excelからそのまま Ctrl/⌘＋V。列順：<strong>名称　仕様　数量　単位　発注単価　備考</strong>（既存行を上書き・不足分は自動追加）。ドラッグで範囲選択→Ctrl+Cでコピー。</div>
       <div style="overflow-x:auto">
         <table class="sync-tbl ctbl" id="ordtbl" style="table-layout:fixed;width:1182px;min-width:1182px">
@@ -8066,7 +8083,7 @@ function renderOrdTable(){
           <td><input data-f="spec" placeholder="仕様" style="min-width:70px" oninput="ordSf(${r.id},'spec',this.value)"></td>
           <td><input type="text" inputmode="decimal" data-f="qty" style="text-align:right;width:100%" oninput="ordSfNum(${r.id},'qty',this.value,this)" onblur="syncOrderFieldDisplay(${r.id},'qty',this)"></td>
           <td><input type="text" list="estimateUnitOptions" data-f="unit" placeholder="単位" oninput="ordSf(${r.id},'unit',this.value)" autocomplete="off"></td>
-          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="syncOrderFieldDisplay(${r.id},'orderCost',this)"></td>
+          <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="commitOrderCost(${r.id},this)"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
           <td><div class="ord-vendor-combo">
@@ -8102,7 +8119,7 @@ function renderOrdTable(){
       if(orderCostInput){
         orderCostInput.style.color='var(--to)';
         orderCostInput.title=r._orderCostManual
-          ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
+          ?'共有の業者別正式単価：確定すると、この案件の見積原価と次回以降へ反映します'
           :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';
       }
       const sel=tr.querySelector('[data-f=unit]');
@@ -8223,20 +8240,23 @@ function highlightOrderVendorSuggest(index){
   });
   menu?.querySelectorAll('button')[next]?.scrollIntoView({block:'nearest'});
 }
-function chooseOrderVendor(index){
+async function chooseOrderVendor(index){
   const {input,rowId,items}=orderVendorSuggestState;
   const name=items[index];
   if(!input||name===undefined)return;
   clearTimeout(orderVendorSuggestState.commitTimer);
   input.value=name;
   hideOrderVendorSuggest();
-  setVendor(rowId,name);
+  await setVendor(rowId,name);
+  showVendorPriceReference(input,rowId,name);
   input.focus({preventScroll:true});
 }
-function commitOrderVendorInput(input,rowId){
+async function commitOrderVendorInput(input,rowId){
   if(!input?.isConnected)return;
-  setVendor(rowId,String(input.value||'').trim());
+  const name=String(input.value||'').trim();
+  await setVendor(rowId,name);
   hideOrderVendorSuggest();
+  if(name)showVendorPriceReference(input,rowId,name);
 }
 function scheduleOrderVendorCommit(input,rowId){
   clearTimeout(orderVendorSuggestState.commitTimer);
@@ -8355,6 +8375,75 @@ async function loadVendorUnitPriceList(vendorName){
     }).catch(error=>{console.warn('業者単価候補を取得できません',error);return [];});
   vendorUnitPriceListCache.set(key,request);
   return request;
+}
+let vendorPriceReferenceTimer=0;
+function vendorPriceReferenceBox(){
+  let box=document.getElementById('vendorPriceReference');
+  if(!box){
+    box=document.createElement('aside');
+    box.id='vendorPriceReference';
+    box.className='vendor-price-reference';
+    box.hidden=true;
+    document.body.appendChild(box);
+  }
+  return box;
+}
+function hideVendorPriceReference(){
+  clearTimeout(vendorPriceReferenceTimer);
+  const box=document.getElementById('vendorPriceReference');
+  if(box)box.hidden=true;
+}
+function positionVendorPriceReference(anchor){
+  const box=vendorPriceReferenceBox();
+  if(box.hidden||!anchor?.isConnected)return;
+  const rect=anchor.getBoundingClientRect();
+  const width=Math.min(350,Math.max(280,window.innerWidth-20));
+  box.style.width=width+'px';
+  let left=Math.min(Math.max(10,rect.right-width),Math.max(10,window.innerWidth-width-10));
+  let top=rect.bottom+5;
+  if(top+box.offsetHeight>window.innerHeight-8&&rect.top-box.offsetHeight-5>=8)top=rect.top-box.offsetHeight-5;
+  box.style.left=left+'px';
+  box.style.top=Math.max(8,top)+'px';
+}
+async function showVendorPriceReference(anchor,rowId,vendorName){
+  const vendor=String(vendorName||'').trim();
+  if(!vendor)return hideVendorPriceReference();
+  const row=ordRows.find(item=>item.id===rowId);
+  const box=vendorPriceReferenceBox();
+  box.replaceChildren();
+  const head=document.createElement('div');head.className='vpr-head';
+  const title=document.createElement('strong');title.textContent=vendor;
+  const caption=document.createElement('span');caption.textContent='登録単価（参考）';
+  const close=document.createElement('button');close.type='button';close.className='vpr-close';close.textContent='×';close.title='閉じる';close.onclick=hideVendorPriceReference;
+  head.append(title,caption,close);box.appendChild(head);
+  const loading=document.createElement('div');loading.className='vpr-empty';loading.textContent='単価を確認中…';box.appendChild(loading);
+  box.hidden=false;positionVendorPriceReference(anchor);
+  const all=await loadVendorUnitPriceList(vendor);
+  if(box.hidden)return;
+  const rowName=normalizedUnitPriceText(row?.name);
+  const rowUnit=String(row?.unit||'');
+  const ranked=all.map(item=>{
+    const exact=normalizedUnitPriceText(item.name)===rowName&&String(item.unit||'')===rowUnit;
+    const vendorSpecific=item.override_price!==null&&item.override_price!==undefined;
+    return {item,exact,vendorSpecific,rank:(exact?100:0)+(vendorSpecific?10:0)};
+  }).filter(entry=>entry.exact||entry.vendorSpecific).sort((a,b)=>b.rank-a.rank||String(a.item.name).localeCompare(String(b.item.name),'ja')).slice(0,6);
+  loading.remove();
+  if(!ranked.length){
+    const empty=document.createElement('div');empty.className='vpr-empty';empty.textContent='この業者の個別登録単価はまだありません。発注単価を直して確定すると、ここへ登録されます。';box.appendChild(empty);
+  }else{
+    const list=document.createElement('div');list.className='vpr-list';
+    ranked.forEach(({item,exact,vendorSpecific})=>{
+      const line=document.createElement('div');line.className='vpr-item'+(exact?' is-match':'');
+      const name=document.createElement('div');name.className='vpr-name';name.textContent=item.name;
+      const price=document.createElement('div');price.className='vpr-price';price.textContent=yen(Number(item.effective_price)||0);
+      const meta=document.createElement('div');meta.className='vpr-meta';meta.textContent=`${item.unit||'式'}・${vendorSpecific?'業者別正式単価':'共通単価'}${exact?'・現在行':''}`;
+      line.append(name,price,meta);list.appendChild(line);
+    });
+    box.appendChild(list);
+  }
+  positionVendorPriceReference(anchor);
+  clearTimeout(vendorPriceReferenceTimer);
+  vendorPriceReferenceTimer=setTimeout(hideVendorPriceReference,9000);
 }
 async function loadClientUnitPriceList(clientName){
   const key=String(clientName||'').trim();
@@ -8482,7 +8571,15 @@ async function setVendor(id,v){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
   if(r.vendor===v)return;
   pushOrdUndo();
+  const previousVendor=r.vendor;
   r.vendor=v;
+  // A業者向けに固定した単価を、B業者へ切り替えた後まで誤って持ち越さない。
+  if(previousVendor&&previousVendor!==v){
+    r._orderCostManual=false;
+    r._vendorUnitPriceAuto=false;
+    r._officialVendorPriceSignature='';
+    r.orderCost=r._estimateCost!==undefined?r._estimateCost:'';
+  }
   if(v&&!r.orderCost) r.orderCost='';
   const td2=document.querySelector(`#ordtbody tr[data-rid="${id}"] td:nth-child(2)`);
   if(td2) td2.style.borderLeft=v?`3px solid ${vColor(v)}`:'';
@@ -8492,6 +8589,7 @@ async function setVendor(id,v){
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
   if(v&&!r._orderCostManual)await applyVendorUnitPrice(r);
+  else if(v&&r._orderCostManual)await saveOrderCostAsOfficialPrice(r,{quiet:true});
 }
 function setOrderCost(id,val){
   const r=ordRows.find(x=>x.id===id); if(!r)return;
@@ -8508,7 +8606,7 @@ function setOrderCost(id,val){
   if(orderCostInput){
     orderCostInput.style.color='var(--to)';
     orderCostInput.title=r._orderCostManual
-      ?'手入力単価：見積から再取込しても保持します（空欄にすると自動取込へ戻ります）'
+      ?'共有の業者別正式単価：確定すると、この案件の見積原価と次回以降へ反映します'
       :'見積原価から自動取込：見積から再取込すると最新原価へ更新します';
   }
   const qa=document.querySelector(`#ordtbody tr[data-rid="${id}"] .oamt`);
@@ -8517,6 +8615,105 @@ function setOrderCost(id,val){
   renderOrdLeft();
   if(typeof ctUpdateTotals==='function') ctUpdateTotals();
   if(!r._orderCostManual&&r.vendor)applyVendorUnitPrice(r);
+}
+
+function sameOfficialVendorPriceKey(a,b){
+  return normalizeOrderVendorText(a?.vendor)===normalizeOrderVendorText(b?.vendor)
+    &&normalizedUnitPriceText(a?.name)===normalizedUnitPriceText(b?.name)
+    &&String(a?.unit||'').trim()===String(b?.unit||'').trim();
+}
+function estimateRowsLinkedFromOrder(orderRow){
+  const direct=orderRow?rows.find(item=>item.id===orderRow._eid):null;
+  if(direct)return [direct];
+  const matches=rows.filter(item=>item.type!=='section'
+    &&normalizedUnitPriceText(item.name)===normalizedUnitPriceText(orderRow?.name)
+    &&String(item.unit||'').trim()===String(orderRow?.unit||'').trim());
+  return matches.length===1?matches:[];
+}
+function syncOfficialOrderPriceToEstimate(orderRows,price){
+  const targets=new Set();
+  orderRows.forEach(orderRow=>estimateRowsLinkedFromOrder(orderRow).forEach(item=>targets.add(item)));
+  targets.forEach(item=>{
+    item.cost=price;
+    item._costManual=true;
+    item._vendorOrderCostSync=true;
+    const input=document.querySelector(`#ctbody tr[data-rid="${item.id}"] [data-f="cost"]`);
+    if(input)input.value=fmtNum(price);
+    _recalcRow(item.id);
+  });
+  if(targets.size){renderCost();renderPrint();renderTotals();syncInv();}
+  return targets.size;
+}
+async function ensureOfficialWorkItem(orderRow,price){
+  const masters=await loadUnitPriceMaster();
+  const exact=masters.find(item=>normalizedUnitPriceText(item.name)===normalizedUnitPriceText(orderRow.name)
+    &&String(item.unit||'').trim()===String(orderRow.unit||'').trim());
+  if(exact)return exact;
+  const linked=estimateRowsLinkedFromOrder(orderRow)[0];
+  const common=Number(linked?.cost);
+  const result=await managementDb.rpc('save_work_item',{
+    p_id:null,p_expected_revision:0,p_name:String(orderRow.name||'').trim(),p_unit:String(orderRow.unit||'式').trim()||'式',p_common_price:Number.isFinite(common)?common:price
+  });
+  if(result.error)throw result.error;
+  const saved=Array.isArray(result.data)?result.data[0]:result.data;
+  if(!saved?.id)throw new Error('工事項目の共有登録結果を確認できませんでした');
+  const created={id:saved.id,name:String(orderRow.name||'').trim(),unit:String(orderRow.unit||'式').trim()||'式',common_price:Number.isFinite(common)?common:price};
+  if(unitPriceMasterCache)unitPriceMasterCache.push(created);
+  return created;
+}
+async function saveOfficialVendorOverride(vendorName,workItemId,price){
+  const vendorResult=await managementDb.from('vendors').select('id,name').eq('name',vendorName).eq('active',true).is('deleted_at',null).limit(1).maybeSingle();
+  if(vendorResult.error)throw vendorResult.error;
+  if(!vendorResult.data?.id)throw new Error('業者マスタに一致する業者がありません');
+  const readRevision=async()=>{
+    const result=await managementDb.from('vendor_unit_prices').select('revision').eq('vendor_id',vendorResult.data.id).eq('work_item_id',workItemId).is('deleted_at',null).limit(1).maybeSingle();
+    if(result.error)throw result.error;
+    return Number(result.data?.revision||0);
+  };
+  let revision=await readRevision();
+  let result=await managementDb.rpc('save_vendor_unit_price',{p_vendor_id:vendorResult.data.id,p_work_item_id:workItemId,p_expected_revision:revision,p_override_price:price});
+  if(result.error&&/競合|別の端末|revision/i.test(result.error.message||'')){
+    revision=await readRevision();
+    result=await managementDb.rpc('save_vendor_unit_price',{p_vendor_id:vendorResult.data.id,p_work_item_id:workItemId,p_expected_revision:revision,p_override_price:price});
+  }
+  if(result.error)throw result.error;
+  return true;
+}
+async function saveOrderCostAsOfficialPrice(orderRow,{quiet=false}={}){
+  if(!orderRow||orderRow.type==='section'||!orderRow._orderCostManual)return false;
+  const price=Number(orderRow.orderCost);
+  if(!Number.isFinite(price))return false;
+  const sameRows=ordRows.filter(item=>item.type!=='section'&&sameOfficialVendorPriceKey(item,orderRow));
+  sameRows.forEach(item=>{item.orderCost=price;item._orderCostManual=true;item._vendorUnitPriceAuto=false;});
+  sameRows.forEach(item=>{item._estimateCost=price;});
+  const estimateCount=syncOfficialOrderPriceToEstimate(sameRows.length?sameRows:[orderRow],price);
+  saveOrdRows();renderOrdTable();renderOrdLeft();scheduleOnlineAutosave(250);
+  if(!orderRow.vendor||!String(orderRow.name||'').trim()){
+    if(!quiet)showToastMsg(`見積原価へ反映しました${orderRow.vendor?'':'（業者未選択のため共有単価は未登録）'}`);
+    return estimateCount>0;
+  }
+  const signature=[orderRow.vendor,orderRow.name,orderRow.unit||'',price].join('\u0001');
+  if(orderRow._officialVendorPriceSignature===signature)return true;
+  try{
+    const workItem=await ensureOfficialWorkItem(orderRow,price);
+    await saveOfficialVendorOverride(orderRow.vendor,workItem.id,price);
+    sameRows.forEach(item=>item._officialVendorPriceSignature=signature);
+    vendorUnitPriceListCache.delete(String(orderRow.vendor).trim());
+    vendorUnitPriceCache.delete([orderRow.vendor,orderRow.name,orderRow.unit||''].join('\u0001'));
+    saveOrdRows();scheduleOnlineAutosave(250);
+    if(!quiet)showToastMsg(`${orderRow.vendor} の正式単価を共有し、見積原価へ反映しました`);
+    return true;
+  }catch(error){
+    console.warn('業者別正式単価を共有できません',error);
+    if(!quiet)showToastMsg(`見積原価へ反映済み／共有単価は保存できません：${error?.message||'接続を確認してください'}`);
+    return false;
+  }
+}
+async function commitOrderCost(id,el){
+  const row=ordRows.find(item=>item.id===id);
+  if(!row||!el)return;
+  syncOrderFieldDisplay(id,'orderCost',el);
+  if(row._orderCostManual)await saveOrderCostAsOfficialPrice(row);
 }
 
 function handleOrdPaste(e){
