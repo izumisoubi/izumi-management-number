@@ -102,11 +102,6 @@ select
 from src
 where not exists(select 1 from public.management_numbers where management_number='24-2984');
 
--- 過去取込用トリガー等で年度が補正されても、退避先の指定年度へ確実に揃える。
-update public.management_numbers
-set fiscal_year='24',sequence_no=2984,accounting_year='2024',updated_at=now()
-where management_number='24-2984';
-
 with src as (
   select estimate_row row_data
   from public.safety_restore_archived_estimate_24_2984_20260812
