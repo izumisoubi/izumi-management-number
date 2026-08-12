@@ -565,10 +565,17 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 @media(min-width:901px) and (max-width:1100px){
   .ord-left{flex:0 0 200px;width:200px;}
 }
-/* 発注テーブルの業者セル */
-.ord-vendor-sel{background:transparent;border:none;width:100%;color:var(--tt);font-size:10px;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;}
-.ord-vendor-sel:focus{background:rgba(247,168,79,.09);}
-.ord-vendor-sel option{background:var(--tc);}
+/* 発注テーブルの業者セル：一覧表示と文字絞り込みを両立する検索式コンボボックス */
+.ord-vendor-combo{position:relative;display:flex;align-items:center;width:100%;min-width:150px;}
+.ord-vendor-sel{background:transparent;border:none;width:100%;color:var(--tt);font-size:10px;padding:4px 23px 4px 5px;font-family:'Helvetica Neue',sans-serif;outline:none;}
+.ord-vendor-sel:focus{background:rgba(247,168,79,.09);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--to) 45%,transparent);}
+.ord-vendor-toggle{position:absolute;right:1px;top:50%;transform:translateY(-50%);width:22px;height:22px;padding:0;border:0;background:transparent;color:var(--tm);font-size:13px;line-height:1;cursor:pointer;border-radius:4px;}
+.ord-vendor-toggle:hover{background:rgba(247,168,79,.12);color:var(--to);}
+.order-vendor-suggest{position:fixed;z-index:12500;min-width:260px;max-width:min(430px,calc(100vw - 20px));max-height:300px;overflow:auto;background:var(--tc);border:1px solid color-mix(in srgb,var(--to) 55%,var(--tbr));border-radius:9px;box-shadow:0 14px 34px rgba(0,0,0,.25);padding:5px;}
+.order-vendor-suggest[hidden]{display:none;}
+.order-vendor-suggest button{display:block;width:100%;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--tt);font:600 11px/1.35 'Helvetica Neue',sans-serif;text-align:left;cursor:pointer;white-space:normal;}
+.order-vendor-suggest button:hover,.order-vendor-suggest button.is-active{background:color-mix(in srgb,var(--to) 13%,var(--ti));color:var(--tt);outline:none;}
+.order-vendor-suggest .ovs-empty{padding:12px 10px;color:var(--tm);font-size:10.5px;line-height:1.6;}
 .ord-order-inp{background:transparent;border:none;width:100%;color:var(--to);font-size:10.5px;font-weight:700;padding:3px 4px;font-family:'Helvetica Neue',sans-serif;outline:none;text-align:right;}
 .ord-order-inp:focus{background:color-mix(in srgb,var(--to) 8%,transparent);}
 .ctbl .ord-has-vendor{background:rgba(46,207,160,.03)!important;}
@@ -8047,8 +8054,6 @@ function renderOrdTable(){
   let no=0, prev=null;
   ordRows.forEach(r=>{
     let tr=tbody.querySelector(`tr[data-rid="${r.id}"]`);
-    const unknownVendor=r.vendor&&!vendors.includes(r.vendor)?`<option selected>${esc(r.vendor)}</option>`:'';
-    const vOpts='<option value=""></option>'+vendors.map(v=>`<option${v===r.vendor?' selected':''}>${v}</option>`).join('')+unknownVendor;
     if(!tr){
       tr=document.createElement('tr'); tr.dataset.rid=r.id;
       if(r.type==='section'){
@@ -8064,10 +8069,17 @@ function renderOrdTable(){
           <td><input type="text" inputmode="decimal" data-f="orderCost" style="text-align:right;width:100%;color:var(--to);font-weight:700" placeholder="発注単価" oninput="setOrderCost(${r.id},this.value)" onblur="syncOrderFieldDisplay(${r.id},'orderCost',this)"></td>
           <td class="ca oamt" style="white-space:nowrap;color:var(--to);font-weight:700"></td>
           <td><input data-f="note" placeholder="備考" style="font-size:10px;min-width:60px" oninput="ordSf(${r.id},'note',this.value)"></td>
-          <td><select class="ord-vendor-sel" data-f="vendor"
-  onchange="setVendor(${r.id},this.value)"
-  onkeydown="if(event.key==='Backspace'||event.key==='Delete'){event.preventDefault();this.value='';setVendor(${r.id},'');}"
-  >${vOpts}</select></td>
+          <td><div class="ord-vendor-combo">
+            <input type="text" class="ord-vendor-sel" data-f="vendor" placeholder="業者名を入力"
+              autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false"
+              onfocus="openOrderVendorSuggest(this,${r.id},true)"
+              onclick="openOrderVendorSuggest(this,${r.id},true)"
+              oninput="filterOrderVendorSuggest(this,${r.id},event)"
+              onkeydown="handleOrderVendorKeydown(event,this,${r.id})"
+              onblur="scheduleOrderVendorCommit(this,${r.id})">
+            <button type="button" class="ord-vendor-toggle" tabindex="-1" aria-label="業者一覧を開く"
+              onmousedown="event.preventDefault()" onclick="openOrderVendorSuggest(this.previousElementSibling,${r.id},true)">⌄</button>
+          </div></td>
           <td class="cdel" onclick="delOrdRow(${r.id})">✕</td>`;
         ['name','spec','qty','orderCost','note'].forEach(f=>{
           tr.querySelector(`[data-f=${f}]`)?.addEventListener('paste', handleOrdPaste);
@@ -8096,7 +8108,7 @@ function renderOrdTable(){
       const sel=tr.querySelector('[data-f=unit]');
       if(sel&&document.activeElement!==sel) sel.value=r.unit||'';
       const vSel=tr.querySelector('[data-f=vendor]');
-      if(vSel&&document.activeElement!==vSel) vSel.innerHTML=vOpts;
+      if(vSel&&document.activeElement!==vSel) vSel.value=r.vendor||'';
       const td2=tr.querySelector('td:nth-child(2)');
       if(td2) td2.style.borderLeft=r.vendor?`3px solid ${vColor(r.vendor)}`:'';
       tr.className=r.vendor?'ord-has-vendor':'';
@@ -8110,6 +8122,154 @@ function renderOrdTable(){
   initOrdRowDrag();
   setTimeout(function(){if(typeof initOrdFillHandle==='function')initOrdFillHandle();},60);
 }
+
+// ===== 発注業者の検索式コンボボックス =====
+// フォーカス時は全件、入力中は業者名の一部一致で候補を絞る。
+// 入力値は候補外の名称でも保存できるため、臨時業者の運用も妨げない。
+let orderVendorSuggestState={menu:null,input:null,rowId:null,items:[],activeIndex:-1,commitTimer:0};
+function normalizeOrderVendorText(value){
+  return String(value||'').normalize('NFKC').toLocaleLowerCase('ja-JP').replace(/[\s\u3000・･._\-ー]/g,'');
+}
+function ensureOrderVendorSuggest(){
+  if(orderVendorSuggestState.menu?.isConnected)return orderVendorSuggestState.menu;
+  const menu=document.createElement('div');
+  menu.className='order-vendor-suggest';
+  menu.hidden=true;
+  menu.setAttribute('role','listbox');
+  document.body.appendChild(menu);
+  orderVendorSuggestState.menu=menu;
+  return menu;
+}
+function positionOrderVendorSuggest(){
+  const {menu,input}=orderVendorSuggestState;
+  if(!menu||menu.hidden||!input?.isConnected)return;
+  const rect=input.getBoundingClientRect();
+  const width=Math.min(Math.max(rect.width,260),Math.max(260,window.innerWidth-20));
+  menu.style.width=width+'px';
+  let left=Math.min(Math.max(10,rect.left),Math.max(10,window.innerWidth-width-10));
+  let top=rect.bottom+4;
+  if(top+menu.offsetHeight>window.innerHeight-8&&rect.top-menu.offsetHeight-4>=8)top=rect.top-menu.offsetHeight-4;
+  menu.style.left=left+'px';
+  menu.style.top=Math.max(8,top)+'px';
+}
+function renderOrderVendorSuggest(query,showAll){
+  const menu=ensureOrderVendorSuggest();
+  const needle=showAll?'':normalizeOrderVendorText(query);
+  const seen=new Set();
+  const current=String(orderVendorSuggestState.input?.value||'');
+  const list=vendors.filter(name=>{
+    const value=String(name||'').trim();
+    if(!value||seen.has(value))return false;
+    seen.add(value);
+    return !needle||normalizeOrderVendorText(value).includes(needle);
+  });
+  orderVendorSuggestState.items=list;
+  orderVendorSuggestState.activeIndex=list.findIndex(name=>name===current);
+  menu.replaceChildren();
+  if(!list.length){
+    const empty=document.createElement('div');
+    empty.className='ovs-empty';
+    empty.textContent='一致する登録業者がありません。入力した名称のまま保存する場合は Enter を押してください。';
+    menu.appendChild(empty);
+  }else{
+    list.forEach((name,index)=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.setAttribute('role','option');
+      button.textContent=name;
+      button.classList.toggle('is-active',index===orderVendorSuggestState.activeIndex);
+      button.setAttribute('aria-selected',index===orderVendorSuggestState.activeIndex?'true':'false');
+      button.addEventListener('mousedown',event=>{
+        event.preventDefault();
+        chooseOrderVendor(index);
+      });
+      menu.appendChild(button);
+    });
+  }
+  menu.hidden=false;
+  orderVendorSuggestState.input?.setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>{
+    positionOrderVendorSuggest();
+    menu.querySelector('.is-active')?.scrollIntoView({block:'nearest'});
+  });
+}
+function openOrderVendorSuggest(input,rowId,showAll=false){
+  clearTimeout(orderVendorSuggestState.commitTimer);
+  orderVendorSuggestState.input=input;
+  orderVendorSuggestState.rowId=rowId;
+  renderOrderVendorSuggest(input.value,showAll);
+}
+function filterOrderVendorSuggest(input,rowId,event){
+  if(event?.isComposing||event?.keyCode===229)return;
+  clearTimeout(orderVendorSuggestState.commitTimer);
+  orderVendorSuggestState.input=input;
+  orderVendorSuggestState.rowId=rowId;
+  renderOrderVendorSuggest(input.value,false);
+}
+function hideOrderVendorSuggest(){
+  const {menu,input}=orderVendorSuggestState;
+  if(menu)menu.hidden=true;
+  if(input)input.setAttribute('aria-expanded','false');
+  orderVendorSuggestState.activeIndex=-1;
+}
+function highlightOrderVendorSuggest(index){
+  const {menu,items}=orderVendorSuggestState;
+  if(!items.length)return;
+  const next=(index+items.length)%items.length;
+  orderVendorSuggestState.activeIndex=next;
+  menu?.querySelectorAll('button').forEach((button,i)=>{
+    button.classList.toggle('is-active',i===next);
+    button.setAttribute('aria-selected',i===next?'true':'false');
+  });
+  menu?.querySelectorAll('button')[next]?.scrollIntoView({block:'nearest'});
+}
+function chooseOrderVendor(index){
+  const {input,rowId,items}=orderVendorSuggestState;
+  const name=items[index];
+  if(!input||name===undefined)return;
+  clearTimeout(orderVendorSuggestState.commitTimer);
+  input.value=name;
+  hideOrderVendorSuggest();
+  setVendor(rowId,name);
+  input.focus({preventScroll:true});
+}
+function commitOrderVendorInput(input,rowId){
+  if(!input?.isConnected)return;
+  setVendor(rowId,String(input.value||'').trim());
+  hideOrderVendorSuggest();
+}
+function scheduleOrderVendorCommit(input,rowId){
+  clearTimeout(orderVendorSuggestState.commitTimer);
+  orderVendorSuggestState.commitTimer=setTimeout(()=>commitOrderVendorInput(input,rowId),140);
+}
+function handleOrderVendorKeydown(event,input,rowId){
+  if(event.isComposing||event.keyCode===229)return;
+  const menu=ensureOrderVendorSuggest();
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+    event.preventDefault();
+    event.stopPropagation();
+    if(menu.hidden)openOrderVendorSuggest(input,rowId,false);
+    const delta=event.key==='ArrowDown'?1:-1;
+    const start=orderVendorSuggestState.activeIndex<0?(delta>0?-1:0):orderVendorSuggestState.activeIndex;
+    highlightOrderVendorSuggest(start+delta);
+  }else if(event.key==='Enter'){
+    event.preventDefault();
+    event.stopPropagation();
+    if(!menu.hidden&&orderVendorSuggestState.activeIndex>=0)chooseOrderVendor(orderVendorSuggestState.activeIndex);
+    else commitOrderVendorInput(input,rowId);
+  }else if(event.key==='Escape'){
+    event.preventDefault();
+    event.stopPropagation();
+    hideOrderVendorSuggest();
+  }
+}
+window.addEventListener('resize',positionOrderVendorSuggest);
+window.addEventListener('scroll',positionOrderVendorSuggest,true);
+document.addEventListener('pointerdown',event=>{
+  const {menu,input,rowId}=orderVendorSuggestState;
+  if(!menu||menu.hidden||event.target===input||menu.contains(event.target)||event.target?.closest?.('.ord-vendor-toggle'))return;
+  if(input)commitOrderVendorInput(input,rowId);
+});
 
 function ordSf(id,f,v){ const r=ordRows.find(x=>x.id===id);if(!r)return;pushOrdUndo();r[f]=v;renderOrdLeft(); }
 function ordSfNum(id,f,v,el){
@@ -8147,6 +8307,11 @@ document.addEventListener('compositionend',event=>{
   unitPriceImeComposing=false;
   // 変換確定後にだけ候補検索を開始する。変換途中の文字列は候補対象にしない。
   const input=event.target;
+  if(input?.dataset?.f==='vendor'&&input.closest?.('#ordtbody')){
+    const row=input.closest('tr[data-rid]');
+    if(row)filterOrderVendorSuggest(input,Number(row.dataset.rid));
+    return;
+  }
   const row=input?.closest?.('#ctbody tr[data-rid],#ordtbody tr[data-rid]');
   if(input?.dataset?.f==='name'&&row){
     const kind=input.closest('#ordtbody')?'order':'estimate';
