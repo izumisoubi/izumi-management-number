@@ -5895,6 +5895,36 @@ async function reconstructEstimateFromImportedCosts(item){
   return reconstructed.length;
 }
 
+function managementClientName(item){
+  return String(item?.customer_name||item?.client_name||item?.billing_client_name||'').trim();
+}
+
+function mergeManagementMasterIntoPayload(payload,item){
+  if(!payload||!item)return{payload,changed:false};
+  const merged=structuredClone(payload);
+  const basic=merged.basic||(merged.basic={});
+  let changed=false;
+  const fill=(key,value)=>{
+    if(String(basic[key]??'').trim()||value===undefined||value===null||String(value).trim()==='')return;
+    basic[key]=value;changed=true;
+  };
+  fill('kanri',item.management_number);
+  fill('staff',item.staff_name);
+  fill('uketsuke',item.reception_date);
+  fill('category',item.category);
+  fill('keijo',item.accounting_month);
+  fill('kanko_date',item.scheduled_completion_date);
+  fill('completedOn',item.completed_on);
+  fill('client',managementClientName(item));
+  fill('clientContact',item.customer_contact_name||item.invoice_contact_name);
+  fill('property',item.property_name);
+  fill('room',item.room_number);
+  fill('postal',item.postal_code||item.property_postal_code);
+  fill('place',item.property_address||item.work_address);
+  fill('summary',item.work_name);
+  return{payload:merged,changed};
+}
+
 async function pickManagementMasterItem(index){
   const item=managementMasterItems[index];if(!item)return;
   // 台帳の「見積を開く」と同じ正本読込を必ず先に通す。
@@ -5934,8 +5964,10 @@ async function pickManagementMasterItem(index){
   const reconstructedCount=await reconstructEstimateFromImportedCosts(item);
   syncKeijoSelect();syncCompletedDate('basic');
   syncEst();refreshEmployeeStamps();closeMasterModal();await linkActiveScheduleManagementNumber(item.management_number);
-  // 固定操作は不要。新規案件も、選択直後に正本へ保存して台帳へ自動反映する。
-  scheduleOnlineAutosave(250);
+  // 明細を復元できない過去案件は、開いただけで「0円の空見積」を正本へ
+  // 保存しない。台帳に残る過去金額を消さず、実際に編集された時だけ保存する。
+  if(reconstructedCount)scheduleOnlineAutosave(250);
+  else setOnlineSaveStatus('自動保存：編集後に開始');
   showToastMsg(reconstructedCount
     ?`過去原価${reconstructedCount}行から見積下書きを復元しました（集計データからの再構成）：${item.management_number}`
     :'Supabase台帳から取り込みました。変更は自動保存・台帳連携されます：'+item.management_number);
@@ -6753,8 +6785,12 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
   pendingOnlineManagementNumber=managementNumber;
   const session=await getOnlineSession();if(!session)return;
   pendingOnlineManagementNumber='';
-  const {data,error}=await managementDb.from('estimate_projects').select('management_number,payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();
+  const [{data,error},{data:master,error:masterError}]=await Promise.all([
+    managementDb.from('estimate_projects').select('management_number,payload,revision').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle(),
+    managementDb.from('management_numbers').select('management_number,reception_date,staff_name,property_name,room_number,work_name,client_name,customer_name,billing_client_name,customer_contact_name,invoice_contact_name,category,accounting_month,scheduled_completion_date,completed_on,property_postal_code,property_address,sales_estimate_ex_tax').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle()
+  ]);
   if(error){if(!silentWhenMissing)showToastMsg('クラウド案件の読込に失敗しました：'+error.message);return false;}
+  if(masterError&&!silentWhenMissing)showToastMsg('台帳基本情報の照合に失敗しました：'+masterError.message);
   if(!data?.payload){
     if(silentWhenMissing){
       try{localStorage.removeItem(LS_LAST_OPENED_MANAGEMENT_NUMBER);}catch(_error){}
@@ -6766,8 +6802,9 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
     if(index>=0)await pickManagementMasterItem(index);
     return false;
   }
-  loadAllFromText(JSON.stringify(data.payload));
-  activeScheduleId=data.payload.calendarEventId||'';
+  const merged=mergeManagementMasterIntoPayload(data.payload,master);
+  loadAllFromText(JSON.stringify(merged.payload));
+  activeScheduleId=merged.payload.calendarEventId||'';
   onlineProjectRevision=data.revision??null;
   onlineProjectId=null;
   onlineProjectIdManagementNumber='';
@@ -6776,9 +6813,10 @@ async function loadOnlineProjectByNumber(managementNumber,{silentWhenMissing=fal
   onlineDraftId='';
   onlineDraftRevision=null;
   await subscribeOnlineProjectUpdates(managementNumber);
-  // 既存案件でも、基本情報の派生列（完工予定日・完工日など）を台帳へ自動整合する。
-  // 日付の固定や「今すぐ保存」は不要で、正本を読み込んだ後にだけ安全な保存RPCを通す。
-  scheduleOnlineAutosave(350);
+  // 読込だけでは金額・明細を書き戻さない。台帳から補完した客先名などがある
+  // 場合だけ保存し、空の旧見積が台帳金額を0円で上書きする事故を防ぐ。
+  if(merged.changed)scheduleOnlineAutosave(350);
+  else setOnlineSaveStatus('自動保存：待機中');
   if(showToast)showToastMsg('☁ クラウド案件を読み込みました：'+managementNumber);
   return true;
 }
