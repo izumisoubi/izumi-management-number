@@ -630,8 +630,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   outline-offset:-1px;
 }
 
-.orderdoc-a4{width:297mm;min-height:210mm;margin:0 auto;padding:10mm 12mm;background:#fff;color:#111;box-shadow:0 4px 18px #0003;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif}
-.od-top{display:flex;justify-content:space-between;align-items:flex-start;font-size:10px}.od-title{text-align:center;font-size:24px;letter-spacing:.75em;margin:-2mm 0 2mm;padding-bottom:2mm;border-bottom:2px solid #111}.od-party{display:grid;grid-template-columns:1fr 1fr;gap:18mm;min-height:23mm;font-size:10px;line-height:1.45}.od-party-name{font-size:15px;font-weight:700;border-bottom:1px solid #222;padding-bottom:1mm}.od-issuer{text-align:right;position:relative}.od-stamp{position:absolute;right:0;top:-3mm}.od-lead{font-size:10px;margin:1mm 0 2mm}.od-info{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.5px}.od-info th,.od-info td{border:1px solid #777;padding:1.2mm 2mm}.od-info th{width:25mm;background:#f4f4f4}.od-amount{font-size:14px;font-weight:700}.od-items{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5px;margin-top:2mm}.od-items th,.od-items td{border:1px solid #777;padding:.9mm 1.2mm;height:6mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-items thead th{background:#eee;text-align:center}.od-num{text-align:right;font-variant-numeric:tabular-nums}.od-terms-title{font-size:9px;font-weight:700;margin:2mm 0 .6mm}.od-terms{column-count:2;column-gap:8mm;font-size:6.8px;line-height:1.35}.od-term{break-inside:avoid;margin:0 0 .7mm;padding-left:4mm;text-indent:-4mm}.od-note{font-size:6.8px;margin-top:1mm;border-top:1px solid #999;padding-top:.7mm}
+.orderdoc-a4{width:297mm;min-height:210mm;margin:0 auto;padding:7mm 7mm 6mm;background:#fff;color:#111;box-shadow:0 4px 18px #0003;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif}
+.od-document-head{position:relative;height:20mm}.od-date{position:absolute;right:1mm;top:0;font-size:10.5px;letter-spacing:.55em;white-space:nowrap}.od-ref{position:absolute;right:1mm;bottom:0;font-size:10px;white-space:nowrap}.od-title{text-align:center;font-size:25px;letter-spacing:.72em;line-height:1;margin:5mm 0 0;font-weight:700}.od-party{display:grid;grid-template-columns:1fr 1fr;column-gap:18mm;min-height:31mm;padding-top:2mm;font-size:11px}.od-party-left{align-self:start;font-size:14px}.od-party-right{align-self:center;display:grid;grid-template-columns:28mm 1fr;align-items:center;font-size:12px}.od-party-label{white-space:nowrap}.od-party-value{font-size:14px;white-space:nowrap}.od-lead{font-size:11px;margin:0 0 2.5mm 10mm}.od-info{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}.od-info th,.od-info td{height:9mm;padding:1.2mm 2.5mm;border-right:1px dotted #777;border-bottom:1px dotted #555;text-align:left;font-weight:400}.od-info tr:first-child>*{border-top:1px dotted #777}.od-info th:first-child,.od-info td:first-child{border-left:1px dotted #777}.od-info th{width:34mm;letter-spacing:.22em;white-space:nowrap}.od-info .od-place-head{width:24mm}.od-info .od-price{font-size:20px;font-weight:700;letter-spacing:.06em;white-space:nowrap}.od-info .od-tax-label{font-size:10.5px;white-space:nowrap}.od-bank-row{display:grid;grid-template-columns:46mm 1fr;margin-left:auto;width:57%;min-height:8mm;align-items:center;border-bottom:1px dotted #777;font-size:10px}.od-bank-label{text-align:right;padding-right:4mm;white-space:nowrap}.od-bank-value{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-items-label{font-size:11px;letter-spacing:.5em;margin:4mm 0 1mm 2mm}.od-items{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px}.od-items th,.od-items td{border:1px solid #222;padding:1mm 1.5mm;height:8mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-items thead th{height:9mm;text-align:center;font-weight:400;letter-spacing:.22em}.od-items .od-summary-row td{height:9mm}.od-items .od-application-row td{height:8mm}.od-items tfoot th,.od-items tfoot td{font-weight:400}.od-items .od-grand-row th,.od-items .od-grand-row td{font-size:12px;border-top:1.5px solid #111}.od-num{text-align:right;font-variant-numeric:tabular-nums}.od-center{text-align:center}.od-terms-title{font-size:9px;font-weight:700;margin:2mm 0 .6mm}.od-terms{column-count:2;column-gap:8mm;font-size:6.8px;line-height:1.35}.od-term{break-inside:avoid;margin:0 0 .7mm;padding-left:4mm;text-indent:-4mm}.od-note{font-size:6.8px;margin-top:1mm;border-top:1px solid #999;padding-top:.7mm}
 
 </style>
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -8536,14 +8536,41 @@ function renderOrderDocuments(){
   const info=getOrdInfo();
   const net=Math.round(data.ord||0),tax=Math.round(net*.1),gross=net+tax;
   const title=orderDocumentType==='accept'?'注　文　請　書':'発　注　書';
-  const today=new Date(),dateText=`${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+  const sourceDate=vv('b-date')||new Date().toISOString().slice(0,10);
+  const d=new Date(sourceDate+'T00:00:00');
+  const dateText=Number.isNaN(d.getTime())?'年　　　月　　　日':`${d.getFullYear()}年　${d.getMonth()+1}月　${d.getDate()}日`;
   const issuerName=esc(issuer.name||'株式会社イズミ装美');
-  const leftName=orderDocumentType==='accept'?issuerName:esc(vendor||'発注先未選択')+'　御中';
-  const rightName=orderDocumentType==='accept'?esc(vendor||'受注者未選択'):issuerName;
-  const rows=data.rows||[];
-  const body=[...Array(Math.max(8,rows.length))].map((_,index)=>{const r=rows[index];if(!r)return'<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';const qty=Number(r.qty)||0,unit=Number(r.orderCost)||0,amount=Math.round(qty*unit);return `<tr><td style="text-align:center">${index+1}</td><td>${esc(r.name)}</td><td>${esc(r.spec)}</td><td style="text-align:center">${esc(r.unit)}</td><td class="od-num">${fmtNum(r.qty)}</td><td class="od-num">${unit?fmt(unit):''}</td><td class="od-num">${amount?fmt(amount):''}</td><td>${esc(r.note)}</td></tr>`;}).join('');
+  const vendorName=esc(vendor||'発注先未選択');
+  const leftParty=orderDocumentType==='accept'?`注文者　${issuerName}`:`${vendorName}　行`;
+  const rightLabel=orderDocumentType==='accept'?'受注者':'注文者';
+  const rightParty=orderDocumentType==='accept'?vendorName:issuerName;
+  const managementNumber=vv('b-kanri');
+  const project=[vv('b-property'),vv('b-room')].filter(Boolean).join(' ');
+  const summary=vv('b-summary')||'工事一式';
+  const period=[fmtD(info.dateFrom),fmtD(info.dateTo)].filter(Boolean).join('～');
+  const workPeriod=(period||'　　　　　　　　　')+'（状況により工期変更あります）';
+  const vendorDetail=(vendorDetails||[]).find(v=>v.name===vendor)||{};
+  const bank=vendorDetail.bank||vendorDetail.bankInfo||'';
   const terms=orderDocumentTerms().map(t=>`<div class="od-term">${esc(t)}</div>`).join('');
-  page.innerHTML=`<div class="od-top"><span>管理番号　${esc(vv('b-kanri'))}</span><span>${dateText}</span></div><div class="od-title">${title}</div><div class="od-party"><div><div class="od-party-name">${leftName}</div><div class="od-lead">下記のとおり注文いたします。</div></div><div class="od-issuer"><div class="od-party-name">${rightName}</div><div>${esc(issuer.zip||'')}</div><div>${esc(issuer.addr||'')}</div><div>${esc(issuer.tel||'')}</div><div class="od-stamp">${orderDocumentType==='order'?buildOrderStampHtml(45):''}</div></div></div><table class="od-info"><tr><th>物件名</th><td>${esc([vv('b-property'),vv('b-room')].filter(Boolean).join(' '))}</td><th>施工場所</th><td>${esc(vv('b-place'))}</td></tr><tr><th>工事名及び概要</th><td colspan="3">${esc(vv('b-summary'))}</td></tr><tr><th>工期</th><td>${esc(fmtD(info.dateFrom))} ～ ${esc(fmtD(info.dateTo))}</td><th>支払条件</th><td>${esc(getPayment())}</td></tr><tr><th>発注金額（消費税込）</th><td colspan="3" class="od-amount">${yen(gross)}</td></tr></table><table class="od-items"><thead><tr><th style="width:6%">№</th><th style="width:24%">名称</th><th style="width:21%">仕様</th><th style="width:7%">呼称</th><th style="width:8%">数量</th><th style="width:11%">単価</th><th style="width:12%">金額</th><th>備考</th></tr></thead><tbody>${body}</tbody><tfoot><tr><th colspan="6">小計</th><td class="od-num">${fmt(net)}</td><td></td></tr><tr><th colspan="6">消費税（10%）</th><td class="od-num">${fmt(tax)}</td><td></td></tr><tr><th colspan="6">合計（税込）</th><td class="od-num">${fmt(gross)}</td><td></td></tr></tfoot></table><div class="od-terms-title">注文条項</div><div class="od-terms">${terms}</div>${/原状回復|退去/.test(vv('b-summary'))?'<div class="od-note">※退去後に確認された追加損傷等は、双方確認のうえ別途見積・発注とします。</div>':''}`;
+  page.innerHTML=`
+    <div class="od-document-head"><div class="od-date">${dateText}</div><div class="od-title">${title}</div><div class="od-ref">見積${esc(managementNumber)}</div></div>
+    <div class="od-party"><div class="od-party-left">${leftParty}</div><div class="od-party-right"><span class="od-party-label">${rightLabel}</span><span class="od-party-value">${rightParty}</span></div></div>
+    <div class="od-lead">下記のとおり注文いたします。</div>
+    <table class="od-info"><colgroup><col style="width:34mm"><col><col style="width:24mm"><col style="width:91mm"></colgroup>
+      <tr><th>物件名</th><td>${esc(project)}</td><th class="od-place-head">施工場所</th><td>${esc(vv('b-place'))}</td></tr>
+      <tr><th>工事名及び概要</th><td colspan="3">${esc(summary)}</td></tr>
+      <tr><th>工期</th><td colspan="3">${esc(workPeriod)}</td></tr>
+      <tr><th>発注金額</th><td><span class="od-price">${yen(gross)}</span>　<span class="od-tax-label">（消費税込）</span></td><th class="od-place-head">支払条件</th><td>${esc(getPayment()||'従来通り')}</td></tr>
+    </table>
+    <div class="od-bank-row"><span class="od-bank-label">振込先金融機関</span><span class="od-bank-value">${esc(bank)}</span></div>
+    <div class="od-items-label">内訳</div>
+    <table class="od-items"><colgroup><col style="width:6%"><col style="width:25%"><col style="width:17%"><col style="width:6%"><col style="width:9%"><col style="width:11%"><col style="width:14%"><col style="width:12%"></colgroup>
+      <thead><tr><th>No.</th><th>名称</th><th>仕様</th><th>呼称</th><th>数量</th><th>単価</th><th>金額</th><th>備考</th></tr></thead>
+      <tbody><tr class="od-summary-row"><td class="od-num">1</td><td>${esc(summary)}</td><td class="od-center">${esc(managementNumber)}　通り</td><td class="od-center">式</td><td class="od-center">1</td><td></td><td class="od-num">${fmt(net)}</td><td></td></tr>
+      <tr class="od-application-row"><td></td><td>見積内容以外申請致します</td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody>
+      <tfoot><tr><th></th><th>（消費税　10%）</th><td></td><td></td><td></td><td></td><td class="od-num">${fmt(tax)}</td><td></td></tr><tr class="od-grand-row"><th></th><th>合　　計</th><td></td><td></td><td></td><td></td><td class="od-num">${yen(gross)}</td><td></td></tr></tfoot>
+    </table>
+    <div class="od-terms-title">注文条項</div><div class="od-terms">${terms}</div>${/原状回復|退去/.test(vv('b-summary'))?'<div class="od-note">※退去後に確認された追加損傷等は、双方確認のうえ別途見積・発注とします。</div>':''}`;
 }
 
 // ===== 左パネル：KPI＋業者カード（情報量最大化） =====
