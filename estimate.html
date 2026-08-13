@@ -635,17 +635,17 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 
 </style>
 <style>
-/* 元帳票の実印刷に合わせ、振込先は右側欄の開始位置へ揃える */
-.od-bank-row{grid-template-columns:42mm 1fr;width:46%}
-.od-document-head{height:18mm}
+/* 発注書は、基本情報欄と明細表の左右端を全要素の基準線にする */
+.od-document-head{height:18mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
 .od-top-meta{position:absolute;right:0;top:0;display:flex;align-items:center;gap:8mm;font-size:10.5px;white-space:nowrap}
 .od-top-meta .od-date,.od-top-meta .od-ref{position:static;letter-spacing:.08em;font-size:inherit}
-.od-party{min-height:31mm;padding-top:3mm}
-.od-party-right{justify-self:end;grid-template-columns:28mm max-content;justify-content:end;text-align:left}
-.od-lead,.od-info,.od-bank-row,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{width:calc(100% - 12mm)}
+.od-party{min-height:31mm;padding-top:3mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
+.od-party-right{justify-self:end;width:115mm;grid-template-columns:28mm minmax(0,1fr);justify-content:end;text-align:left}
+.od-lead,.od-info,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{width:calc(100% - 12mm)}
 .od-lead,.od-info,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{margin-left:auto;margin-right:auto}
 .od-info th,.od-info td{height:9mm;border-bottom:1px solid #777}
-.od-bank-row{margin-right:6mm}
+.od-bank-row{grid-template-columns:32mm minmax(0,1fr);width:115mm;min-height:9mm;margin-left:auto;margin-right:6mm;border-bottom:1px solid #777}
+.od-bank-label{padding-right:4mm}
 .od-items th,.od-items td,.od-items tbody td,.od-items tfoot td,.od-items tfoot th{border-style:solid}
 .od-items th,.od-items td{height:8mm}
 .od-items thead th{height:9mm}
