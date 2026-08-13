@@ -3476,24 +3476,24 @@ function getActiveSaveDocumentLabel(){
     'sc-order':'発注書',
     'sc-costtable':'原価管理表',
     'sc-invoice':'御請求書',
-    'sc-report':'完了報告書'
+    'sc-report':'完了報告書',
+    'sc-orderdocs':orderDocumentType==='accept'?'注文請書':'発注書'
   }[activeScreen]||'御見積書';
 }
-function getProjectFileBaseName(){
-  const workName=sanitizeFileNamePart(vv('b-kojiname')||vv('b-property')||'物件名未入力');
+function getProjectFileBaseName(documentLabel=getActiveSaveDocumentLabel()){
+  const propertyName=sanitizeFileNamePart(vv('b-property'));
+  const roomNumber=sanitizeFileNamePart(vv('b-room'));
+  const workName=sanitizeFileNamePart(vv('b-summary'));
   const managementNo=sanitizeFileNamePart(vv('b-kanri'));
-  const projectName=[workName,managementNo].filter(Boolean).join(' ')||'物件名未入力';
-  return `【${getActiveSaveDocumentLabel()}】${projectName}`.slice(0,120);
-}
-function normalizeDocumentLabel(value){
-  return String(value||'').replace(/[\s　]/g,'').replace(/^御/,'').replace(/^売上/,'');
+  const legacyName=sanitizeFileNamePart(vv('b-kojiname'));
+  const projectName=[propertyName,roomNumber,workName].filter(Boolean).join(' ')||legacyName||'物件名未入力';
+  const safeLabel=sanitizeFileNamePart(documentLabel)||'御見積書';
+  const managementSuffix=managementNo?` ${managementNo}`:'';
+  const availableLength=Math.max(20,120-safeLabel.length-managementSuffix.length-2);
+  return `【${safeLabel}】${projectName.slice(0,availableLength)}${managementSuffix}`;
 }
 function getDocumentFileTitle(label){
-  const base=getProjectFileBaseName();
-  const bracketLabel=base.match(/^【([^】]+)】/)?.[1]||'';
-  return normalizeDocumentLabel(label)===normalizeDocumentLabel(bracketLabel)
-    ?base
-    :[sanitizeFileNamePart(label),base].filter(Boolean).join(' ');
+  return getProjectFileBaseName(label);
 }
 function openSaveDirectoryDb(){
   return new Promise((resolve,reject)=>{
