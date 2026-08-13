@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>イズミ装美 工事写真帖</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="認証セッション共通.js?v=20260729-UX56"></script>
+<script src="本日日付共通.js?v=20260808-TODAY1"></script>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#006699">
+<style>*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:#EDECEA;min-height:100vh}
+.online-project-bar{position:sticky;top:0;z-index:500;display:flex;align-items:center;gap:12px;padding:9px 18px;background:#12345b;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);font-size:13px}
+.online-project-bar strong{white-space:nowrap}.online-project-detail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.online-project-note{font-size:11px;color:#d5e5f7;white-space:nowrap}.online-project-back{border:1px solid rgba(255,255,255,.55);border-radius:7px;background:#fff;color:#12345b;padding:6px 11px;font-weight:700;text-decoration:none;white-space:nowrap}
+.online-project-bar.is-error{background:#8a2b2b}.online-project-bar.is-loading .online-project-detail{opacity:.8}
+.local-storage-policy{margin:14px 0 18px;padding:12px 14px;border:1px solid #efc36a;border-left:5px solid #e38b12;border-radius:9px;background:#fff9e9;color:#4d3b1d;font-size:12px;line-height:1.75}
+.local-storage-policy strong{color:#8a5100}.local-storage-policy ul{margin:5px 0 0 18px;padding:0}
+@media(max-width:700px){.online-project-bar{flex-wrap:wrap;padding:8px 10px;gap:7px}.online-project-detail{order:3;flex-basis:100%}.online-project-note{display:none}}
+#setup{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px}
+.scard{background:#fff;border-radius:16px;padding:36px 42px;max-width:820px;width:100%;box-shadow:0 6px 30px rgba(0,0,0,.12)}
+.slogo-t{font-size:22px;font-weight:800;color:#1A3E6E;letter-spacing:.06em;text-align:center}
+.slogo-s{font-size:11px;color:#888;text-align:center;margin-top:2px;margin-bottom:24px}
+.s-step{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:#1A3E6E;border-radius:10px;padding:2px 10px;margin-bottom:8px}
+.s-sub{font-size:14px;font-weight:600;color:#333;margin-bottom:12px}
+.pat-btn{display:block;width:100%;padding:13px 16px;border:2px solid #E5E2DE;border-radius:9px;background:#fff;cursor:pointer;font-family:inherit;margin-bottom:8px;transition:all .15s;text-align:left}
+.pat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pat-grid .pat-btn{height:100%;min-height:72px;margin-bottom:0}
+.pat-btn:hover,.pat-btn.active{border-color:#1A3E6E;background:#EBF0F9}
+.pat-ph{font-size:15px;font-weight:700;color:#1A3E6E}
+.pat-ds{font-size:11px;color:#888;margin-top:3px}
+.cnt-row{display:flex;gap:8px;flex-wrap:wrap}
+.cnt-btn{flex:1;min-width:70px;padding:12px 6px;border:2px solid #E5E2DE;border-radius:9px;background:#fff;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;text-align:center;transition:all .15s;color:#555}
+.cnt-btn:hover,.cnt-btn.active{border-color:#1A3E6E;background:#EBF0F9;color:#1A3E6E}
+.cnt-ht{font-size:11px;color:#888;margin-top:6px}
+.s-sub-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:12px}.s-sub-row .s-sub{margin-bottom:0}.seq-nine-warn{display:none;color:#B23A2B;font-size:13px;font-weight:700;line-height:1}
+#fi-zip::-webkit-contacts-auto-fill-button,#fi-addr::-webkit-contacts-auto-fill-button{visibility:hidden!important;display:none!important;pointer-events:none!important;position:absolute!important;right:0!important}
+.divider{border:none;border-top:1.5px solid #F0EDEA;margin:20px 0}
+.fg{margin-bottom:15px}
+.fl{font-size:12px;font-weight:700;color:#555;margin-bottom:6px;display:block}
+.fi{width:100%;min-height:46px;padding:12px 14px;border:1.5px solid #D6D0C8;border-radius:9px;font-size:15px;font-family:inherit;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.fi:focus{border-color:#1A3E6E;box-shadow:0 0 0 3px rgba(26,62,110,.1)}
+.dr{display:flex;align-items:center;gap:8px}
+.ds{color:#999;font-size:13px;white-space:nowrap}
+.ad{display:flex;align-items:center;min-height:46px;font-size:14px;color:#555;padding:12px 14px;background:#F7F5F2;border-radius:9px;border:1.5px solid #D6D0C8}
+.cover-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;align-items:start}.cover-grid>.fg{grid-column:span 6}.cover-grid>.fg-zip{grid-column:span 4}.cover-grid>.fg-address{grid-column:span 8}.cover-grid>.fg-wide{grid-column:1/-1}.cover-grid>.fg-complete{grid-column:span 4}.cover-grid>.fg-amount{grid-column:span 8}
+.go-btn{display:block;width:100%;padding:14px;background:#1A3E6E;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px}
+.go-btn:hover{background:#122E54}
+.hidden{display:none!important}
+#main{display:none;min-height:100vh}
+.toolbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:10px 16px;background:#fff;border-bottom:1px solid #E5E2DE;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.tbar-l{display:flex;align-items:center;gap:8px}
+.tbar-c{display:flex;align-items:center;gap:7px}
+.tbar-r{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.tbar-title{font-size:15px;font-weight:800;color:#1A3E6E}
+.pat-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:#EBF0F9;color:#1A3E6E;border:1px solid #1A3E6E;white-space:nowrap}
+.layout-select{max-width:190px;padding:5px 28px 5px 9px;border:1.5px solid #1A3E6E;border-radius:7px;background:#fff;color:#1A3E6E;font:700 11px/1.2 inherit;cursor:pointer;outline:none}
+.layout-select:focus{box-shadow:0 0 0 2px rgba(26,62,110,.14)}
+.layout-warning{display:none;color:#C33B2B;font-size:11px;font-weight:800;white-space:nowrap}
+.preview-btn{padding:5px 9px;border:1.5px solid #807A73;border-radius:7px;background:#fff;color:#555;font:700 11px/1.2 inherit;cursor:pointer;white-space:nowrap}
+.pdf-preview-float{display:none;position:fixed;right:16px;top:70px;width:380px;max-height:calc(100vh - 86px);z-index:5000;background:#fff;border:1px solid #CFCAC4;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.26);overflow:auto}
+.pdf-preview-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:7px;padding:9px 10px;background:#fff;border-bottom:1px solid #E5E2DE}
+.pdf-preview-title{flex:1;min-width:0;color:#1A3E6E;font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-preview-note{display:none;color:#C33B2B;font-size:10px;font-weight:800}.pdf-preview-close{width:28px;height:28px;border:0;border-radius:6px;background:#EEECEA;color:#555;font-size:17px;cursor:pointer}
+.pdf-preview-stage{position:relative;width:100%;overflow:hidden;background:#2B2D33}.pdf-preview-frame{position:absolute;left:0;top:0;width:794px;height:1123px;border:0;transform-origin:top left;background:#fff}
+.pdf-preview-actions{display:flex;gap:7px;justify-content:flex-end;padding:9px 10px;border-top:1px solid #E5E2DE}
+.gallery-modal{display:none;position:fixed;inset:0;z-index:6000;background:rgba(22,25,31,.72);padding:28px;overflow:auto}.gallery-box{max-width:1700px;margin:0 auto;background:#F4F2EF;border-radius:14px;padding:18px;box-shadow:0 16px 55px rgba(0,0,0,.35)}
+.gallery-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}.gallery-head h2{flex:1;font-size:19px;color:#1A3E6E}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}
+.gallery-card{position:relative;padding:10px;border:2px solid transparent;border-radius:10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit}.gallery-card:hover,.gallery-card.active{border-color:#1A3E6E;background:#F7F9FD}.gallery-card-title{font-size:11px;font-weight:800;color:#333;min-height:30px}.gallery-bad{display:inline-block;margin-top:3px;color:#C33B2B;font-size:9px;font-weight:800}
+.mini-page{height:150px;margin-top:7px;padding:8px 7px;background:#fff;border:1px solid #BBB;display:flex;flex-direction:column;justify-content:center}.mini-head{height:7px;background:#1A3E6E;margin-bottom:4px}.mini-cols{display:flex;align-items:center;gap:3px}.mini-col{flex:1;border:1px solid #999;padding:2px}.mini-bar{height:6px;margin-bottom:2px}.mini-cell{border:1px solid #D1CECA;background:#ECEAE7;margin-top:2px}.mini-cell.h{height:13px}.mini-cell.p{height:22px}
+.gallery-preview{position:relative;width:100%;aspect-ratio:794/1123;margin-top:6px;overflow:hidden;background:#292B31;border:1px solid #BBB}.gallery-preview iframe{position:absolute;left:0;top:0;width:794px;height:1123px;border:0;transform-origin:top left;pointer-events:none;background:#fff}
+.upbtn{padding:7px 12px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;border:1.5px solid;display:inline-block;user-select:none;-webkit-user-select:none}
+.up-bef{background:#E8F5E9;color:#2E7D32;border-color:#2E7D32}
+.up-dur{background:#FFF3E0;color:#E65100;border-color:#E65100}
+.up-aft{background:#E3F2FD;color:#1565C0;border-color:#1565C0}
+.tbtn{padding:7px 12px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;border:1.5px solid}
+.tb-pdf{background:#1A3E6E;color:#fff;border-color:#1A3E6E}
+.tb-cfg{background:#F5F3F0;color:#666;border-color:#D5D2CE}
+.tb-save{background:#E8F5E9;color:#2E7D32;border-color:#2E7D32}
+.tb-load{background:#FFF3E0;color:#E65100;border-color:#E65100;cursor:pointer;display:inline-block}
+.col-wrap{display:flex;gap:10px;padding:14px 16px;justify-content:center;align-items:flex-start;min-height:calc(100vh - 56px)}
+.col{width:310px;flex:0 0 310px;display:flex;flex-direction:column}
+.col-hdr{position:sticky;top:56px;z-index:50;padding:10px 12px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;-webkit-user-select:none}
+.ch-bef{background:#2E7D32}.ch-dur{background:#E65100}.ch-aft{background:#1565C0}.ch-seq{background:#555}
+.ch-txt{font-size:14px;font-weight:800;color:#fff;letter-spacing:.06em}
+.ch-r{display:flex;align-items:center;gap:6px}
+.ch-cnt{font-size:11px;color:rgba(255,255,255,.85)}
+.ch-add{font-size:11px;color:#fff;background:rgba(255,255,255,.22);border-radius:5px;padding:3px 9px;font-weight:600}
+.col-cards{display:flex;flex-direction:column;gap:7px}
+.dh{border:2px dashed #D5D2CE;border-radius:8px;padding:22px 12px;text-align:center;color:#bbb;font-size:12px;cursor:pointer;background:#FAF9F7;transition:all .15s;display:block;margin-bottom:8px;user-select:none;-webkit-user-select:none}
+.dh:hover{border-color:#1A3E6E;color:#1A3E6E;background:#EBF0F9}
+.pcard{background:#fff;border-radius:7px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.pcard-hdr{display:flex;align-items:center;gap:5px;padding:5px 8px;font-size:10px;font-weight:700;color:#fff;cursor:grab;user-select:none;-webkit-user-select:none}
+.ph-bef{background:#2E7D32}.ph-dur{background:#E65100}.ph-aft{background:#1565C0}.ph-seq{background:#555}
+.drag-h{cursor:grab;font-size:13px;opacity:.8;user-select:none;-webkit-user-select:none}
+.drag-h:active{cursor:grabbing}
+.pcard-num{flex:1;font-size:10px}
+.pcard-del{background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;border-radius:3px;padding:1px 6px;font-size:10px;font-family:inherit}
+.pcard-img-wrap{position:relative;width:100%;padding-top:var(--phase-pad,70%);overflow:hidden;background:#E8E6E3}
+.pcard-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;background:#f0f0f0}
+.pcard-body{padding:7px 8px 9px}
+.f-lbl{font-size:9px;font-weight:700;color:#1A3E6E;margin-bottom:2px}
+.f-txt{width:100%;border:1px solid #E5E2DE;border-radius:5px;padding:4px 7px;font-size:11px;font-family:inherit;background:#FAF9F7;outline:none;margin-bottom:6px}
+.f-txt:focus{border-color:#1A3E6E}
+.f-area{width:100%;border:1px solid #E5E2DE;border-radius:5px;padding:4px 7px;font-size:11px;font-family:inherit;background:#FAF9F7;outline:none;resize:vertical;height:60px;line-height:1.45;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.f-area:focus{border-color:#1A3E6E}
+.cmt-count{text-align:right;margin-top:2px;color:#888;font-size:9px;line-height:1.3}.cmt-count.near{color:#C46A00;font-weight:700}.cmt-count.over{color:#C33B2B;font-weight:800}
+/* SEQ グリッド表示 */
+.seq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 16px;max-width:1000px;margin:0 auto}
+.seq-card{background:#fff;border-radius:7px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.seq-card-hdr{display:flex;align-items:center;gap:5px;padding:5px 8px;font-size:10px;font-weight:700;color:#fff;background:#555;cursor:grab;user-select:none;-webkit-user-select:none}
+.seq-drag{cursor:grab;font-size:13px;opacity:.8;user-select:none;-webkit-user-select:none}
+.seq-drag:active{cursor:grabbing}
+.seq-num{flex:1;font-size:10px}
+.seq-del{background:rgba(255,255,255,.2);border:none;color:#fff;cursor:pointer;border-radius:3px;padding:1px 6px;font-size:10px;font-family:inherit}
+.seq-img-wrap{position:relative;overflow:hidden;width:100%;padding-top:var(--seq-pad,70%);background:#E8E6E3}
+.seq-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;background:#f0f0f0}
+.seq-body{padding:6px 8px 8px}
+.seq-flbl{font-size:9px;font-weight:700;color:#555;margin-bottom:2px}
+.seq-ftxt{width:100%;border:1px solid #E5E2DE;border-radius:5px;padding:3px 6px;font-size:11px;font-family:inherit;background:#FAF9F7;outline:none;margin-bottom:5px}
+.seq-ftxt:focus{border-color:#555}
+.seq-farea{width:100%;border:1px solid #E5E2DE;border-radius:5px;padding:3px 6px;font-size:11px;font-family:inherit;background:#FAF9F7;outline:none;resize:vertical;height:60px;line-height:1.45;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.seq-farea:focus{border-color:#555}
+.seq-drop{grid-column:1/-1;border:2px dashed #D5D2CE;border-radius:8px;padding:22px;text-align:center;color:#bbb;font-size:12px;cursor:pointer;background:#FAF9F7;transition:all .15s}
+.seq-drop:hover{border-color:#555;color:#555;background:#F0EFED}
+@media (max-width:768px){
+  .toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px}
+  .tbar-l{width:100%;flex-wrap:wrap}
+  .tbar-c{width:100%;justify-content:center;flex-wrap:wrap;gap:5px;order:3}
+  .tbar-r{margin-left:auto}
+  .tbar-title{font-size:13px}
+  .upbtn,.tbtn{padding:8px 10px;font-size:11px;min-height:38px}
+  .pat-badge{font-size:10px;padding:2px 7px}
+  .layout-select{max-width:min(190px,48vw);min-height:34px;font-size:10px}
+  .layout-warning{font-size:10px}.preview-btn{min-height:34px;font-size:10px}.pdf-preview-float{left:8px;right:8px;top:64px;width:auto;max-height:calc(100vh - 72px)}
+  .gallery-modal{padding:10px}.gallery-box{padding:12px}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .col-wrap{flex-direction:column;align-items:stretch;gap:16px;padding:10px}
+  .col{width:100%!important;flex:none!important}
+  .col-hdr{position:relative;top:auto}
+  .pcard-img-wrap{padding-top:var(--phase-pad,70%)}
+  .pcard-body{padding:6px 8px 10px}
+  .f-txt,.f-area,.fi{font-size:16px}
+  .f-lbl{font-size:10px}
+  .seq-grid{grid-template-columns:1fr;gap:10px;padding:10px}
+  #setup{padding:10px}.scard{padding:24px 18px;margin:0;max-width:100%}.pat-grid{grid-template-columns:1fr}.cover-grid{grid-template-columns:1fr;column-gap:0}.cover-grid>.fg,.cover-grid>.fg-zip,.cover-grid>.fg-address,.cover-grid>.fg-wide,.cover-grid>.fg-complete,.cover-grid>.fg-amount{grid-column:1}
+  .pat-ph{font-size:13px}
+  .dh{padding:28px 12px;font-size:13px}
+}
+@media (max-width:480px){
+  .col-hdr-lbl{font-size:12px}
+  .upbtn,.tbtn{padding:7px 8px;font-size:10px}
+  .tbar-title{font-size:12px}
+}
+
+.rot-btns{position:absolute;bottom:4px;right:4px;display:flex;gap:2px;z-index:10;}
+.rot-btn{width:24px;height:24px;border:none;border-radius:5px;background:rgba(26,62,110,.9);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.rot-btn:hover,.rot-btn:active{background:#1A3E6E}
+.view-btns{position:absolute;bottom:4px;right:110px;display:flex;gap:2px;z-index:11;background:rgba(255,255,255,.82);padding:2px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.view-btn{width:24px;height:24px;border:none;border-radius:5px;background:#2E6B4F;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.view-btn:hover,.view-btn:active{background:#1F503A}
+</style>
+</head>
+<body>
+
+<div id="online-project-bar" class="online-project-bar is-loading">
+  <strong>工事写真帖</strong>
+  <span id="online-project-detail" class="online-project-detail">案件の基本情報を確認しています…</span>
+  <span class="online-project-note">基本情報のみ自動取得／写真本体・JSON・PDFはPC保存</span>
+  <a id="online-project-back" class="online-project-back" href="estimate.html">見積システムへ戻る</a>
+</div>
+
+<input type="file" id="fup-before" multiple accept="image/*" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none">
+<input type="file" id="fup-during" multiple accept="image/*" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none">
+<input type="file" id="fup-after"  multiple accept="image/*" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none">
+<input type="file" id="fup-seq"    multiple accept="image/*" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;pointer-events:none">
+
+<div id="setup">
+  <div class="scard">
+    <div class="slogo-t">📷 工事写真帳</div>
+    <div class="slogo-s">Construction Photo Album</div>
+    <div class="local-storage-policy" role="note">
+      <strong>保存について（重要）</strong>
+      <ul>
+        <li>管理番号から、案件の基本情報だけをオンライン版から自動取得します。</li>
+        <li>写真本体はクラウドへ保存しません。工事写真帖のJSONとPDFは、このPCへ保存します。</li>
+        <li>別のPCや社員へ引き継ぐ場合は、保存したJSONファイルを渡して「保存データを読込」から開いてください。</li>
+      </ul>
+    </div>
+    <div id="step1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div class="s-step">STEP 1</div>
+          <div class="s-sub" style="margin-bottom:0">写真パターンを選択</div>
+        </div>
+        <label for="fup-load" style="padding:8px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;border:1.5px solid #E65100;background:#FFF3E0;color:#E65100;display:inline-block;white-space:nowrap">📂 保存データを読込</label>
+        <input type="file" id="fup-load" accept=".json" style="display:none" onchange="loadProject(this)">
+      </div>
+      <div class="pat-grid">
+      <button class="pat-btn" data-pat="ABC" onclick="selPat(this.dataset.pat,this)">
+        <div class="pat-ph">工事前　・　工事中　・　工事後</div>
+        <div class="pat-ds">3段階の工事記録（Before / During / After）</div>
+      </button>
+      <button class="pat-btn" data-pat="AC" onclick="selPat(this.dataset.pat,this)">
+        <div class="pat-ph">工事前　・　工事後</div>
+        <div class="pat-ds">施工前後の比較（Before / After）</div>
+      </button>
+      <button class="pat-btn" data-pat="BC" onclick="selPat(this.dataset.pat,this)">
+        <div class="pat-ph">工事中　・　工事後</div>
+        <div class="pat-ds">施工途中からの記録（During / After）</div>
+      </button>
+      <button class="pat-btn" data-pat="SEQ" onclick="selPat(this.dataset.pat,this)">
+        <div class="pat-ph">連続写真</div>
+        <div class="pat-ds">写真を追加した順にそのまま並べる</div>
+      </button>
+      </div>
+    </div>
+    <div id="step2" class="hidden">
+      <hr class="divider">
+      <div class="s-step">STEP 2</div>
+      <div class="s-sub-row"><div class="s-sub">写真枚数を選択</div><span class="seq-nine-warn" id="seq-nine-warning">非推奨：余白が大きくなりやすい</span></div>
+      <div class="cnt-row" id="cnt-row"></div>
+      <div class="cnt-ht" id="cnt-ht"></div>
+    </div>
+    <div id="step3" class="hidden">
+      <hr class="divider">
+      <div class="s-step">STEP 3</div>
+      <div class="s-sub">表紙情報を入力</div>
+      <div class="cover-grid">
+      <div class="fg"><label class="fl">管理番号</label><input class="fi" id="fi-management-number" placeholder="見積システムから自動反映" readonly></div>
+      <div class="fg"><label class="fl">客先名</label><input class="fi" id="fi-client" placeholder="基本情報から自動反映"></div>
+      <div class="fg"><label class="fl">帳票タイトル</label>
+        <input class="fi" id="fi-doc-title" placeholder="工事写真帳" value="工事写真帳"></div>
+      <div class="fg"><label class="fl">物件名</label><input class="fi" id="fi-title" placeholder="物件名を入力"></div>
+      <div class="fg"><label class="fl">撮影部位</label><input class="fi" id="fi-loc" placeholder="工事名称を入力"></div>
+      <div class="fg"><label class="fl">部屋番号</label><input class="fi" id="fi-room" placeholder="部屋番号"></div>
+      <div class="fg"><label class="fl">工事担当者</label><input class="fi" id="fi-staff" placeholder="基本情報から自動反映"></div>
+      <div class="fg"><label class="fl">施工会社</label><div class="ad" style="font-weight:700;color:#1A3E6E">株式会社イズミ装美</div></div>
+      <div class="fg fg-zip"><label class="fl">郵便番号</label><div style="display:flex;gap:8px;align-items:center"><input class="fi" id="fi-zip" name="project_zip_lookup" autocomplete="one-time-code" inputmode="numeric" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" placeholder="例：101-0041" style="max-width:240px" oninput="autoZip(this.value)"><span style="font-size:11px;color:#888" id="zip-status"></span></div></div>
+      <div class="fg fg-address"><label class="fl">物件住所</label><input class="fi" id="fi-addr" name="project_site_address" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-autocomplete="none" placeholder="東京都○○区○○ ○-○-○"></div>
+      <div class="fg"><label class="fl">入居年数</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="fi" id="fi-years" placeholder="例：3年または手入力" style="flex:1;min-width:120px" oninput="syncYearsInput(this)">
+          <select id="fi-years-sel" style="flex:1;min-width:120px;padding:10px 12px;border:1.5px solid #D6D0C8;border-radius:10px;font-size:15px;background:#fff;color:#222" onchange="syncYearsSel(this)">
+          <option value="">選択してください</option>
+          <option value="1ヶ月">1ヶ月</option>
+          <option value="2ヶ月">2ヶ月</option>
+          <option value="3ヶ月">3ヶ月</option>
+          <option value="4ヶ月">4ヶ月</option>
+          <option value="5ヶ月">5ヶ月</option>
+          <option value="6ヶ月">6ヶ月</option>
+          <option value="7ヶ月">7ヶ月</option>
+          <option value="8ヶ月">8ヶ月</option>
+          <option value="9ヶ月">9ヶ月</option>
+          <option value="10ヶ月">10ヶ月</option>
+          <option value="11ヶ月">11ヶ月</option>
+          <option value="1年">1年</option>
+          <option value="1年1ヶ月">1年1ヶ月</option>
+          <option value="1年2ヶ月">1年2ヶ月</option>
+          <option value="1年3ヶ月">1年3ヶ月</option>
+          <option value="1年4ヶ月">1年4ヶ月</option>
+          <option value="1年5ヶ月">1年5ヶ月</option>
+          <option value="1年6ヶ月">1年6ヶ月</option>
+          <option value="1年7ヶ月">1年7ヶ月</option>
+          <option value="1年8ヶ月">1年8ヶ月</option>
+          <option value="1年9ヶ月">1年9ヶ月</option>
+          <option value="1年10ヶ月">1年10ヶ月</option>
+          <option value="1年11ヶ月">1年11ヶ月</option>
+          <option value="2年">2年</option>
+          <option value="2年1ヶ月">2年1ヶ月</option>
+          <option value="2年2ヶ月">2年2ヶ月</option>
+          <option value="2年3ヶ月">2年3ヶ月</option>
+          <option value="2年4ヶ月">2年4ヶ月</option>
+          <option value="2年5ヶ月">2年5ヶ月</option>
+          <option value="2年6ヶ月">2年6ヶ月</option>
+          <option value="2年7ヶ月">2年7ヶ月</option>
+          <option value="2年8ヶ月">2年8ヶ月</option>
+          <option value="2年9ヶ月">2年9ヶ月</option>
+          <option value="2年10ヶ月">2年10ヶ月</option>
+          <option value="2年11ヶ月">2年11ヶ月</option>
+          <option value="3年">3年</option>
+          <option value="3年1ヶ月">3年1ヶ月</option>
+          <option value="3年2ヶ月">3年2ヶ月</option>
+          <option value="3年3ヶ月">3年3ヶ月</option>
+          <option value="3年4ヶ月">3年4ヶ月</option>
+          <option value="3年5ヶ月">3年5ヶ月</option>
+          <option value="3年6ヶ月">3年6ヶ月</option>
+          <option value="3年7ヶ月">3年7ヶ月</option>
+          <option value="3年8ヶ月">3年8ヶ月</option>
+          <option value="3年9ヶ月">3年9ヶ月</option>
+          <option value="3年10ヶ月">3年10ヶ月</option>
+          <option value="3年11ヶ月">3年11ヶ月</option>
+          <option value="4年">4年</option>
+          <option value="4年1ヶ月">4年1ヶ月</option>
+          <option value="4年2ヶ月">4年2ヶ月</option>
+          <option value="4年3ヶ月">4年3ヶ月</option>
+          <option value="4年4ヶ月">4年4ヶ月</option>
+          <option value="4年5ヶ月">4年5ヶ月</option>
+          <option value="4年6ヶ月">4年6ヶ月</option>
+          <option value="4年7ヶ月">4年7ヶ月</option>
+          <option value="4年8ヶ月">4年8ヶ月</option>
+          <option value="4年9ヶ月">4年9ヶ月</option>
+          <option value="4年10ヶ月">4年10ヶ月</option>
+          <option value="4年11ヶ月">4年11ヶ月</option>
+          <option value="5年">5年</option>
+          <option value="5年1ヶ月">5年1ヶ月</option>
+          <option value="5年2ヶ月">5年2ヶ月</option>
+          <option value="5年3ヶ月">5年3ヶ月</option>
+          <option value="5年4ヶ月">5年4ヶ月</option>
+          <option value="5年5ヶ月">5年5ヶ月</option>
+          <option value="5年6ヶ月">5年6ヶ月</option>
+          <option value="5年7ヶ月">5年7ヶ月</option>
+          <option value="5年8ヶ月">5年8ヶ月</option>
+          <option value="5年9ヶ月">5年9ヶ月</option>
+          <option value="5年10ヶ月">5年10ヶ月</option>
+          <option value="5年11ヶ月">5年11ヶ月</option>
+          <option value="6年">6年</option>
+          <option value="6年1ヶ月">6年1ヶ月</option>
+          <option value="6年2ヶ月">6年2ヶ月</option>
+          <option value="6年3ヶ月">6年3ヶ月</option>
+          <option value="6年4ヶ月">6年4ヶ月</option>
+          <option value="6年5ヶ月">6年5ヶ月</option>
+          <option value="6年6ヶ月">6年6ヶ月</option>
+          <option value="6年7ヶ月">6年7ヶ月</option>
+          <option value="6年8ヶ月">6年8ヶ月</option>
+          <option value="6年9ヶ月">6年9ヶ月</option>
+          <option value="6年10ヶ月">6年10ヶ月</option>
+          <option value="6年11ヶ月">6年11ヶ月</option>
+          <option value="7年">7年</option>
+          <option value="7年1ヶ月">7年1ヶ月</option>
+          <option value="7年2ヶ月">7年2ヶ月</option>
+          <option value="7年3ヶ月">7年3ヶ月</option>
+          <option value="7年4ヶ月">7年4ヶ月</option>
+          <option value="7年5ヶ月">7年5ヶ月</option>
+          <option value="7年6ヶ月">7年6ヶ月</option>
+          <option value="7年7ヶ月">7年7ヶ月</option>
+          <option value="7年8ヶ月">7年8ヶ月</option>
+          <option value="7年9ヶ月">7年9ヶ月</option>
+          <option value="7年10ヶ月">7年10ヶ月</option>
+          <option value="7年11ヶ月">7年11ヶ月</option>
+          <option value="8年">8年</option>
+          <option value="8年1ヶ月">8年1ヶ月</option>
+          <option value="8年2ヶ月">8年2ヶ月</option>
+          <option value="8年3ヶ月">8年3ヶ月</option>
+          <option value="8年4ヶ月">8年4ヶ月</option>
+          <option value="8年5ヶ月">8年5ヶ月</option>
+          <option value="8年6ヶ月">8年6ヶ月</option>
+          <option value="8年7ヶ月">8年7ヶ月</option>
+          <option value="8年8ヶ月">8年8ヶ月</option>
+          <option value="8年9ヶ月">8年9ヶ月</option>
+          <option value="8年10ヶ月">8年10ヶ月</option>
+          <option value="8年11ヶ月">8年11ヶ月</option>
+          <option value="9年">9年</option>
+          <option value="9年1ヶ月">9年1ヶ月</option>
+          <option value="9年2ヶ月">9年2ヶ月</option>
+          <option value="9年3ヶ月">9年3ヶ月</option>
+          <option value="9年4ヶ月">9年4ヶ月</option>
+          <option value="9年5ヶ月">9年5ヶ月</option>
+          <option value="9年6ヶ月">9年6ヶ月</option>
+          <option value="9年7ヶ月">9年7ヶ月</option>
+          <option value="9年8ヶ月">9年8ヶ月</option>
+          <option value="9年9ヶ月">9年9ヶ月</option>
+          <option value="9年10ヶ月">9年10ヶ月</option>
+          <option value="9年11ヶ月">9年11ヶ月</option>
+          <option value="10年">10年</option>
+          <option value="10年1ヶ月">10年1ヶ月</option>
+          <option value="10年2ヶ月">10年2ヶ月</option>
+          <option value="10年3ヶ月">10年3ヶ月</option>
+          <option value="10年4ヶ月">10年4ヶ月</option>
+          <option value="10年5ヶ月">10年5ヶ月</option>
+          <option value="10年6ヶ月">10年6ヶ月</option>
+          <option value="10年7ヶ月">10年7ヶ月</option>
+          <option value="10年8ヶ月">10年8ヶ月</option>
+          <option value="10年9ヶ月">10年9ヶ月</option>
+          <option value="10年10ヶ月">10年10ヶ月</option>
+          <option value="10年11ヶ月">10年11ヶ月</option>
+          <option value="11年">11年</option>
+          <option value="11年1ヶ月">11年1ヶ月</option>
+          <option value="11年2ヶ月">11年2ヶ月</option>
+          <option value="11年3ヶ月">11年3ヶ月</option>
+          <option value="11年4ヶ月">11年4ヶ月</option>
+          <option value="11年5ヶ月">11年5ヶ月</option>
+          <option value="11年6ヶ月">11年6ヶ月</option>
+          <option value="11年7ヶ月">11年7ヶ月</option>
+          <option value="11年8ヶ月">11年8ヶ月</option>
+          <option value="11年9ヶ月">11年9ヶ月</option>
+          <option value="11年10ヶ月">11年10ヶ月</option>
+          <option value="11年11ヶ月">11年11ヶ月</option>
+          <option value="12年">12年</option>
+          <option value="12年1ヶ月">12年1ヶ月</option>
+          <option value="12年2ヶ月">12年2ヶ月</option>
+          <option value="12年3ヶ月">12年3ヶ月</option>
+          <option value="12年4ヶ月">12年4ヶ月</option>
+          <option value="12年5ヶ月">12年5ヶ月</option>
+          <option value="12年6ヶ月">12年6ヶ月</option>
+          <option value="12年7ヶ月">12年7ヶ月</option>
+          <option value="12年8ヶ月">12年8ヶ月</option>
+          <option value="12年9ヶ月">12年9ヶ月</option>
+          <option value="12年10ヶ月">12年10ヶ月</option>
+          <option value="12年11ヶ月">12年11ヶ月</option>
+          <option value="13年">13年</option>
+          <option value="13年1ヶ月">13年1ヶ月</option>
+          <option value="13年2ヶ月">13年2ヶ月</option>
+          <option value="13年3ヶ月">13年3ヶ月</option>
+          <option value="13年4ヶ月">13年4ヶ月</option>
+          <option value="13年5ヶ月">13年5ヶ月</option>
+          <option value="13年6ヶ月">13年6ヶ月</option>
+          <option value="13年7ヶ月">13年7ヶ月</option>
+          <option value="13年8ヶ月">13年8ヶ月</option>
+          <option value="13年9ヶ月">13年9ヶ月</option>
+          <option value="13年10ヶ月">13年10ヶ月</option>
+          <option value="13年11ヶ月">13年11ヶ月</option>
+          <option value="14年">14年</option>
+          <option value="14年1ヶ月">14年1ヶ月</option>
+          <option value="14年2ヶ月">14年2ヶ月</option>
+          <option value="14年3ヶ月">14年3ヶ月</option>
+          <option value="14年4ヶ月">14年4ヶ月</option>
+          <option value="14年5ヶ月">14年5ヶ月</option>
+          <option value="14年6ヶ月">14年6ヶ月</option>
+          <option value="14年7ヶ月">14年7ヶ月</option>
+          <option value="14年8ヶ月">14年8ヶ月</option>
+          <option value="14年9ヶ月">14年9ヶ月</option>
+          <option value="14年10ヶ月">14年10ヶ月</option>
+          <option value="14年11ヶ月">14年11ヶ月</option>
+          <option value="15年">15年</option>
+          <option value="15年1ヶ月">15年1ヶ月</option>
+          <option value="15年2ヶ月">15年2ヶ月</option>
+          <option value="15年3ヶ月">15年3ヶ月</option>
+          <option value="15年4ヶ月">15年4ヶ月</option>
+          <option value="15年5ヶ月">15年5ヶ月</option>
+          <option value="15年6ヶ月">15年6ヶ月</option>
+          <option value="15年7ヶ月">15年7ヶ月</option>
+          <option value="15年8ヶ月">15年8ヶ月</option>
+          <option value="15年9ヶ月">15年9ヶ月</option>
+          <option value="15年10ヶ月">15年10ヶ月</option>
+          <option value="15年11ヶ月">15年11ヶ月</option>
+          <option value="16年">16年</option>
+          <option value="16年1ヶ月">16年1ヶ月</option>
+          <option value="16年2ヶ月">16年2ヶ月</option>
+          <option value="16年3ヶ月">16年3ヶ月</option>
+          <option value="16年4ヶ月">16年4ヶ月</option>
+          <option value="16年5ヶ月">16年5ヶ月</option>
+          <option value="16年6ヶ月">16年6ヶ月</option>
+          <option value="16年7ヶ月">16年7ヶ月</option>
+          <option value="16年8ヶ月">16年8ヶ月</option>
+          <option value="16年9ヶ月">16年9ヶ月</option>
+          <option value="16年10ヶ月">16年10ヶ月</option>
+          <option value="16年11ヶ月">16年11ヶ月</option>
+          <option value="17年">17年</option>
+          <option value="17年1ヶ月">17年1ヶ月</option>
+          <option value="17年2ヶ月">17年2ヶ月</option>
+          <option value="17年3ヶ月">17年3ヶ月</option>
+          <option value="17年4ヶ月">17年4ヶ月</option>
+          <option value="17年5ヶ月">17年5ヶ月</option>
+          <option value="17年6ヶ月">17年6ヶ月</option>
+          <option value="17年7ヶ月">17年7ヶ月</option>
+          <option value="17年8ヶ月">17年8ヶ月</option>
+          <option value="17年9ヶ月">17年9ヶ月</option>
+          <option value="17年10ヶ月">17年10ヶ月</option>
+          <option value="17年11ヶ月">17年11ヶ月</option>
+          <option value="18年">18年</option>
+          <option value="18年1ヶ月">18年1ヶ月</option>
+          <option value="18年2ヶ月">18年2ヶ月</option>
+          <option value="18年3ヶ月">18年3ヶ月</option>
+          <option value="18年4ヶ月">18年4ヶ月</option>
+          <option value="18年5ヶ月">18年5ヶ月</option>
+          <option value="18年6ヶ月">18年6ヶ月</option>
+          <option value="18年7ヶ月">18年7ヶ月</option>
+          <option value="18年8ヶ月">18年8ヶ月</option>
+          <option value="18年9ヶ月">18年9ヶ月</option>
+          <option value="18年10ヶ月">18年10ヶ月</option>
+          <option value="18年11ヶ月">18年11ヶ月</option>
+          <option value="19年">19年</option>
+          <option value="19年1ヶ月">19年1ヶ月</option>
+          <option value="19年2ヶ月">19年2ヶ月</option>
+          <option value="19年3ヶ月">19年3ヶ月</option>
+          <option value="19年4ヶ月">19年4ヶ月</option>
+          <option value="19年5ヶ月">19年5ヶ月</option>
+          <option value="19年6ヶ月">19年6ヶ月</option>
+          <option value="19年7ヶ月">19年7ヶ月</option>
+          <option value="19年8ヶ月">19年8ヶ月</option>
+          <option value="19年9ヶ月">19年9ヶ月</option>
+          <option value="19年10ヶ月">19年10ヶ月</option>
+          <option value="19年11ヶ月">19年11ヶ月</option>
+          <option value="20年">20年</option>
+          <option value="20年1ヶ月">20年1ヶ月</option>
+          <option value="20年2ヶ月">20年2ヶ月</option>
+          <option value="20年3ヶ月">20年3ヶ月</option>
+          <option value="20年4ヶ月">20年4ヶ月</option>
+          <option value="20年5ヶ月">20年5ヶ月</option>
+          <option value="20年6ヶ月">20年6ヶ月</option>
+          <option value="20年7ヶ月">20年7ヶ月</option>
+          <option value="20年8ヶ月">20年8ヶ月</option>
+          <option value="20年9ヶ月">20年9ヶ月</option>
+          <option value="20年10ヶ月">20年10ヶ月</option>
+          <option value="20年11ヶ月">20年11ヶ月</option>
+          <option value="21年">21年</option>
+          <option value="21年1ヶ月">21年1ヶ月</option>
+          <option value="21年2ヶ月">21年2ヶ月</option>
+          <option value="21年3ヶ月">21年3ヶ月</option>
+          <option value="21年4ヶ月">21年4ヶ月</option>
+          <option value="21年5ヶ月">21年5ヶ月</option>
+          <option value="21年6ヶ月">21年6ヶ月</option>
+          <option value="21年7ヶ月">21年7ヶ月</option>
+          <option value="21年8ヶ月">21年8ヶ月</option>
+          <option value="21年9ヶ月">21年9ヶ月</option>
+          <option value="21年10ヶ月">21年10ヶ月</option>
+          <option value="21年11ヶ月">21年11ヶ月</option>
+          <option value="22年">22年</option>
+          <option value="22年1ヶ月">22年1ヶ月</option>
+          <option value="22年2ヶ月">22年2ヶ月</option>
+          <option value="22年3ヶ月">22年3ヶ月</option>
+          <option value="22年4ヶ月">22年4ヶ月</option>
+          <option value="22年5ヶ月">22年5ヶ月</option>
+          <option value="22年6ヶ月">22年6ヶ月</option>
+          <option value="22年7ヶ月">22年7ヶ月</option>
+          <option value="22年8ヶ月">22年8ヶ月</option>
+          <option value="22年9ヶ月">22年9ヶ月</option>
+          <option value="22年10ヶ月">22年10ヶ月</option>
+          <option value="22年11ヶ月">22年11ヶ月</option>
+          <option value="23年">23年</option>
+          <option value="23年1ヶ月">23年1ヶ月</option>
+          <option value="23年2ヶ月">23年2ヶ月</option>
+          <option value="23年3ヶ月">23年3ヶ月</option>
+          <option value="23年4ヶ月">23年4ヶ月</option>
+          <option value="23年5ヶ月">23年5ヶ月</option>
+          <option value="23年6ヶ月">23年6ヶ月</option>
+          <option value="23年7ヶ月">23年7ヶ月</option>
+          <option value="23年8ヶ月">23年8ヶ月</option>
+          <option value="23年9ヶ月">23年9ヶ月</option>
+          <option value="23年10ヶ月">23年10ヶ月</option>
+          <option value="23年11ヶ月">23年11ヶ月</option>
+          <option value="24年">24年</option>
+          <option value="24年1ヶ月">24年1ヶ月</option>
+          <option value="24年2ヶ月">24年2ヶ月</option>
+          <option value="24年3ヶ月">24年3ヶ月</option>
+          <option value="24年4ヶ月">24年4ヶ月</option>
+          <option value="24年5ヶ月">24年5ヶ月</option>
+          <option value="24年6ヶ月">24年6ヶ月</option>
+          <option value="24年7ヶ月">24年7ヶ月</option>
+          <option value="24年8ヶ月">24年8ヶ月</option>
+          <option value="24年9ヶ月">24年9ヶ月</option>
+          <option value="24年10ヶ月">24年10ヶ月</option>
+          <option value="24年11ヶ月">24年11ヶ月</option>
+          <option value="25年">25年</option>
+          <option value="25年1ヶ月">25年1ヶ月</option>
+          <option value="25年2ヶ月">25年2ヶ月</option>
+          <option value="25年3ヶ月">25年3ヶ月</option>
+          <option value="25年4ヶ月">25年4ヶ月</option>
+          <option value="25年5ヶ月">25年5ヶ月</option>
+          <option value="25年6ヶ月">25年6ヶ月</option>
+          <option value="25年7ヶ月">25年7ヶ月</option>
+          <option value="25年8ヶ月">25年8ヶ月</option>
+          <option value="25年9ヶ月">25年9ヶ月</option>
+          <option value="25年10ヶ月">25年10ヶ月</option>
+          <option value="25年11ヶ月">25年11ヶ月</option>
+          <option value="26年">26年</option>
+          <option value="26年1ヶ月">26年1ヶ月</option>
+          <option value="26年2ヶ月">26年2ヶ月</option>
+          <option value="26年3ヶ月">26年3ヶ月</option>
+          <option value="26年4ヶ月">26年4ヶ月</option>
+          <option value="26年5ヶ月">26年5ヶ月</option>
+          <option value="26年6ヶ月">26年6ヶ月</option>
+          <option value="26年7ヶ月">26年7ヶ月</option>
+          <option value="26年8ヶ月">26年8ヶ月</option>
+          <option value="26年9ヶ月">26年9ヶ月</option>
+          <option value="26年10ヶ月">26年10ヶ月</option>
+          <option value="26年11ヶ月">26年11ヶ月</option>
+          <option value="27年">27年</option>
+          <option value="27年1ヶ月">27年1ヶ月</option>
+          <option value="27年2ヶ月">27年2ヶ月</option>
+          <option value="27年3ヶ月">27年3ヶ月</option>
+          <option value="27年4ヶ月">27年4ヶ月</option>
+          <option value="27年5ヶ月">27年5ヶ月</option>
+          <option value="27年6ヶ月">27年6ヶ月</option>
+          <option value="27年7ヶ月">27年7ヶ月</option>
+          <option value="27年8ヶ月">27年8ヶ月</option>
+          <option value="27年9ヶ月">27年9ヶ月</option>
+          <option value="27年10ヶ月">27年10ヶ月</option>
+          <option value="27年11ヶ月">27年11ヶ月</option>
+          <option value="28年">28年</option>
+          <option value="28年1ヶ月">28年1ヶ月</option>
+          <option value="28年2ヶ月">28年2ヶ月</option>
+          <option value="28年3ヶ月">28年3ヶ月</option>
+          <option value="28年4ヶ月">28年4ヶ月</option>
+          <option value="28年5ヶ月">28年5ヶ月</option>
+          <option value="28年6ヶ月">28年6ヶ月</option>
+          <option value="28年7ヶ月">28年7ヶ月</option>
+          <option value="28年8ヶ月">28年8ヶ月</option>
+          <option value="28年9ヶ月">28年9ヶ月</option>
+          <option value="28年10ヶ月">28年10ヶ月</option>
+          <option value="28年11ヶ月">28年11ヶ月</option>
+          <option value="29年">29年</option>
+          <option value="29年1ヶ月">29年1ヶ月</option>
+          <option value="29年2ヶ月">29年2ヶ月</option>
+          <option value="29年3ヶ月">29年3ヶ月</option>
+          <option value="29年4ヶ月">29年4ヶ月</option>
+          <option value="29年5ヶ月">29年5ヶ月</option>
+          <option value="29年6ヶ月">29年6ヶ月</option>
+          <option value="29年7ヶ月">29年7ヶ月</option>
+          <option value="29年8ヶ月">29年8ヶ月</option>
+          <option value="29年9ヶ月">29年9ヶ月</option>
+          <option value="29年10ヶ月">29年10ヶ月</option>
+          <option value="29年11ヶ月">29年11ヶ月</option>
+          <option value="30年">30年</option>
+          <option value="30年1ヶ月">30年1ヶ月</option>
+          <option value="30年2ヶ月">30年2ヶ月</option>
+          <option value="30年3ヶ月">30年3ヶ月</option>
+          <option value="30年4ヶ月">30年4ヶ月</option>
+          <option value="30年5ヶ月">30年5ヶ月</option>
+          <option value="30年6ヶ月">30年6ヶ月</option>
+          <option value="30年7ヶ月">30年7ヶ月</option>
+          <option value="30年8ヶ月">30年8ヶ月</option>
+          <option value="30年9ヶ月">30年9ヶ月</option>
+          <option value="30年10ヶ月">30年10ヶ月</option>
+          <option value="30年11ヶ月">30年11ヶ月</option>
+          </select>
+        </div></div>
+      <div class="fg"><label class="fl">作成日</label><input type="date" class="fi" id="auto-date-input"></div>
+      <div class="fg fg-wide"><label class="fl">工事期間</label>
+        <div class="dr"><input type="date" class="fi" id="fi-start"><span class="ds">〜</span><input type="date" class="fi" id="fi-end"></div>
+      </div>
+      <div class="fg fg-complete"><label class="fl">完工日</label><input type="date" class="fi" id="fi-comp"></div>
+      <div class="fg fg-amount"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><label class="fl" style="margin:0">工事金額（任意）</label><label style="cursor:pointer;font-size:12px;color:#666"><input type="checkbox" id="chk-amount" onclick="toggleOptional('amount',this.checked)"> 表示する</label></div><div id="opt-amount" class="hidden"><input class="fi" id="fi-amount" placeholder="例：1250000" oninput="formatAmount(this)"></div></div>
+      <div class="fg fg-wide"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><label class="fl" style="margin:0">角印（任意）</label><label style="cursor:pointer;font-size:12px;color:#666"><input type="checkbox" id="chk-stamp" onclick="toggleOptional('stamp',this.checked)"> 表示する</label></div><div id="opt-stamp" class="hidden"><label style="display:inline-block;padding:8px 16px;background:#EBF0F9;border:1.5px dashed #1A3E6E;border-radius:8px;cursor:pointer;font-size:12px;color:#1A3E6E">📎 角印画像を選択<input type="file" id="fi-stamp" accept="image/*" style="display:none" onchange="loadStamp(this)"></label><div id="stamp-preview" style="margin-top:8px"></div><button type="button" id="btn-del-stamp" onclick="delStamp()" style="display:none;margin-top:6px;padding:4px 12px;font-size:12px;background:#fff;border:1.5px solid #c00;color:#c00;border-radius:6px;cursor:pointer">🗑 角印を削除</button></div></div>
+      </div>
+      <button class="go-btn" id="go-btn" onclick="startApp()">作成開始 →</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="toolbar">
+    <div class="tbar-l">
+      <span class="tbar-title">工事写真帳</span>
+      <span class="pat-badge" id="pat-badge"></span>
+      <select class="layout-select" id="quick-layout" aria-label="写真パターンを簡易変更" onchange="quickChangeLayout(this.value)">
+        <optgroup label="工事前・工事中・工事後">
+          <option value="ABC|2|2|H">6枚　横写真（2列）</option>
+          <option value="ABC|2|3|P">6枚　縦写真（3列）</option>
+          <option value="ABC|3|2|H">9枚　横写真（2列）</option>
+          <option value="ABC|3|3|P">9枚　縦写真（3列）</option>
+        </optgroup>
+        <optgroup label="工事前・工事後">
+          <option value="AC|2|2|H">4枚　横写真（2列）</option>
+          <option value="AC|2|3|P">4枚　縦写真（3列）</option>
+          <option value="AC|3|2|H">6枚　横写真（2列）</option>
+          <option value="AC|3|3|P">6枚　縦写真（3列）</option>
+        </optgroup>
+        <optgroup label="工事中・工事後">
+          <option value="BC|2|2|H">4枚　横写真（2列）</option>
+          <option value="BC|2|3|P">4枚　縦写真（3列）</option>
+          <option value="BC|3|2|H">6枚　横写真（2列）</option>
+          <option value="BC|3|3|P">6枚　縦写真（3列）</option>
+        </optgroup>
+        <optgroup label="連続写真">
+          <option value="SEQ|6|2|H">6枚　横写真（2列×3行）</option>
+          <option value="SEQ|6|3|P">6枚　縦写真（3列×2行）</option>
+          <option value="SEQ|9|3|H">横9枚　横写真（3列×3行）</option>
+          <option value="SEQ|9|3|P">縦9枚　縦写真（3列×3行）</option>
+        </optgroup>
+      </select>
+      <span class="layout-warning" id="layout-warning">非推奨：余白が大きくなりやすい</span>
+      <button type="button" class="preview-btn" onclick="openLayoutGallery()">👁 16パターン比較</button>
+    </div>
+    <div class="tbar-c">
+      <label for="fup-before" class="upbtn up-bef hidden" id="lbl-before">📷 工事前</label>
+      <label for="fup-during" class="upbtn up-dur hidden" id="lbl-during">📷 工事中</label>
+      <label for="fup-after"  class="upbtn up-aft hidden" id="lbl-after">📷 工事後</label>
+    </div>
+    <div class="tbar-r">
+      <button class="tbtn tb-save" onclick="saveProject()">💾 JSON保存</button>
+
+      <button class="tbtn tb-pdf" onclick="doPrint()">📄 PDF保存</button>
+      <button class="tbtn tb-cfg" onclick="goSetup()">表紙編集</button>
+    </div>
+  </div>
+  <div class="col-wrap" id="col-wrap"></div>
+</div>
+
+<aside class="pdf-preview-float" id="pdf-preview-float" aria-label="PDFレイアウトプレビュー">
+  <div class="pdf-preview-head"><span class="pdf-preview-title" id="pdf-preview-title">PDFプレビュー</span><span class="pdf-preview-note" id="pdf-preview-note">非推奨</span><button type="button" class="pdf-preview-close" onclick="closeLayoutPreview()">×</button></div>
+  <div class="pdf-preview-stage" id="pdf-preview-stage"><iframe class="pdf-preview-frame" id="pdf-preview-frame" title="選択中パターンのPDFプレビュー"></iframe></div>
+  <div class="pdf-preview-actions"><button type="button" class="preview-btn" onclick="openLayoutGallery()">16パターン比較</button><button type="button" class="tbtn tb-pdf" onclick="doPrint()">このレイアウトでPDF保存</button></div>
+</aside>
+<div class="gallery-modal" id="layout-gallery" onclick="if(event.target===this)closeLayoutGallery()">
+  <div class="gallery-box"><div class="gallery-head"><h2>16パターンを比較して選択</h2><button type="button" class="pdf-preview-close" onclick="closeLayoutGallery()">×</button></div><div class="gallery-grid" id="layout-gallery-grid"></div></div>
+</div>
+
+<script>/*! Sortable 1.15.0 - MIT | git://github.com/SortableJS/Sortable.git */
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t=t||self).Sortable=e()}(this,function(){"use strict";function e(e,t){var n,o=Object.keys(e);return Object.getOwnPropertySymbols&&(n=Object.getOwnPropertySymbols(e),t&&(n=n.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),o.push.apply(o,n)),o}function M(o){for(var t=1;t<arguments.length;t++){var i=null!=arguments[t]?arguments[t]:{};t%2?e(Object(i),!0).forEach(function(t){var e,n;e=o,t=i[n=t],n in e?Object.defineProperty(e,n,{value:t,enumerable:!0,configurable:!0,writable:!0}):e[n]=t}):Object.getOwnPropertyDescriptors?Object.defineProperties(o,Object.getOwnPropertyDescriptors(i)):e(Object(i)).forEach(function(t){Object.defineProperty(o,t,Object.getOwnPropertyDescriptor(i,t))})}return o}function o(t){return(o="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t})(t)}function a(){return(a=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n,o=arguments[e];for(n in o)Object.prototype.hasOwnProperty.call(o,n)&&(t[n]=o[n])}return t}).apply(this,arguments)}function i(t,e){if(null==t)return{};var n,o=function(t,e){if(null==t)return{};for(var n,o={},i=Object.keys(t),r=0;r<i.length;r++)n=i[r],0<=e.indexOf(n)||(o[n]=t[n]);return o}(t,e);if(Object.getOwnPropertySymbols)for(var i=Object.getOwnPropertySymbols(t),r=0;r<i.length;r++)n=i[r],0<=e.indexOf(n)||Object.prototype.propertyIsEnumerable.call(t,n)&&(o[n]=t[n]);return o}function r(t){return function(t){if(Array.isArray(t))return l(t)}(t)||function(t){if("undefined"!=typeof Symbol&&null!=t[Symbol.iterator]||null!=t["@@iterator"])return Array.from(t)}(t)||function(t,e){if(t){if("string"==typeof t)return l(t,e);var n=Object.prototype.toString.call(t).slice(8,-1);return"Map"===(n="Object"===n&&t.constructor?t.constructor.name:n)||"Set"===n?Array.from(t):"Arguments"===n||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)?l(t,e):void 0}}(t)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function l(t,e){(null==e||e>t.length)&&(e=t.length);for(var n=0,o=new Array(e);n<e;n++)o[n]=t[n];return o}function t(t){if("undefined"!=typeof window&&window.navigator)return!!navigator.userAgent.match(t)}var y=t(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i),w=t(/Edge/i),s=t(/firefox/i),u=t(/safari/i)&&!t(/chrome/i)&&!t(/android/i),n=t(/iP(ad|od|hone)/i),c=t(/chrome/i)&&t(/android/i),d={capture:!1,passive:!1};function h(t,e,n){t.addEventListener(e,n,!y&&d)}function f(t,e,n){t.removeEventListener(e,n,!y&&d)}function p(t,e){if(e&&(">"===e[0]&&(e=e.substring(1)),t))try{if(t.matches)return t.matches(e);if(t.msMatchesSelector)return t.msMatchesSelector(e);if(t.webkitMatchesSelector)return t.webkitMatchesSelector(e)}catch(t){return}}function N(t,e,n,o){if(t){n=n||document;do{if(null!=e&&(">"!==e[0]||t.parentNode===n)&&p(t,e)||o&&t===n)return t}while(t!==n&&(t=(i=t).host&&i!==document&&i.host.nodeType?i.host:i.parentNode))}var i;return null}var g,m=/\s+/g;function I(t,e,n){var o;t&&e&&(t.classList?t.classList[n?"add":"remove"](e):(o=(" "+t.className+" ").replace(m," ").replace(" "+e+" "," "),t.className=(o+(n?" "+e:"")).replace(m," ")))}function P(t,e,n){var o=t&&t.style;if(o){if(void 0===n)return document.defaultView&&document.defaultView.getComputedStyle?n=document.defaultView.getComputedStyle(t,""):t.currentStyle&&(n=t.currentStyle),void 0===e?n:n[e];o[e=!(e in o||-1!==e.indexOf("webkit"))?"-webkit-"+e:e]=n+("string"==typeof n?"":"px")}}function v(t,e){var n="";if("string"==typeof t)n=t;else do{var o=P(t,"transform")}while(o&&"none"!==o&&(n=o+" "+n),!e&&(t=t.parentNode));var i=window.DOMMatrix||window.WebKitCSSMatrix||window.CSSMatrix||window.MSCSSMatrix;return i&&new i(n)}function b(t,e,n){if(t){var o=t.getElementsByTagName(e),i=0,r=o.length;if(n)for(;i<r;i++)n(o[i],i);return o}return[]}function O(){var t=document.scrollingElement;return t||document.documentElement}function k(t,e,n,o,i){if(t.getBoundingClientRect||t===window){var r,a,l,s,c,u,d=t!==window&&t.parentNode&&t!==O()?(a=(r=t.getBoundingClientRect()).top,l=r.left,s=r.bottom,c=r.right,u=r.height,r.width):(l=a=0,s=window.innerHeight,c=window.innerWidth,u=window.innerHeight,window.innerWidth);if((e||n)&&t!==window&&(i=i||t.parentNode,!y))do{if(i&&i.getBoundingClientRect&&("none"!==P(i,"transform")||n&&"static"!==P(i,"position"))){var h=i.getBoundingClientRect();a-=h.top+parseInt(P(i,"border-top-width")),l-=h.left+parseInt(P(i,"border-left-width")),s=a+r.height,c=l+r.width;break}}while(i=i.parentNode);return o&&t!==window&&(o=(e=v(i||t))&&e.a,t=e&&e.d,e&&(s=(a/=t)+(u/=t),c=(l/=o)+(d/=o))),{top:a,left:l,bottom:s,right:c,width:d,height:u}}}function R(t,e,n){for(var o=A(t,!0),i=k(t)[e];o;){var r=k(o)[n];if(!("top"===n||"left"===n?r<=i:i<=r))return o;if(o===O())break;o=A(o,!1)}return!1}function X(t,e,n,o){for(var i=0,r=0,a=t.children;r<a.length;){if("none"!==a[r].style.display&&a[r]!==Bt.ghost&&(o||a[r]!==Bt.dragged)&&N(a[r],n.draggable,t,!1)){if(i===e)return a[r];i++}r++}return null}function Y(t,e){for(var n=t.lastElementChild;n&&(n===Bt.ghost||"none"===P(n,"display")||e&&!p(n,e));)n=n.previousElementSibling;return n||null}function B(t,e){var n=0;if(!t||!t.parentNode)return-1;for(;t=t.previousElementSibling;)"TEMPLATE"===t.nodeName.toUpperCase()||t===Bt.clone||e&&!p(t,e)||n++;return n}function E(t){var e=0,n=0,o=O();if(t)do{var i=v(t),r=i.a,i=i.d}while(e+=t.scrollLeft*r,n+=t.scrollTop*i,t!==o&&(t=t.parentNode));return[e,n]}function A(t,e){if(!t||!t.getBoundingClientRect)return O();var n=t,o=!1;do{if(n.clientWidth<n.scrollWidth||n.clientHeight<n.scrollHeight){var i=P(n);if(n.clientWidth<n.scrollWidth&&("auto"==i.overflowX||"scroll"==i.overflowX)||n.clientHeight<n.scrollHeight&&("auto"==i.overflowY||"scroll"==i.overflowY)){if(!n.getBoundingClientRect||n===document.body)return O();if(o||e)return n;o=!0}}}while(n=n.parentNode);return O()}function D(t,e){return Math.round(t.top)===Math.round(e.top)&&Math.round(t.left)===Math.round(e.left)&&Math.round(t.height)===Math.round(e.height)&&Math.round(t.width)===Math.round(e.width)}function S(e,n){return function(){var t;g||(1===(t=arguments).length?e.call(this,t[0]):e.apply(this,t),g=setTimeout(function(){g=void 0},n))}}function F(t,e,n){t.scrollLeft+=e,t.scrollTop+=n}function _(t){var e=window.Polymer,n=window.jQuery||window.Zepto;return e&&e.dom?e.dom(t).cloneNode(!0):n?n(t).clone(!0)[0]:t.cloneNode(!0)}function C(t,e){P(t,"position","absolute"),P(t,"top",e.top),P(t,"left",e.left),P(t,"width",e.width),P(t,"height",e.height)}function T(t){P(t,"position",""),P(t,"top",""),P(t,"left",""),P(t,"width",""),P(t,"height","")}var j="Sortable"+(new Date).getTime();function x(){var e,o=[];return{captureAnimationState:function(){o=[],this.options.animation&&[].slice.call(this.el.children).forEach(function(t){var e,n;"none"!==P(t,"display")&&t!==Bt.ghost&&(o.push({target:t,rect:k(t)}),e=M({},o[o.length-1].rect),!t.thisAnimationDuration||(n=v(t,!0))&&(e.top-=n.f,e.left-=n.e),t.fromRect=e)})},addAnimationState:function(t){o.push(t)},removeAnimationState:function(t){o.splice(function(t,e){for(var n in t)if(t.hasOwnProperty(n))for(var o in e)if(e.hasOwnProperty(o)&&e[o]===t[n][o])return Number(n);return-1}(o,{target:t}),1)},animateAll:function(t){var c=this;if(!this.options.animation)return clearTimeout(e),void("function"==typeof t&&t());var u=!1,d=0;o.forEach(function(t){var e=0,n=t.target,o=n.fromRect,i=k(n),r=n.prevFromRect,a=n.prevToRect,l=t.rect,s=v(n,!0);s&&(i.top-=s.f,i.left-=s.e),n.toRect=i,n.thisAnimationDuration&&D(r,i)&&!D(o,i)&&(l.top-i.top)/(l.left-i.left)==(o.top-i.top)/(o.left-i.left)&&(t=l,s=r,r=a,a=c.options,e=Math.sqrt(Math.pow(s.top-t.top,2)+Math.pow(s.left-t.left,2))/Math.sqrt(Math.pow(s.top-r.top,2)+Math.pow(s.left-r.left,2))*a.animation),D(i,o)||(n.prevFromRect=o,n.prevToRect=i,e=e||c.options.animation,c.animate(n,l,i,e)),e&&(u=!0,d=Math.max(d,e),clearTimeout(n.animationResetTimer),n.animationResetTimer=setTimeout(function(){n.animationTime=0,n.prevFromRect=null,n.fromRect=null,n.prevToRect=null,n.thisAnimationDuration=null},e),n.thisAnimationDuration=e)}),clearTimeout(e),u?e=setTimeout(function(){"function"==typeof t&&t()},d):"function"==typeof t&&t(),o=[]},animate:function(t,e,n,o){var i,r;o&&(P(t,"transition",""),P(t,"transform",""),i=(r=v(this.el))&&r.a,r=r&&r.d,i=(e.left-n.left)/(i||1),r=(e.top-n.top)/(r||1),t.animatingX=!!i,t.animatingY=!!r,P(t,"transform","translate3d("+i+"px,"+r+"px,0)"),this.forRepaintDummy=t.offsetWidth,P(t,"transition","transform "+o+"ms"+(this.options.easing?" "+this.options.easing:"")),P(t,"transform","translate3d(0,0,0)"),"number"==typeof t.animated&&clearTimeout(t.animated),t.animated=setTimeout(function(){P(t,"transition",""),P(t,"transform",""),t.animated=!1,t.animatingX=!1,t.animatingY=!1},o))}}}var H=[],L={initializeByDefault:!0},K={mount:function(e){for(var t in L)!L.hasOwnProperty(t)||t in e||(e[t]=L[t]);H.forEach(function(t){if(t.pluginName===e.pluginName)throw"Sortable: Cannot mount plugin ".concat(e.pluginName," more than once")}),H.push(e)},pluginEvent:function(e,n,o){var t=this;this.eventCanceled=!1,o.cancel=function(){t.eventCanceled=!0};var i=e+"Global";H.forEach(function(t){n[t.pluginName]&&(n[t.pluginName][i]&&n[t.pluginName][i](M({sortable:n},o)),n.options[t.pluginName]&&n[t.pluginName][e]&&n[t.pluginName][e](M({sortable:n},o)))})},initializePlugins:function(n,o,i,t){for(var e in H.forEach(function(t){var e=t.pluginName;(n.options[e]||t.initializeByDefault)&&((t=new t(n,o,n.options)).sortable=n,t.options=n.options,n[e]=t,a(i,t.defaults))}),n.options){var r;n.options.hasOwnProperty(e)&&(void 0!==(r=this.modifyOption(n,e,n.options[e]))&&(n.options[e]=r))}},getEventProperties:function(e,n){var o={};return H.forEach(function(t){"function"==typeof t.eventProperties&&a(o,t.eventProperties.call(n[t.pluginName],e))}),o},modifyOption:function(e,n,o){var i;return H.forEach(function(t){e[t.pluginName]&&t.optionListeners&&"function"==typeof t.optionListeners[n]&&(i=t.optionListeners[n].call(e[t.pluginName],o))}),i}};function W(t){var e=t.sortable,n=t.rootEl,o=t.name,i=t.targetEl,r=t.cloneEl,a=t.toEl,l=t.fromEl,s=t.oldIndex,c=t.newIndex,u=t.oldDraggableIndex,d=t.newDraggableIndex,h=t.originalEvent,f=t.putSortable,p=t.extraEventProperties;if(e=e||n&&n[j]){var g,m=e.options,t="on"+o.charAt(0).toUpperCase()+o.substr(1);!window.CustomEvent||y||w?(g=document.createEvent("Event")).initEvent(o,!0,!0):g=new CustomEvent(o,{bubbles:!0,cancelable:!0}),g.to=a||n,g.from=l||n,g.item=i||n,g.clone=r,g.oldIndex=s,g.newIndex=c,g.oldDraggableIndex=u,g.newDraggableIndex=d,g.originalEvent=h,g.pullMode=f?f.lastPutMode:void 0;var v,b=M(M({},p),K.getEventProperties(o,e));for(v in b)g[v]=b[v];n&&n.dispatchEvent(g),m[t]&&m[t].call(e,g)}}function z(t,e){var n=(o=2<arguments.length&&void 0!==arguments[2]?arguments[2]:{}).evt,o=i(o,G);K.pluginEvent.bind(Bt)(t,e,M({dragEl:q,parentEl:V,ghostEl:Z,rootEl:$,nextEl:Q,lastDownEl:J,cloneEl:tt,cloneHidden:et,dragStarted:pt,putSortable:lt,activeSortable:Bt.active,originalEvent:n,oldIndex:nt,oldDraggableIndex:it,newIndex:ot,newDraggableIndex:rt,hideGhostForTarget:kt,unhideGhostForTarget:Rt,cloneNowHidden:function(){et=!0},cloneNowShown:function(){et=!1},dispatchSortableEvent:function(t){U({sortable:e,name:t,originalEvent:n})}},o))}var G=["evt"];function U(t){W(M({putSortable:lt,cloneEl:tt,targetEl:q,rootEl:$,oldIndex:nt,oldDraggableIndex:it,newIndex:ot,newDraggableIndex:rt},t))}var q,V,Z,$,Q,J,tt,et,nt,ot,it,rt,at,lt,st,ct,ut,dt,ht,ft,pt,gt,mt,vt,bt,yt=!1,wt=!1,Et=[],Dt=!1,St=!1,_t=[],Ct=!1,Tt=[],xt="undefined"!=typeof document,Ot=n,At=w||y?"cssFloat":"float",Mt=xt&&!c&&!n&&"draggable"in document.createElement("div"),Nt=function(){if(xt){if(y)return!1;var t=document.createElement("x");return t.style.cssText="pointer-events:auto","auto"===t.style.pointerEvents}}(),It=function(t,e){var n=P(t),o=parseInt(n.width)-parseInt(n.paddingLeft)-parseInt(n.paddingRight)-parseInt(n.borderLeftWidth)-parseInt(n.borderRightWidth),i=X(t,0,e),r=X(t,1,e),a=i&&P(i),l=r&&P(r),s=a&&parseInt(a.marginLeft)+parseInt(a.marginRight)+k(i).width,t=l&&parseInt(l.marginLeft)+parseInt(l.marginRight)+k(r).width;if("flex"===n.display)return"column"===n.flexDirection||"column-reverse"===n.flexDirection?"vertical":"horizontal";if("grid"===n.display)return n.gridTemplateColumns.split(" ").length<=1?"vertical":"horizontal";if(i&&a.float&&"none"!==a.float){e="left"===a.float?"left":"right";return!r||"both"!==l.clear&&l.clear!==e?"horizontal":"vertical"}return i&&("block"===a.display||"flex"===a.display||"table"===a.display||"grid"===a.display||o<=s&&"none"===n[At]||r&&"none"===n[At]&&o<s+t)?"vertical":"horizontal"},Pt=function(t){function l(r,a){return function(t,e,n,o){var i=t.options.group.name&&e.options.group.name&&t.options.group.name===e.options.group.name;if(null==r&&(a||i))return!0;if(null==r||!1===r)return!1;if(a&&"clone"===r)return r;if("function"==typeof r)return l(r(t,e,n,o),a)(t,e,n,o);e=(a?t:e).options.group.name;return!0===r||"string"==typeof r&&r===e||r.join&&-1<r.indexOf(e)}}var e={},n=t.group;n&&"object"==o(n)||(n={name:n}),e.name=n.name,e.checkPull=l(n.pull,!0),e.checkPut=l(n.put),e.revertClone=n.revertClone,t.group=e},kt=function(){!Nt&&Z&&P(Z,"display","none")},Rt=function(){!Nt&&Z&&P(Z,"display","")};xt&&!c&&document.addEventListener("click",function(t){if(wt)return t.preventDefault(),t.stopPropagation&&t.stopPropagation(),t.stopImmediatePropagation&&t.stopImmediatePropagation(),wt=!1},!0);function Xt(t){if(q){t=t.touches?t.touches[0]:t;var e=(i=t.clientX,r=t.clientY,Et.some(function(t){var e=t[j].options.emptyInsertThreshold;if(e&&!Y(t)){var n=k(t),o=i>=n.left-e&&i<=n.right+e,e=r>=n.top-e&&r<=n.bottom+e;return o&&e?a=t:void 0}}),a);if(e){var n,o={};for(n in t)t.hasOwnProperty(n)&&(o[n]=t[n]);o.target=o.rootEl=e,o.preventDefault=void 0,o.stopPropagation=void 0,e[j]._onDragOver(o)}}var i,r,a}function Yt(t){q&&q.parentNode[j]._isOutsideThisEl(t.target)}function Bt(t,e){if(!t||!t.nodeType||1!==t.nodeType)throw"Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(t));this.el=t,this.options=e=a({},e),t[j]=this;var n,o,i={group:null,sort:!0,disabled:!1,store:null,handle:null,draggable:/^[uo]l$/i.test(t.nodeName)?">li":">*",swapThreshold:1,invertSwap:!1,invertedSwapThreshold:null,removeCloneOnHide:!0,direction:function(){return It(t,this.options)},ghostClass:"sortable-ghost",chosenClass:"sortable-chosen",dragClass:"sortable-drag",ignore:"a, img",filter:null,preventOnFilter:!0,animation:0,easing:null,setData:function(t,e){t.setData("Text",e.textContent)},dropBubble:!1,dragoverBubble:!1,dataIdAttr:"data-id",delay:0,delayOnTouchOnly:!1,touchStartThreshold:(Number.parseInt?Number:window).parseInt(window.devicePixelRatio,10)||1,forceFallback:!1,fallbackClass:"sortable-fallback",fallbackOnBody:!1,fallbackTolerance:0,fallbackOffset:{x:0,y:0},supportPointer:!1!==Bt.supportPointer&&"PointerEvent"in window&&!u,emptyInsertThreshold:5};for(n in K.initializePlugins(this,t,i),i)n in e||(e[n]=i[n]);for(o in Pt(e),this)"_"===o.charAt(0)&&"function"==typeof this[o]&&(this[o]=this[o].bind(this));this.nativeDraggable=!e.forceFallback&&Mt,this.nativeDraggable&&(this.options.touchStartThreshold=1),e.supportPointer?h(t,"pointerdown",this._onTapStart):(h(t,"mousedown",this._onTapStart),h(t,"touchstart",this._onTapStart)),this.nativeDraggable&&(h(t,"dragover",this),h(t,"dragenter",this)),Et.push(this.el),e.store&&e.store.get&&this.sort(e.store.get(this)||[]),a(this,x())}function Ft(t,e,n,o,i,r,a,l){var s,c,u=t[j],d=u.options.onMove;return!window.CustomEvent||y||w?(s=document.createEvent("Event")).initEvent("move",!0,!0):s=new CustomEvent("move",{bubbles:!0,cancelable:!0}),s.to=e,s.from=t,s.dragged=n,s.draggedRect=o,s.related=i||e,s.relatedRect=r||k(e),s.willInsertAfter=l,s.originalEvent=a,t.dispatchEvent(s),c=d?d.call(u,s,a):c}function jt(t){t.draggable=!1}function Ht(){Ct=!1}function Lt(t){return setTimeout(t,0)}function Kt(t){return clearTimeout(t)}Bt.prototype={constructor:Bt,_isOutsideThisEl:function(t){this.el.contains(t)||t===this.el||(gt=null)},_getDirection:function(t,e){return"function"==typeof this.options.direction?this.options.direction.call(this,t,e,q):this.options.direction},_onTapStart:function(e){if(e.cancelable){var n=this,o=this.el,t=this.options,i=t.preventOnFilter,r=e.type,a=e.touches&&e.touches[0]||e.pointerType&&"touch"===e.pointerType&&e,l=(a||e).target,s=e.target.shadowRoot&&(e.path&&e.path[0]||e.composedPath&&e.composedPath()[0])||l,c=t.filter;if(!function(t){Tt.length=0;var e=t.getElementsByTagName("input"),n=e.length;for(;n--;){var o=e[n];o.checked&&Tt.push(o)}}(o),!q&&!(/mousedown|pointerdown/.test(r)&&0!==e.button||t.disabled)&&!s.isContentEditable&&(this.nativeDraggable||!u||!l||"SELECT"!==l.tagName.toUpperCase())&&!((l=N(l,t.draggable,o,!1))&&l.animated||J===l)){if(nt=B(l),it=B(l,t.draggable),"function"==typeof c){if(c.call(this,e,l,this))return U({sortable:n,rootEl:s,name:"filter",targetEl:l,toEl:o,fromEl:o}),z("filter",n,{evt:e}),void(i&&e.cancelable&&e.preventDefault())}else if(c=c&&c.split(",").some(function(t){if(t=N(s,t.trim(),o,!1))return U({sortable:n,rootEl:t,name:"filter",targetEl:l,fromEl:o,toEl:o}),z("filter",n,{evt:e}),!0}))return void(i&&e.cancelable&&e.preventDefault());t.handle&&!N(s,t.handle,o,!1)||this._prepareDragStart(e,a,l)}}},_prepareDragStart:function(t,e,n){var o,i=this,r=i.el,a=i.options,l=r.ownerDocument;n&&!q&&n.parentNode===r&&(o=k(n),$=r,V=(q=n).parentNode,Q=q.nextSibling,J=n,at=a.group,st={target:Bt.dragged=q,clientX:(e||t).clientX,clientY:(e||t).clientY},ht=st.clientX-o.left,ft=st.clientY-o.top,this._lastX=(e||t).clientX,this._lastY=(e||t).clientY,q.style["will-change"]="all",o=function(){z("delayEnded",i,{evt:t}),Bt.eventCanceled?i._onDrop():(i._disableDelayedDragEvents(),!s&&i.nativeDraggable&&(q.draggable=!0),i._triggerDragStart(t,e),U({sortable:i,name:"choose",originalEvent:t}),I(q,a.chosenClass,!0))},a.ignore.split(",").forEach(function(t){b(q,t.trim(),jt)}),h(l,"dragover",Xt),h(l,"mousemove",Xt),h(l,"touchmove",Xt),h(l,"mouseup",i._onDrop),h(l,"touchend",i._onDrop),h(l,"touchcancel",i._onDrop),s&&this.nativeDraggable&&(this.options.touchStartThreshold=4,q.draggable=!0),z("delayStart",this,{evt:t}),!a.delay||a.delayOnTouchOnly&&!e||this.nativeDraggable&&(w||y)?o():Bt.eventCanceled?this._onDrop():(h(l,"mouseup",i._disableDelayedDrag),h(l,"touchend",i._disableDelayedDrag),h(l,"touchcancel",i._disableDelayedDrag),h(l,"mousemove",i._delayedDragTouchMoveHandler),h(l,"touchmove",i._delayedDragTouchMoveHandler),a.supportPointer&&h(l,"pointermove",i._delayedDragTouchMoveHandler),i._dragStartTimer=setTimeout(o,a.delay)))},_delayedDragTouchMoveHandler:function(t){t=t.touches?t.touches[0]:t;Math.max(Math.abs(t.clientX-this._lastX),Math.abs(t.clientY-this._lastY))>=Math.floor(this.options.touchStartThreshold/(this.nativeDraggable&&window.devicePixelRatio||1))&&this._disableDelayedDrag()},_disableDelayedDrag:function(){q&&jt(q),clearTimeout(this._dragStartTimer),this._disableDelayedDragEvents()},_disableDelayedDragEvents:function(){var t=this.el.ownerDocument;f(t,"mouseup",this._disableDelayedDrag),f(t,"touchend",this._disableDelayedDrag),f(t,"touchcancel",this._disableDelayedDrag),f(t,"mousemove",this._delayedDragTouchMoveHandler),f(t,"touchmove",this._delayedDragTouchMoveHandler),f(t,"pointermove",this._delayedDragTouchMoveHandler)},_triggerDragStart:function(t,e){e=e||"touch"==t.pointerType&&t,!this.nativeDraggable||e?this.options.supportPointer?h(document,"pointermove",this._onTouchMove):h(document,e?"touchmove":"mousemove",this._onTouchMove):(h(q,"dragend",this),h($,"dragstart",this._onDragStart));try{document.selection?Lt(function(){document.selection.empty()}):window.getSelection().removeAllRanges()}catch(t){}},_dragStarted:function(t,e){var n;yt=!1,$&&q?(z("dragStarted",this,{evt:e}),this.nativeDraggable&&h(document,"dragover",Yt),n=this.options,t||I(q,n.dragClass,!1),I(q,n.ghostClass,!0),Bt.active=this,t&&this._appendGhost(),U({sortable:this,name:"start",originalEvent:e})):this._nulling()},_emulateDragOver:function(){if(ct){this._lastX=ct.clientX,this._lastY=ct.clientY,kt();for(var t=document.elementFromPoint(ct.clientX,ct.clientY),e=t;t&&t.shadowRoot&&(t=t.shadowRoot.elementFromPoint(ct.clientX,ct.clientY))!==e;)e=t;if(q.parentNode[j]._isOutsideThisEl(t),e)do{if(e[j])if(e[j]._onDragOver({clientX:ct.clientX,clientY:ct.clientY,target:t,rootEl:e})&&!this.options.dragoverBubble)break}while(e=(t=e).parentNode);Rt()}},_onTouchMove:function(t){if(st){var e=this.options,n=e.fallbackTolerance,o=e.fallbackOffset,i=t.touches?t.touches[0]:t,r=Z&&v(Z,!0),a=Z&&r&&r.a,l=Z&&r&&r.d,e=Ot&&bt&&E(bt),a=(i.clientX-st.clientX+o.x)/(a||1)+(e?e[0]-_t[0]:0)/(a||1),l=(i.clientY-st.clientY+o.y)/(l||1)+(e?e[1]-_t[1]:0)/(l||1);if(!Bt.active&&!yt){if(n&&Math.max(Math.abs(i.clientX-this._lastX),Math.abs(i.clientY-this._lastY))<n)return;this._onDragStart(t,!0)}Z&&(r?(r.e+=a-(ut||0),r.f+=l-(dt||0)):r={a:1,b:0,c:0,d:1,e:a,f:l},r="matrix(".concat(r.a,",").concat(r.b,",").concat(r.c,",").concat(r.d,",").concat(r.e,",").concat(r.f,")"),P(Z,"webkitTransform",r),P(Z,"mozTransform",r),P(Z,"msTransform",r),P(Z,"transform",r),ut=a,dt=l,ct=i),t.cancelable&&t.preventDefault()}},_appendGhost:function(){if(!Z){var t=this.options.fallbackOnBody?document.body:$,e=k(q,!0,Ot,!0,t),n=this.options;if(Ot){for(bt=t;"static"===P(bt,"position")&&"none"===P(bt,"transform")&&bt!==document;)bt=bt.parentNode;bt!==document.body&&bt!==document.documentElement?(bt===document&&(bt=O()),e.top+=bt.scrollTop,e.left+=bt.scrollLeft):bt=O(),_t=E(bt)}I(Z=q.cloneNode(!0),n.ghostClass,!1),I(Z,n.fallbackClass,!0),I(Z,n.dragClass,!0),P(Z,"transition",""),P(Z,"transform",""),P(Z,"box-sizing","border-box"),P(Z,"margin",0),P(Z,"top",e.top),P(Z,"left",e.left),P(Z,"width",e.width),P(Z,"height",e.height),P(Z,"opacity","0.8"),P(Z,"position",Ot?"absolute":"fixed"),P(Z,"zIndex","100000"),P(Z,"pointerEvents","none"),Bt.ghost=Z,t.appendChild(Z),P(Z,"transform-origin",ht/parseInt(Z.style.width)*100+"% "+ft/parseInt(Z.style.height)*100+"%")}},_onDragStart:function(t,e){var n=this,o=t.dataTransfer,i=n.options;z("dragStart",this,{evt:t}),Bt.eventCanceled?this._onDrop():(z("setupClone",this),Bt.eventCanceled||((tt=_(q)).removeAttribute("id"),tt.draggable=!1,tt.style["will-change"]="",this._hideClone(),I(tt,this.options.chosenClass,!1),Bt.clone=tt),n.cloneId=Lt(function(){z("clone",n),Bt.eventCanceled||(n.options.removeCloneOnHide||$.insertBefore(tt,q),n._hideClone(),U({sortable:n,name:"clone"}))}),e||I(q,i.dragClass,!0),e?(wt=!0,n._loopId=setInterval(n._emulateDragOver,50)):(f(document,"mouseup",n._onDrop),f(document,"touchend",n._onDrop),f(document,"touchcancel",n._onDrop),o&&(o.effectAllowed="move",i.setData&&i.setData.call(n,o,q)),h(document,"drop",n),P(q,"transform","translateZ(0)")),yt=!0,n._dragStartId=Lt(n._dragStarted.bind(n,e,t)),h(document,"selectstart",n),pt=!0,u&&P(document.body,"user-select","none"))},_onDragOver:function(n){var o,i,r,t,a=this.el,l=n.target,e=this.options,s=e.group,c=Bt.active,u=at===s,d=e.sort,h=lt||c,f=this,p=!1;if(!Ct){if(void 0!==n.preventDefault&&n.cancelable&&n.preventDefault(),l=N(l,e.draggable,a,!0),T("dragOver"),Bt.eventCanceled)return p;if(q.contains(n.target)||l.animated&&l.animatingX&&l.animatingY||f._ignoreWhileAnimating===l)return O(!1);if(wt=!1,c&&!e.disabled&&(u?d||(i=V!==$):lt===this||(this.lastPutMode=at.checkPull(this,c,q,n))&&s.checkPut(this,c,q,n))){if(r="vertical"===this._getDirection(n,l),o=k(q),T("dragOverValid"),Bt.eventCanceled)return p;if(i)return V=$,x(),this._hideClone(),T("revert"),Bt.eventCanceled||(Q?$.insertBefore(q,Q):$.appendChild(q)),O(!0);var g=Y(a,e.draggable);if(!g||function(t,e,n){n=k(Y(n.el,n.options.draggable));return e?t.clientX>n.right+10||t.clientX<=n.right&&t.clientY>n.bottom&&t.clientX>=n.left:t.clientX>n.right&&t.clientY>n.top||t.clientX<=n.right&&t.clientY>n.bottom+10}(n,r,this)&&!g.animated){if(g===q)return O(!1);if((l=g&&a===n.target?g:l)&&(w=k(l)),!1!==Ft($,a,q,o,l,w,n,!!l))return x(),g&&g.nextSibling?a.insertBefore(q,g.nextSibling):a.appendChild(q),V=a,A(),O(!0)}else if(g&&function(t,e,n){n=k(X(n.el,0,n.options,!0));return e?t.clientX<n.left-10||t.clientY<n.top&&t.clientX<n.right:t.clientY<n.top-10||t.clientY<n.bottom&&t.clientX<n.left}(n,r,this)){var m=X(a,0,e,!0);if(m===q)return O(!1);if(w=k(l=m),!1!==Ft($,a,q,o,l,w,n,!1))return x(),a.insertBefore(q,m),V=a,A(),O(!0)}else if(l.parentNode===a){var v,b,y,w=k(l),E=q.parentNode!==a,D=(D=q.animated&&q.toRect||o,C=l.animated&&l.toRect||w,S=(t=r)?D.left:D.top,s=t?D.right:D.bottom,g=t?D.width:D.height,m=t?C.left:C.top,D=t?C.right:C.bottom,C=t?C.width:C.height,!(S===m||s===D||S+g/2===m+C/2)),S=r?"top":"left",g=R(l,"top","top")||R(q,"top","top"),m=g?g.scrollTop:void 0;if(gt!==l&&(b=w[S],Dt=!1,St=!D&&e.invertSwap||E),0!==(v=function(t,e,n,o,i,r,a,l){var s=o?t.clientY:t.clientX,c=o?n.height:n.width,t=o?n.top:n.left,o=o?n.bottom:n.right,n=!1;if(!a)if(l&&vt<c*i){if(Dt=!Dt&&(1===mt?t+c*r/2<s:s<o-c*r/2)?!0:Dt)n=!0;else if(1===mt?s<t+vt:o-vt<s)return-mt}else if(t+c*(1-i)/2<s&&s<o-c*(1-i)/2)return function(t){return B(q)<B(t)?1:-1}(e);if((n=n||a)&&(s<t+c*r/2||o-c*r/2<s))return t+c/2<s?1:-1;return 0}(n,l,w,r,D?1:e.swapThreshold,null==e.invertedSwapThreshold?e.swapThreshold:e.invertedSwapThreshold,St,gt===l)))for(var _=B(q);(y=V.children[_-=v])&&("none"===P(y,"display")||y===Z););if(0===v||y===l)return O(!1);mt=v;var C=(gt=l).nextElementSibling,E=!1,D=Ft($,a,q,o,l,w,n,E=1===v);if(!1!==D)return 1!==D&&-1!==D||(E=1===D),Ct=!0,setTimeout(Ht,30),x(),E&&!C?a.appendChild(q):l.parentNode.insertBefore(q,E?C:l),g&&F(g,0,m-g.scrollTop),V=q.parentNode,void 0===b||St||(vt=Math.abs(b-k(l)[S])),A(),O(!0)}if(a.contains(q))return O(!1)}return!1}function T(t,e){z(t,f,M({evt:n,isOwner:u,axis:r?"vertical":"horizontal",revert:i,dragRect:o,targetRect:w,canSort:d,fromSortable:h,target:l,completed:O,onMove:function(t,e){return Ft($,a,q,o,t,k(t),n,e)},changed:A},e))}function x(){T("dragOverAnimationCapture"),f.captureAnimationState(),f!==h&&h.captureAnimationState()}function O(t){return T("dragOverCompleted",{insertion:t}),t&&(u?c._hideClone():c._showClone(f),f!==h&&(I(q,(lt||c).options.ghostClass,!1),I(q,e.ghostClass,!0)),lt!==f&&f!==Bt.active?lt=f:f===Bt.active&&lt&&(lt=null),h===f&&(f._ignoreWhileAnimating=l),f.animateAll(function(){T("dragOverAnimationComplete"),f._ignoreWhileAnimating=null}),f!==h&&(h.animateAll(),h._ignoreWhileAnimating=null)),(l===q&&!q.animated||l===a&&!l.animated)&&(gt=null),e.dragoverBubble||n.rootEl||l===document||(q.parentNode[j]._isOutsideThisEl(n.target),t||Xt(n)),!e.dragoverBubble&&n.stopPropagation&&n.stopPropagation(),p=!0}function A(){ot=B(q),rt=B(q,e.draggable),U({sortable:f,name:"change",toEl:a,newIndex:ot,newDraggableIndex:rt,originalEvent:n})}},_ignoreWhileAnimating:null,_offMoveEvents:function(){f(document,"mousemove",this._onTouchMove),f(document,"touchmove",this._onTouchMove),f(document,"pointermove",this._onTouchMove),f(document,"dragover",Xt),f(document,"mousemove",Xt),f(document,"touchmove",Xt)},_offUpEvents:function(){var t=this.el.ownerDocument;f(t,"mouseup",this._onDrop),f(t,"touchend",this._onDrop),f(t,"pointerup",this._onDrop),f(t,"touchcancel",this._onDrop),f(document,"selectstart",this)},_onDrop:function(t){var e=this.el,n=this.options;ot=B(q),rt=B(q,n.draggable),z("drop",this,{evt:t}),V=q&&q.parentNode,ot=B(q),rt=B(q,n.draggable),Bt.eventCanceled||(Dt=St=yt=!1,clearInterval(this._loopId),clearTimeout(this._dragStartTimer),Kt(this.cloneId),Kt(this._dragStartId),this.nativeDraggable&&(f(document,"drop",this),f(e,"dragstart",this._onDragStart)),this._offMoveEvents(),this._offUpEvents(),u&&P(document.body,"user-select",""),P(q,"transform",""),t&&(pt&&(t.cancelable&&t.preventDefault(),n.dropBubble||t.stopPropagation()),Z&&Z.parentNode&&Z.parentNode.removeChild(Z),($===V||lt&&"clone"!==lt.lastPutMode)&&tt&&tt.parentNode&&tt.parentNode.removeChild(tt),q&&(this.nativeDraggable&&f(q,"dragend",this),jt(q),q.style["will-change"]="",pt&&!yt&&I(q,(lt||this).options.ghostClass,!1),I(q,this.options.chosenClass,!1),U({sortable:this,name:"unchoose",toEl:V,newIndex:null,newDraggableIndex:null,originalEvent:t}),$!==V?(0<=ot&&(U({rootEl:V,name:"add",toEl:V,fromEl:$,originalEvent:t}),U({sortable:this,name:"remove",toEl:V,originalEvent:t}),U({rootEl:V,name:"sort",toEl:V,fromEl:$,originalEvent:t}),U({sortable:this,name:"sort",toEl:V,originalEvent:t})),lt&&lt.save()):ot!==nt&&0<=ot&&(U({sortable:this,name:"update",toEl:V,originalEvent:t}),U({sortable:this,name:"sort",toEl:V,originalEvent:t})),Bt.active&&(null!=ot&&-1!==ot||(ot=nt,rt=it),U({sortable:this,name:"end",toEl:V,originalEvent:t}),this.save())))),this._nulling()},_nulling:function(){z("nulling",this),$=q=V=Z=Q=tt=J=et=st=ct=pt=ot=rt=nt=it=gt=mt=lt=at=Bt.dragged=Bt.ghost=Bt.clone=Bt.active=null,Tt.forEach(function(t){t.checked=!0}),Tt.length=ut=dt=0},handleEvent:function(t){switch(t.type){case"drop":case"dragend":this._onDrop(t);break;case"dragenter":case"dragover":q&&(this._onDragOver(t),function(t){t.dataTransfer&&(t.dataTransfer.dropEffect="move");t.cancelable&&t.preventDefault()}(t));break;case"selectstart":t.preventDefault()}},toArray:function(){for(var t,e=[],n=this.el.children,o=0,i=n.length,r=this.options;o<i;o++)N(t=n[o],r.draggable,this.el,!1)&&e.push(t.getAttribute(r.dataIdAttr)||function(t){var e=t.tagName+t.className+t.src+t.href+t.textContent,n=e.length,o=0;for(;n--;)o+=e.charCodeAt(n);return o.toString(36)}(t));return e},sort:function(t,e){var n={},o=this.el;this.toArray().forEach(function(t,e){e=o.children[e];N(e,this.options.draggable,o,!1)&&(n[t]=e)},this),e&&this.captureAnimationState(),t.forEach(function(t){n[t]&&(o.removeChild(n[t]),o.appendChild(n[t]))}),e&&this.animateAll()},save:function(){var t=this.options.store;t&&t.set&&t.set(this)},closest:function(t,e){return N(t,e||this.options.draggable,this.el,!1)},option:function(t,e){var n=this.options;if(void 0===e)return n[t];var o=K.modifyOption(this,t,e);n[t]=void 0!==o?o:e,"group"===t&&Pt(n)},destroy:function(){z("destroy",this);var t=this.el;t[j]=null,f(t,"mousedown",this._onTapStart),f(t,"touchstart",this._onTapStart),f(t,"pointerdown",this._onTapStart),this.nativeDraggable&&(f(t,"dragover",this),f(t,"dragenter",this)),Array.prototype.forEach.call(t.querySelectorAll("[draggable]"),function(t){t.removeAttribute("draggable")}),this._onDrop(),this._disableDelayedDragEvents(),Et.splice(Et.indexOf(this.el),1),this.el=t=null},_hideClone:function(){et||(z("hideClone",this),Bt.eventCanceled||(P(tt,"display","none"),this.options.removeCloneOnHide&&tt.parentNode&&tt.parentNode.removeChild(tt),et=!0))},_showClone:function(t){"clone"===t.lastPutMode?et&&(z("showClone",this),Bt.eventCanceled||(q.parentNode!=$||this.options.group.revertClone?Q?$.insertBefore(tt,Q):$.appendChild(tt):$.insertBefore(tt,q),this.options.group.revertClone&&this.animate(q,tt),P(tt,"display",""),et=!1)):this._hideClone()}},xt&&h(document,"touchmove",function(t){(Bt.active||yt)&&t.cancelable&&t.preventDefault()}),Bt.utils={on:h,off:f,css:P,find:b,is:function(t,e){return!!N(t,e,t,!1)},extend:function(t,e){if(t&&e)for(var n in e)e.hasOwnProperty(n)&&(t[n]=e[n]);return t},throttle:S,closest:N,toggleClass:I,clone:_,index:B,nextTick:Lt,cancelNextTick:Kt,detectDirection:It,getChild:X},Bt.get=function(t){return t[j]},Bt.mount=function(){for(var t=arguments.length,e=new Array(t),n=0;n<t;n++)e[n]=arguments[n];(e=e[0].constructor===Array?e[0]:e).forEach(function(t){if(!t.prototype||!t.prototype.constructor)throw"Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(t));t.utils&&(Bt.utils=M(M({},Bt.utils),t.utils)),K.mount(t)})},Bt.create=function(t,e){return new Bt(t,e)};var Wt,zt,Gt,Ut,qt,Vt,Zt=[],$t=!(Bt.version="1.15.0");function Qt(){Zt.forEach(function(t){clearInterval(t.pid)}),Zt=[]}function Jt(){clearInterval(Vt)}var te,ee=S(function(n,t,e,o){if(t.scroll){var i,r=(n.touches?n.touches[0]:n).clientX,a=(n.touches?n.touches[0]:n).clientY,l=t.scrollSensitivity,s=t.scrollSpeed,c=O(),u=!1;zt!==e&&(zt=e,Qt(),Wt=t.scroll,i=t.scrollFn,!0===Wt&&(Wt=A(e,!0)));var d=0,h=Wt;do{var f=h,p=k(f),g=p.top,m=p.bottom,v=p.left,b=p.right,y=p.width,w=p.height,E=void 0,D=void 0,S=f.scrollWidth,_=f.scrollHeight,C=P(f),T=f.scrollLeft,p=f.scrollTop,D=f===c?(E=y<S&&("auto"===C.overflowX||"scroll"===C.overflowX||"visible"===C.overflowX),w<_&&("auto"===C.overflowY||"scroll"===C.overflowY||"visible"===C.overflowY)):(E=y<S&&("auto"===C.overflowX||"scroll"===C.overflowX),w<_&&("auto"===C.overflowY||"scroll"===C.overflowY)),T=E&&(Math.abs(b-r)<=l&&T+y<S)-(Math.abs(v-r)<=l&&!!T),p=D&&(Math.abs(m-a)<=l&&p+w<_)-(Math.abs(g-a)<=l&&!!p);if(!Zt[d])for(var x=0;x<=d;x++)Zt[x]||(Zt[x]={});Zt[d].vx==T&&Zt[d].vy==p&&Zt[d].el===f||(Zt[d].el=f,Zt[d].vx=T,Zt[d].vy=p,clearInterval(Zt[d].pid),0==T&&0==p||(u=!0,Zt[d].pid=setInterval(function(){o&&0===this.layer&&Bt.active._onTouchMove(qt);var t=Zt[this.layer].vy?Zt[this.layer].vy*s:0,e=Zt[this.layer].vx?Zt[this.layer].vx*s:0;"function"==typeof i&&"continue"!==i.call(Bt.dragged.parentNode[j],e,t,n,qt,Zt[this.layer].el)||F(Zt[this.layer].el,e,t)}.bind({layer:d}),24))),d++}while(t.bubbleScroll&&h!==c&&(h=A(h,!1)));$t=u}},30),c=function(t){var e=t.originalEvent,n=t.putSortable,o=t.dragEl,i=t.activeSortable,r=t.dispatchSortableEvent,a=t.hideGhostForTarget,t=t.unhideGhostForTarget;e&&(i=n||i,a(),e=e.changedTouches&&e.changedTouches.length?e.changedTouches[0]:e,e=document.elementFromPoint(e.clientX,e.clientY),t(),i&&!i.el.contains(e)&&(r("spill"),this.onSpill({dragEl:o,putSortable:n})))};function ne(){}function oe(){}ne.prototype={startIndex:null,dragStart:function(t){t=t.oldDraggableIndex;this.startIndex=t},onSpill:function(t){var e=t.dragEl,n=t.putSortable;this.sortable.captureAnimationState(),n&&n.captureAnimationState();t=X(this.sortable.el,this.startIndex,this.options);t?this.sortable.el.insertBefore(e,t):this.sortable.el.appendChild(e),this.sortable.animateAll(),n&&n.animateAll()},drop:c},a(ne,{pluginName:"revertOnSpill"}),oe.prototype={onSpill:function(t){var e=t.dragEl,t=t.putSortable||this.sortable;t.captureAnimationState(),e.parentNode&&e.parentNode.removeChild(e),t.animateAll()},drop:c},a(oe,{pluginName:"removeOnSpill"});var ie,re,ae,le,se,ce=[],ue=[],de=!1,he=!1,fe=!1;function pe(n,o){ue.forEach(function(t,e){e=o.children[t.sortableIndex+(n?Number(e):0)];e?o.insertBefore(t,e):o.appendChild(t)})}function ge(){ce.forEach(function(t){t!==ae&&t.parentNode&&t.parentNode.removeChild(t)})}return Bt.mount(new function(){function t(){for(var t in this.defaults={scroll:!0,forceAutoScrollFallback:!1,scrollSensitivity:30,scrollSpeed:10,bubbleScroll:!0},this)"_"===t.charAt(0)&&"function"==typeof this[t]&&(this[t]=this[t].bind(this))}return t.prototype={dragStarted:function(t){t=t.originalEvent;this.sortable.nativeDraggable?h(document,"dragover",this._handleAutoScroll):this.options.supportPointer?h(document,"pointermove",this._handleFallbackAutoScroll):t.touches?h(document,"touchmove",this._handleFallbackAutoScroll):h(document,"mousemove",this._handleFallbackAutoScroll)},dragOverCompleted:function(t){t=t.originalEvent;this.options.dragOverBubble||t.rootEl||this._handleAutoScroll(t)},drop:function(){this.sortable.nativeDraggable?f(document,"dragover",this._handleAutoScroll):(f(document,"pointermove",this._handleFallbackAutoScroll),f(document,"touchmove",this._handleFallbackAutoScroll),f(document,"mousemove",this._handleFallbackAutoScroll)),Jt(),Qt(),clearTimeout(g),g=void 0},nulling:function(){qt=zt=Wt=$t=Vt=Gt=Ut=null,Zt.length=0},_handleFallbackAutoScroll:function(t){this._handleAutoScroll(t,!0)},_handleAutoScroll:function(e,n){var o,i=this,r=(e.touches?e.touches[0]:e).clientX,a=(e.touches?e.touches[0]:e).clientY,t=document.elementFromPoint(r,a);qt=e,n||this.options.forceAutoScrollFallback||w||y||u?(ee(e,this.options,t,n),o=A(t,!0),!$t||Vt&&r===Gt&&a===Ut||(Vt&&Jt(),Vt=setInterval(function(){var t=A(document.elementFromPoint(r,a),!0);t!==o&&(o=t,Qt()),ee(e,i.options,t,n)},10),Gt=r,Ut=a)):this.options.bubbleScroll&&A(t,!0)!==O()?ee(e,this.options,A(t,!1),!1):Qt()}},a(t,{pluginName:"scroll",initializeByDefault:!0})}),Bt.mount(oe,ne),Bt.mount(new function(){function t(){this.defaults={swapClass:"sortable-swap-highlight"}}return t.prototype={dragStart:function(t){t=t.dragEl;te=t},dragOverValid:function(t){var e=t.completed,n=t.target,o=t.onMove,i=t.activeSortable,r=t.changed,a=t.cancel;i.options.swap&&(t=this.sortable.el,i=this.options,n&&n!==t&&(t=te,te=!1!==o(n)?(I(n,i.swapClass,!0),n):null,t&&t!==te&&I(t,i.swapClass,!1)),r(),e(!0),a())},drop:function(t){var e,n,o=t.activeSortable,i=t.putSortable,r=t.dragEl,a=i||this.sortable,l=this.options;te&&I(te,l.swapClass,!1),te&&(l.swap||i&&i.options.swap)&&r!==te&&(a.captureAnimationState(),a!==o&&o.captureAnimationState(),n=te,t=(e=r).parentNode,l=n.parentNode,t&&l&&!t.isEqualNode(n)&&!l.isEqualNode(e)&&(i=B(e),r=B(n),t.isEqualNode(l)&&i<r&&r++,t.insertBefore(n,t.children[i]),l.insertBefore(e,l.children[r])),a.animateAll(),a!==o&&o.animateAll())},nulling:function(){te=null}},a(t,{pluginName:"swap",eventProperties:function(){return{swapItem:te}}})}),Bt.mount(new function(){function t(o){for(var t in this)"_"===t.charAt(0)&&"function"==typeof this[t]&&(this[t]=this[t].bind(this));o.options.avoidImplicitDeselect||(o.options.supportPointer?h(document,"pointerup",this._deselectMultiDrag):(h(document,"mouseup",this._deselectMultiDrag),h(document,"touchend",this._deselectMultiDrag))),h(document,"keydown",this._checkKeyDown),h(document,"keyup",this._checkKeyUp),this.defaults={selectedClass:"sortable-selected",multiDragKey:null,avoidImplicitDeselect:!1,setData:function(t,e){var n="";ce.length&&re===o?ce.forEach(function(t,e){n+=(e?", ":"")+t.textContent}):n=e.textContent,t.setData("Text",n)}}}return t.prototype={multiDragKeyDown:!1,isMultiDrag:!1,delayStartGlobal:function(t){t=t.dragEl;ae=t},delayEnded:function(){this.isMultiDrag=~ce.indexOf(ae)},setupClone:function(t){var e=t.sortable,t=t.cancel;if(this.isMultiDrag){for(var n=0;n<ce.length;n++)ue.push(_(ce[n])),ue[n].sortableIndex=ce[n].sortableIndex,ue[n].draggable=!1,ue[n].style["will-change"]="",I(ue[n],this.options.selectedClass,!1),ce[n]===ae&&I(ue[n],this.options.chosenClass,!1);e._hideClone(),t()}},clone:function(t){var e=t.sortable,n=t.rootEl,o=t.dispatchSortableEvent,t=t.cancel;this.isMultiDrag&&(this.options.removeCloneOnHide||ce.length&&re===e&&(pe(!0,n),o("clone"),t()))},showClone:function(t){var e=t.cloneNowShown,n=t.rootEl,t=t.cancel;this.isMultiDrag&&(pe(!1,n),ue.forEach(function(t){P(t,"display","")}),e(),se=!1,t())},hideClone:function(t){var e=this,n=(t.sortable,t.cloneNowHidden),t=t.cancel;this.isMultiDrag&&(ue.forEach(function(t){P(t,"display","none"),e.options.removeCloneOnHide&&t.parentNode&&t.parentNode.removeChild(t)}),n(),se=!0,t())},dragStartGlobal:function(t){t.sortable;!this.isMultiDrag&&re&&re.multiDrag._deselectMultiDrag(),ce.forEach(function(t){t.sortableIndex=B(t)}),ce=ce.sort(function(t,e){return t.sortableIndex-e.sortableIndex}),fe=!0},dragStarted:function(t){var e,n=this,t=t.sortable;this.isMultiDrag&&(this.options.sort&&(t.captureAnimationState(),this.options.animation&&(ce.forEach(function(t){t!==ae&&P(t,"position","absolute")}),e=k(ae,!1,!0,!0),ce.forEach(function(t){t!==ae&&C(t,e)}),de=he=!0)),t.animateAll(function(){de=he=!1,n.options.animation&&ce.forEach(function(t){T(t)}),n.options.sort&&ge()}))},dragOver:function(t){var e=t.target,n=t.completed,t=t.cancel;he&&~ce.indexOf(e)&&(n(!1),t())},revert:function(t){var n,o,e=t.fromSortable,i=t.rootEl,r=t.sortable,a=t.dragRect;1<ce.length&&(ce.forEach(function(t){r.addAnimationState({target:t,rect:he?k(t):a}),T(t),t.fromRect=a,e.removeAnimationState(t)}),he=!1,n=!this.options.removeCloneOnHide,o=i,ce.forEach(function(t,e){e=o.children[t.sortableIndex+(n?Number(e):0)];e?o.insertBefore(t,e):o.appendChild(t)}))},dragOverCompleted:function(t){var e,n=t.sortable,o=t.isOwner,i=t.insertion,r=t.activeSortable,a=t.parentEl,l=t.putSortable,t=this.options;i&&(o&&r._hideClone(),de=!1,t.animation&&1<ce.length&&(he||!o&&!r.options.sort&&!l)&&(e=k(ae,!1,!0,!0),ce.forEach(function(t){t!==ae&&(C(t,e),a.appendChild(t))}),he=!0),o||(he||ge(),1<ce.length?(o=se,r._showClone(n),r.options.animation&&!se&&o&&ue.forEach(function(t){r.addAnimationState({target:t,rect:le}),t.fromRect=le,t.thisAnimationDuration=null})):r._showClone(n)))},dragOverAnimationCapture:function(t){var e=t.dragRect,n=t.isOwner,t=t.activeSortable;ce.forEach(function(t){t.thisAnimationDuration=null}),t.options.animation&&!n&&t.multiDrag.isMultiDrag&&(le=a({},e),e=v(ae,!0),le.top-=e.f,le.left-=e.e)},dragOverAnimationComplete:function(){he&&(he=!1,ge())},drop:function(t){var e=t.originalEvent,n=t.rootEl,o=t.parentEl,i=t.sortable,r=t.dispatchSortableEvent,a=t.oldIndex,l=t.putSortable,s=l||this.sortable;if(e){var c,u,d,h=this.options,f=o.children;if(!fe)if(h.multiDragKey&&!this.multiDragKeyDown&&this._deselectMultiDrag(),I(ae,h.selectedClass,!~ce.indexOf(ae)),~ce.indexOf(ae))ce.splice(ce.indexOf(ae),1),ie=null,W({sortable:i,rootEl:n,name:"deselect",targetEl:ae,originalEvent:e});else{if(ce.push(ae),W({sortable:i,rootEl:n,name:"select",targetEl:ae,originalEvent:e}),e.shiftKey&&ie&&i.el.contains(ie)){var p=B(ie),t=B(ae);if(~p&&~t&&p!==t)for(var g,m=p<t?(g=p,t):(g=t,p+1);g<m;g++)~ce.indexOf(f[g])||(I(f[g],h.selectedClass,!0),ce.push(f[g]),W({sortable:i,rootEl:n,name:"select",targetEl:f[g],originalEvent:e}))}else ie=ae;re=s}fe&&this.isMultiDrag&&(he=!1,(o[j].options.sort||o!==n)&&1<ce.length&&(c=k(ae),u=B(ae,":not(."+this.options.selectedClass+")"),!de&&h.animation&&(ae.thisAnimationDuration=null),s.captureAnimationState(),de||(h.animation&&(ae.fromRect=c,ce.forEach(function(t){var e;t.thisAnimationDuration=null,t!==ae&&(e=he?k(t):c,t.fromRect=e,s.addAnimationState({target:t,rect:e}))})),ge(),ce.forEach(function(t){f[u]?o.insertBefore(t,f[u]):o.appendChild(t),u++}),a===B(ae)&&(d=!1,ce.forEach(function(t){t.sortableIndex!==B(t)&&(d=!0)}),d&&r("update"))),ce.forEach(function(t){T(t)}),s.animateAll()),re=s),(n===o||l&&"clone"!==l.lastPutMode)&&ue.forEach(function(t){t.parentNode&&t.parentNode.removeChild(t)})}},nullingGlobal:function(){this.isMultiDrag=fe=!1,ue.length=0},destroyGlobal:function(){this._deselectMultiDrag(),f(document,"pointerup",this._deselectMultiDrag),f(document,"mouseup",this._deselectMultiDrag),f(document,"touchend",this._deselectMultiDrag),f(document,"keydown",this._checkKeyDown),f(document,"keyup",this._checkKeyUp)},_deselectMultiDrag:function(t){if(!(void 0!==fe&&fe||re!==this.sortable||t&&N(t.target,this.options.draggable,this.sortable.el,!1)||t&&0!==t.button))for(;ce.length;){var e=ce[0];I(e,this.options.selectedClass,!1),ce.shift(),W({sortable:this.sortable,rootEl:this.sortable.el,name:"deselect",targetEl:e,originalEvent:t})}},_checkKeyDown:function(t){t.key===this.options.multiDragKey&&(this.multiDragKeyDown=!0)},_checkKeyUp:function(t){t.key===this.options.multiDragKey&&(this.multiDragKeyDown=!1)}},a(t,{pluginName:"multiDrag",utils:{select:function(t){var e=t.parentNode[j];e&&e.options.multiDrag&&!~ce.indexOf(t)&&(re&&re!==e&&(re.multiDrag._deselectMultiDrag(),re=e),I(t,e.options.selectedClass,!0),ce.push(t))},deselect:function(t){var e=t.parentNode[j],n=ce.indexOf(t);e&&e.options.multiDrag&&~n&&(I(t,e.options.selectedClass,!1),ce.splice(n,1))}},eventProperties:function(){var n=this,o=[],i=[];return ce.forEach(function(t){var e;o.push({multiDragElement:t,index:t.sortableIndex}),e=he&&t!==ae?-1:he?B(t,":not(."+n.options.selectedClass+")"):B(t),i.push({multiDragElement:t,index:e})}),{items:r(ce),clones:[].concat(ue),oldIndicies:o,newIndicies:i}},optionListeners:{multiDragKey:function(t){return"ctrl"===(t=t.toLowerCase())?t="Control":1<t.length&&(t=t.charAt(0).toUpperCase()+t.substr(1)),t}}})}),Bt});</script>
+<script>
+(function(){
+var PHOTO_SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
+var PHOTO_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+var photoDb=window.supabase&&window.supabase.createClient(PHOTO_SUPABASE_URL,PHOTO_SUPABASE_ANON_KEY);
+function setProjectField(id,value){var el=document.getElementById(id);if(el&&value!=null&&String(value).trim())el.value=String(value);}
+async function loadLinkedProject(){
+  var managementNumber=(new URLSearchParams(location.search).get('management_number')||'').trim();
+  var bar=document.getElementById('online-project-bar'),detail=document.getElementById('online-project-detail'),back=document.getElementById('online-project-back');
+  var backUrl=new URL('estimate.html',location.href);if(managementNumber)backUrl.searchParams.set('management_number',managementNumber);backUrl.searchParams.set('open_tab','estimate');if(back)back.href=backUrl.href;
+  if(!managementNumber){if(bar)bar.classList.remove('is-loading');if(detail)detail.textContent='管理番号未指定：JSONを読み込むか、表紙情報を手入力してください';return;}
+  setProjectField('fi-management-number',managementNumber);
+  try{
+    if(!photoDb)throw new Error('オンライン接続を初期化できません');
+    var sr=await photoDb.auth.getSession(),session=sr&&sr.data&&sr.data.session;
+    if(!session){location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search));return;}
+    var er=await photoDb.rpc('is_current_app_user_enabled');if(er.error||er.data!==true)throw new Error('この社員アカウントでは利用できません');
+    var r=await photoDb.from('estimate_projects').select('management_number,payload').eq('management_number',managementNumber).is('deleted_at',null).maybeSingle();if(r.error)throw r.error;
+    var b=r.data&&r.data.payload&&r.data.payload.basic;if(!b)throw new Error('案件の基本情報が見つかりません');
+    setProjectField('fi-management-number',b.kanri||managementNumber);setProjectField('fi-client',b.client);setProjectField('fi-title',b.property);setProjectField('fi-room',b.room);setProjectField('fi-loc',b.summary||b.kojiname);setProjectField('fi-staff',b.staff);setProjectField('fi-zip',b.postal);setProjectField('fi-addr',b.place);setProjectField('fi-start',b.uketsuke);setProjectField('fi-end',b.kanko_date);setProjectField('fi-comp',b.completedOn);
+    if(bar)bar.classList.remove('is-loading','is-error');if(detail)detail.textContent=[b.kanri||managementNumber,[b.property,b.room].filter(Boolean).join(' '),b.summary||b.kojiname,b.client].filter(Boolean).join(' ｜ ');
+  }catch(error){if(bar)bar.className='online-project-bar is-error';if(detail)detail.textContent='基本情報の取得に失敗しました：'+(error.message||error);}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadLinkedProject,{once:true});else loadLinkedProject();
+var PAT='', PER=0, COLS=3, ORIENT='AUTO', sorts={}, _appStarted=false;
+/* ユーティリティ: 先頭で定義（初期化コードから呼ばれるため） */
+function formatAmount(el){ var v=el.value.replace(/[^0-9]/g,''); if(v) el.value=Number(v).toLocaleString('ja-JP'); else el.value=''; }
+window.formatAmount=formatAmount;
+function showJpDate(el){ if(!el) return; var d=el.value; var s=''; if(d){ var p=d.split('-'); if(p.length===3) s=p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日'; } var sp=document.getElementById('jp-'+el.id); if(sp) sp.textContent=s; }
+window.showJpDate=showJpDate; /* onchange削除済 */
+function syncYearsInput(el){
+  /* 手入力時 → プルダウンを「選択してください」にリセット */
+  var sel=document.getElementById('fi-years-sel');
+  if(sel) sel.value='';
+}
+window.syncYearsInput=syncYearsInput;
+function syncYearsSel(sel){
+  /* プルダウン選択時 → テキスト入力欄に反映 */
+  var inp=document.getElementById('fi-years');
+  if(inp && sel.value) inp.value=sel.value;
+  if(inp && !sel.value) inp.value='';
+}
+window.syncYearsSel=syncYearsSel;
+function formatYears(el){ if(!el) return; var v=el.value.replace(/[^0-9]/g,''); if(v) el.value=v+'年'; else el.value=''; }
+window.formatYears=formatYears;
+var photos = {before:[], during:[], after:[]};
+var cover  = {};
+var ACTIVE = [];
+var PH = {
+  before:{lbl:'工事前', color:'#2E7D32', hcls:'ph-bef', chcls:'ch-bef'},
+  during:{lbl:'工事中', color:'#E65100', hcls:'ph-dur', chcls:'ch-dur'},
+  after: {lbl:'工事後', color:'#1565C0', hcls:'ph-aft', chcls:'ch-aft'},
+  seq:   {lbl:'連続写真', color:'#555555', hcls:'ph-seq', chcls:'ch-seq'}
+};
+var PAT_LABELS = {ABC:'工事前・工事中・工事後', AC:'工事前・工事後', BC:'工事中・工事後', SEQ:'連続写真'};
+/* 実写真入り全パターン検査で、用紙の空きが特に大きかった組み合わせ */
+var NON_RECOMMENDED={'ABC|2|2|H':1,'ABC|3|2|H':1,'AC|2|2|H':1,'BC|2|2|H':1,'SEQ|9|3|H':1};
+function layoutKey(){return [PAT,PER,COLS,ORIENT].join('|');}
+function isNonRecommended(){return !!NON_RECOMMENDED[layoutKey()];}
+function updateLayoutWarnings(){
+  var bad=isNonRecommended();
+  var setupWarn=document.getElementById('seq-nine-warning');if(setupWarn)setupWarn.style.display=bad?'inline-flex':'none';
+  var mainWarn=document.getElementById('layout-warning');if(mainWarn)mainWarn.style.display=bad?'inline':'none';
+}
+
+window.quickChangeLayout=function(value){
+  var p=(value||'').split('|');
+  if(p.length!==4) return;
+  var nextPAT=p[0], nextPER=parseInt(p[1],10), nextCOLS=parseInt(p[2],10), nextORIENT=p[3];
+  if(!PAT_LABELS[nextPAT]||!nextPER||!nextCOLS) return;
+  /* 入力中の撮影部位・コメントを確定してから表示だけを組み替える */
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  PAT=nextPAT; PER=nextPER; COLS=nextCOLS; ORIENT=nextORIENT;
+  photos.before=photos.before||[]; photos.during=photos.during||[];
+  photos.after=photos.after||[]; photos.seq=photos.seq||[];
+  buildMain();
+  ACTIVE.forEach(function(ph){ renderPh(ph); });
+  updateLayoutWarnings();
+  setTimeout(function(){window.openLayoutPreview();},80);
+};
+
+var _d=new Date();var _tv=_d.getFullYear()+'-'+('0'+(_d.getMonth()+1)).slice(-2)+'-'+('0'+_d.getDate()).slice(-2);var TODAY=_tv;(function(){var et=document.getElementById('auto-date-input');if(et)et.value=_tv;})();
+
+/* ★ localStorage から前回の値を復元 */
+var saved = {};
+try{ saved = JSON.parse(localStorage.getItem('koji_cover_izumi_v55')||'{}'); }catch(e){}
+['fi-management-number','fi-client','fi-doc-title','fi-title','fi-loc','fi-room','fi-staff','fi-co','fi-zip','fi-addr','fi-years','fi-amount'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el && saved[id]) el.value=saved[id];
+});
+if(saved['fi-start']){document.getElementById('fi-start').value=saved['fi-start'];}
+if(saved['fi-end']){document.getElementById('fi-end').value=saved['fi-end'];}
+if(saved['fi-comp']){var _ce=document.getElementById('fi-comp');if(_ce){_ce.value='';_ce.value=saved['fi-comp'];}}
+if(saved['chk-amount']){document.getElementById('chk-amount').checked=true;document.getElementById('opt-amount').classList.remove('hidden');}
+if(saved['fi-amount'])document.getElementById('fi-amount').value=saved['fi-amount']||'';
+if(saved['chk-stamp']){document.getElementById('chk-stamp').checked=true;document.getElementById('opt-stamp').classList.remove('hidden');}
+if(saved['stamp-src']&&saved['stamp-src']!==''){window._stampSrc=saved['stamp-src'];var _sp=document.getElementById('stamp-preview');if(_sp)_sp.innerHTML='<img src="'+saved['stamp-src']+'" style="max-width:120px;max-height:120px">';var _db=document.getElementById('btn-del-stamp');if(_db)_db.style.display='inline-block';}
+if(saved['fi-years']){
+  var _ey=document.getElementById('fi-years');
+  if(_ey) _ey.value=saved['fi-years'];
+  var _eySel=document.getElementById('fi-years-sel');
+  if(_eySel) _eySel.value=saved['fi-years']||'';
+}
+
+/* changeイベントをfile inputに静的バインド */
+['before','during','after','seq'].forEach(function(ph){
+  var el=document.getElementById('fup-'+ph);
+  if(!el) return;
+  el.addEventListener('change', function(){
+    addFiles(el.files, ph);
+    el.value='';
+  });
+});
+
+window.selPat=function(p,btn){
+  PAT=p; PER=0; COLS=3; ORIENT='AUTO';
+  var _warn=document.getElementById('seq-nine-warning');
+  if(_warn) _warn.style.display='none';
+  document.querySelectorAll('.pat-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('step3').classList.add('hidden');
+
+  function makeBtn(per,cols,ori,label,isDefault){
+    return '<button class="cnt-btn'+(isDefault?' active':'')+'" data-per="'+per+'" data-cols="'+cols+'" data-ori="'+ori+'" onclick="selOri(this)">'+label+'</button>';
+  }
+  var html='';
+  if(p==='ABC'){
+    html+=makeBtn(2,2,'H','6枚<br><small>横写真（2列）</small>',false);
+    html+=makeBtn(2,3,'P','6枚<br><small>縦写真（3列）</small>',false);
+    html+=makeBtn(3,2,'H','9枚<br><small>横写真（2列）</small>',false);
+    html+=makeBtn(3,3,'P','9枚<br><small>縦写真（3列）</small>',true);
+    document.getElementById('cnt-ht').textContent='各フェーズあたりの枚数と写真の向きを選択';
+    PER=3; COLS=3; ORIENT='P';
+  } else if(p==='AC'||p==='BC'){
+    html+=makeBtn(2,2,'H','4枚<br><small>横写真（2列）</small>',false);
+    html+=makeBtn(2,3,'P','4枚<br><small>縦写真（3列）</small>',false);
+    html+=makeBtn(3,2,'H','6枚<br><small>横写真（2列）</small>',false);
+    html+=makeBtn(3,3,'P','6枚<br><small>縦写真（3列）</small>',true);
+    document.getElementById('cnt-ht').textContent='各フェーズあたりの枚数と写真の向きを選択';
+    PER=3; COLS=3; ORIENT='P';
+  } else if(p==='SEQ'){
+    html+=makeBtn(6,2,'H','6枚<br><small>横写真（2列×3行）</small>',false);
+    html+=makeBtn(6,3,'P','6枚<br><small>縦写真（3列×2行）</small>',false);
+    html+=makeBtn(9,3,'H','横9枚<br><small>横写真（3列×3行）</small>',true);
+    html+=makeBtn(9,3,'P','縦9枚<br><small>縦写真（3列×3行）</small>',false);
+    document.getElementById('cnt-ht').textContent='1ページあたりの枚数と写真の向きを選択';
+    PER=9; COLS=3; ORIENT='H';
+  }
+  document.getElementById('cnt-row').innerHTML=html;
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('step3').classList.remove('hidden');
+  updateLayoutWarnings();
+}
+
+window.selOri=function(btn){
+  var per=parseInt(btn.getAttribute('data-per'));
+  var cols=parseInt(btn.getAttribute('data-cols'));
+  PER=per; COLS=cols; ORIENT=btn.getAttribute('data-ori')||'AUTO';
+  document.querySelectorAll('.cnt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var ht=document.getElementById('cnt-ht');
+  if(ht) ht.textContent='✓ '+btn.textContent.trim().replace(/\n/g,' ')+'に設定しました';
+  document.getElementById('step3').classList.remove('hidden');
+  updateLayoutWarnings();
+};
+
+window.selCnt=function(n,btn){
+  if(PAT==='SEQ'){
+    PER=n;
+  } else {
+    PER=n/((PAT==='ABC')?3:2);
+  }
+  /* デバッグ: PER値を画面表示 */
+  var ht=document.getElementById('cnt-ht');
+  if(ht && !isNaN(n)) ht.textContent='✓ '+n+'枚/ページに設定済み';
+  document.querySelectorAll('.cnt-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  document.getElementById('step3').classList.remove('hidden');
+};
+
+window.startApp=function(){
+  if(!PAT){ alert('パターンを選択してください'); return; }
+  /* STEP2のactiveボタンからPER/COLSを再取得 */
+  var _activeCnt2=document.querySelector('.cnt-btn.active');
+  if(_activeCnt2){
+    var _rper2=parseInt(_activeCnt2.getAttribute('data-per')||'0');
+    var _rcols2=parseInt(_activeCnt2.getAttribute('data-cols')||'0');
+    var _rori2=_activeCnt2.getAttribute('data-ori')||'AUTO';
+    if(_rper2) PER=_rper2; if(_rcols2) COLS=_rcols2;
+    ORIENT=_rori2;
+  }
+  if(!PER){ PER=(PAT==='SEQ')?9:2; }
+  cover={
+    managementNumber: document.getElementById('fi-management-number').value,
+    client:   document.getElementById('fi-client').value,
+    docTitle: document.getElementById('fi-doc-title').value||'工事写真帳',
+    title:    document.getElementById('fi-title').value,
+    loc:      document.getElementById('fi-loc').value,
+    room:     document.getElementById('fi-room').value,
+    staff:    document.getElementById('fi-staff').value,
+    co:       '株式会社イズミ装美',
+    zip:      document.getElementById('fi-zip').value,
+    addr:     document.getElementById('fi-addr').value,
+    years:    document.getElementById('fi-years').value,
+    start:    document.getElementById('fi-start').value,
+    end:      document.getElementById('fi-end').value,
+    comp:     document.getElementById('fi-comp').value,
+    amount:   document.getElementById('chk-amount').checked ? document.getElementById('fi-amount').value : '',
+    stamp:    window._stampSrc||'',
+    today:    document.getElementById('auto-date-input').value||TODAY
+  };
+  try{ localStorage.setItem('koji_cover_izumi_v55',JSON.stringify({'fi-management-number':cover.managementNumber,'fi-client':cover.client,'fi-doc-title':cover.docTitle,'fi-title':cover.title,'fi-loc':cover.loc,'fi-room':cover.room,'fi-staff':cover.staff,'fi-co':cover.co,'fi-years':cover.years,'fi-start':cover.start,'fi-end':cover.end,'fi-comp':cover.comp,'fi-amount':cover.amount,'chk-amount':cover.amount?true:false,'stamp-src':cover.stamp||'','chk-stamp':cover.stamp?true:false,'today':cover.today})); }catch(e){}
+  /* 写真は初回のみリセット（loadProject/表紙編集から戻った場合は保持） */
+  var _firstStart=!_appStarted;
+  if(_firstStart){
+    photos={before:[],during:[],after:[],seq:[]};
+  }
+  _appStarted=true;
+  buildMain();
+  ACTIVE.forEach(function(ph){ renderPh(ph); });
+  document.getElementById('setup').style.display='none';
+  document.getElementById('main').style.display='block';
+};
+
+window.goSetup=function(){
+  /* STEP3の入力欄にcoverの現在値を書き戻す */
+  if(cover){
+    function _sv2(id,val){ var el=document.getElementById(id); if(el&&val!==undefined&&val!==null) el.value=val; }
+    _sv2('fi-management-number',cover.managementNumber);
+    _sv2('fi-client',    cover.client);
+    _sv2('fi-doc-title', cover.docTitle);
+    _sv2('fi-title',     cover.title);
+    _sv2('fi-loc',       cover.loc);
+    _sv2('fi-room',      cover.room);
+    _sv2('fi-staff',     cover.staff);
+    _sv2('fi-co',        cover.co);
+    _sv2('fi-zip',       cover.zip||'');
+    _sv2('fi-addr',      cover.addr||'');
+    _sv2('fi-years',     cover.years||'');
+    _sv2('fi-start',     cover.start);
+    _sv2('fi-end',       cover.end);
+    var _ce=document.getElementById('fi-comp');
+    if(_ce&&cover.comp){ _ce.value=''; _ce.value=cover.comp; }
+    var _et=document.getElementById('auto-date-input');
+    if(_et&&cover.today){ _et.value=''; _et.value=cover.today; }
+    if(cover.amount){
+      var _a=document.getElementById('fi-amount'); if(_a) _a.value=cover.amount;
+      var _ca=document.getElementById('chk-amount'); if(_ca) _ca.checked=true;
+      var _oa=document.getElementById('opt-amount'); if(_oa) _oa.classList.remove('hidden');
+    }
+    if(cover.stamp){
+      window._stampSrc=cover.stamp;
+      var _cs=document.getElementById('chk-stamp'); if(_cs) _cs.checked=true;
+      var _os=document.getElementById('opt-stamp'); if(_os) _os.classList.remove('hidden');
+      var _ps=document.getElementById('stamp-preview');
+      if(_ps) _ps.innerHTML='<img src="'+cover.stamp+'" style="max-width:120px;max-height:120px">';
+      var _db=document.getElementById('btn-del-stamp'); if(_db) _db.style.display='inline-block';
+    }
+    /* 年数プルダウンも同期 */
+    var _ySel=document.getElementById('fi-years-sel');
+    if(_ySel) _ySel.value=cover.years||'';
+  }
+  /* STEP1: 現在のPATをアクティブに */
+  document.querySelectorAll('.pat-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.pat===PAT);
+  });
+  updateLayoutWarnings();
+  /* STEP2: PATに応じてボタンを再生成し、現在のPERをアクティブに */
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('step3').classList.remove('hidden');
+  var _curPAT=PAT||'ABC';
+  /* STEP2: 現在のPAT/PER/COLSでボタンを再生成 */
+  (function(){
+    function _mb(per,cols,ori,label){
+      var isAct=(per===PER&&cols===COLS&&ori===ORIENT);
+      return '<button class="cnt-btn'+(isAct?' active':'')+'" data-per="'+per+'" data-cols="'+cols+'" data-ori="'+ori+'" onclick="selOri(this)">'+label+'</button>';
+    }
+    var h2='';
+    if(_curPAT==='ABC'){
+      h2+=_mb(2,2,'H','6枚<br><small>横写真（2列）</small>');
+      h2+=_mb(2,3,'P','6枚<br><small>縦写真（3列）</small>');
+      h2+=_mb(3,2,'H','9枚<br><small>横写真（2列）</small>');
+      h2+=_mb(3,3,'P','9枚<br><small>縦写真（3列）</small>');
+    } else if(_curPAT==='AC'||_curPAT==='BC'){
+      h2+=_mb(2,2,'H','4枚<br><small>横写真（2列）</small>');
+      h2+=_mb(2,3,'P','4枚<br><small>縦写真（3列）</small>');
+      h2+=_mb(3,2,'H','6枚<br><small>横写真（2列）</small>');
+      h2+=_mb(3,3,'P','6枚<br><small>縦写真（3列）</small>');
+    } else if(_curPAT==='SEQ'){
+      h2+=_mb(6,2,'H','6枚<br><small>横写真（2列×3行）</small>');
+      h2+=_mb(6,3,'P','6枚<br><small>縦写真（3列×2行）</small>');
+      h2+=_mb(9,3,'H','横9枚<br><small>横写真（3列×3行）</small>');
+      h2+=_mb(9,3,'P','縦9枚<br><small>縦写真（3列×3行）</small>');
+    }
+    document.getElementById('cnt-row').innerHTML=h2;
+  })();
+  document.getElementById('setup').style.display='flex';
+  document.getElementById('main').style.display='none';
+  setTimeout(function(){
+    var steps=document.querySelectorAll('.s-step');
+    if(steps.length>=3) steps[2].scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
+};
+
+function buildMain(){
+  var isSeq=(PAT==='SEQ');
+  document.documentElement.style.setProperty('--phase-pad',(ORIENT==='P')?'130%':'70%');
+  var hasBef=!isSeq&&(PAT==='ABC'||PAT==='AC');
+  var hasDur=!isSeq&&(PAT==='ABC'||PAT==='BC');
+  ACTIVE=[];
+  if(isSeq){ ACTIVE.push('seq'); }
+  else {
+    if(hasBef) ACTIVE.push('before');
+    if(hasDur) ACTIVE.push('during');
+    ACTIVE.push('after');
+  }
+
+  var badge=document.getElementById('pat-badge');
+  if(badge) badge.textContent=PAT_LABELS[PAT]||'';
+  var quick=document.getElementById('quick-layout');
+  if(quick) quick.value=[PAT,PER,COLS,ORIENT].join('|');
+  updateLayoutWarnings();
+
+  // ツールバーボタン制御
+  document.getElementById('lbl-before').classList.toggle('hidden',!hasBef);
+  document.getElementById('lbl-during').classList.toggle('hidden',!hasDur);
+  var la=document.getElementById('lbl-after');
+  if(isSeq){
+    la.setAttribute('for','fup-seq');
+    la.className='upbtn up-aft';
+    la.textContent='📷 写真を追加';
+    la.classList.remove('hidden');
+  } else {
+    la.setAttribute('for','fup-after');
+    la.textContent='📷 工事後';
+    la.classList.remove('hidden');
+  }
+
+  // カラム生成
+  var wrap=document.getElementById('col-wrap');
+  if(isSeq){
+    // SEQ: グリッド表示
+    wrap.style.display='block';
+    wrap.style.padding='0';
+    wrap.innerHTML='<div class="seq-grid" id="seq-grid">'
+      +'<label for="fup-seq" class="seq-drop" id="dh-seq">📷 タップして連続写真を追加</label>'
+      +'</div>';
+    initSeqSort();
+  } else {
+    wrap.style.display='';
+    wrap.style.padding='';
+    var html='';
+    ACTIVE.forEach(function(ph){
+      html+='<div class="col" id="col-'+ph+'">';
+      html+='<label for="fup-'+ph+'" class="col-hdr '+PH[ph].chcls+'">';
+      html+='<span class="ch-txt">'+PH[ph].lbl+'</span>';
+      html+='<div class="ch-r">';
+      html+='<span class="ch-cnt" id="cnt-'+ph+'">0枚</span>';
+      html+='<span class="ch-add">＋ 追加</span>';
+      html+='</div></label>';
+      html+='<label for="fup-'+ph+'" class="dh" id="dh-'+ph+'">📷 タップして写真を追加</label>';
+      html+='<div class="col-cards" id="cards-'+ph+'"></div>';
+      html+='</div>';
+    });
+    wrap.innerHTML=html;
+    ACTIVE.forEach(function(ph){initSort(ph);});
+  }
+}
+
+/* ★ 画像圧縮: 長辺1200px・JPEG品質0.75に縮小 */
+function compressImage(dataURL, callback){
+  var img=new Image();
+  img.onload=function(){
+    var MAX=1200;
+    var w=img.width, h=img.height;
+    var ratio=h/w; /* 縦横比: >1=縦長, <1=横長 */
+    if(w>MAX||h>MAX){
+      if(w>h){ h=Math.round(h*MAX/w); w=MAX; }
+      else    { w=Math.round(w*MAX/h); h=MAX; }
+    }
+    var c=document.createElement('canvas');
+    c.width=w; c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    callback(c.toDataURL('image/jpeg',0.75), ratio);
+  };
+  img.src=dataURL;
+}
+
+function addFiles(files, ph){
+  if(!files||!files.length) return;
+  var total=files.length;
+  var results=new Array(total); /* ★ インデックス固定で順番を保持 */
+  var loaded=0;
+  for(var i=0;i<total;i++){
+    (function(file, idx){
+      var r=new FileReader();
+      r.onload=function(e){
+        compressImage(e.target.result, function(compressed, ratio){
+          results[idx]={
+            id: Date.now()+Math.random(),
+            src: compressed,
+            ratio: ratio||1,
+            name: '',
+            comment: '',
+            zoom: 1,
+            offsetX: 0,
+            offsetY: 0
+          };
+          if(++loaded===total){
+            /* 全件揃ったら選択した順序通りに追加 */
+            results.forEach(function(p){ photos[ph].push(p); });
+            renderPh(ph);
+          }
+        });
+      };
+      r.readAsDataURL(file);
+    })(files[i], i);
+  }
+}
+
+function renderPh(ph){
+  if(ph==='seq'){ renderSeq(); return; }
+  var cards=document.getElementById('cards-'+ph);
+  var dh=document.getElementById('dh-'+ph);
+  if(!cards) return;
+  if(!photos[ph].length){
+    if(dh) dh.style.display='block';
+    cards.innerHTML='';
+  } else {
+    if(dh) dh.style.display='none';
+    cards.innerHTML=photos[ph].map(function(p,i){return cardHTML(p,ph,i+1);}).join('');
+    addViewControls(cards,ph);
+  }
+  var cnt=document.getElementById('cnt-'+ph);
+  if(cnt) cnt.textContent=photos[ph].length+'枚';
+  initSort(ph);
+}
+
+/* SEQ グリッド描画 */
+function renderSeq(){
+  var grid=document.getElementById('seq-grid');
+  if(!grid) return;
+  grid.style.setProperty('--seq-pad',(ORIENT==='P')?'130%':'70%');
+  var list=photos.seq||[];
+  var html='';
+  list.forEach(function(p,i){
+    html+='<div class="seq-card" data-id="'+p.id+'">'
+      +'<div class="seq-card-hdr">'
+      +'<span class="seq-drag">⠿</span>'
+      +'<span class="seq-num">連続写真 No.'+(i+1)+'</span>'
+      +'<button class="seq-del" data-ph="seq" data-id="'+p.id+'" onclick="delCard(this)">✕</button>'
+      +'</div>'
+      +'<div class="seq-img-wrap" style="position:relative"><img class="seq-img" src="'+p.src+'" style="transform:'+window.getImgTransform(p)+';">'+'<div class="rot-btns"><button class="rot-btn" onclick="rotateSeqCard(this,-90)" title="左90°">↺</button><button class="rot-btn" onclick="rotateSeqCard(this,90)" title="右90°">↻</button><button class="rot-btn" data-axis="H" onclick="flipSeqCard(this)" title="左右反転">⇆</button><button class="rot-btn" data-axis="V" onclick="flipSeqCard(this)" title="上下反転">⇅</button></div></div>'
+      +'<div class="seq-body">'
+      +'<div class="seq-flbl">撮影部位</div>'
+      +'<input class="seq-ftxt" value="'+esc(p.name)+'" placeholder="工事名称（任意）"'
+        +' data-ph="seq" data-id="'+p.id+'" onchange="updName(this)">'
+      +'<div class="seq-flbl">状況・原因・対処</div>'
+      +'<textarea class="seq-farea" rows="4" wrap="soft" maxlength="120" placeholder="コメントを入力（最大120字）" data-ph="seq" data-id="'+p.id
+        +'" onchange="updCmt(this)" oninput="updCmt(this)">'+esc(p.comment)+'</textarea>'
+      +'<div class="cmt-count'+((p.comment||'').length>120?' over':((p.comment||'').length>=100?' near':''))+'">'+((p.comment||'').length>120?'旧データ '+(p.comment||'').length+'字／PDFは120字まで':'あと '+(120-(p.comment||'').length)+'字')+'</div>'
+      +'</div></div>';
+  });
+  // drop hint は最後に追加
+  html+='<label for="fup-seq" class="seq-drop" id="dh-seq">📷 タップして写真を追加（現在'+list.length+'枚）</label>';
+  grid.innerHTML=html;
+  addViewControls(grid,'seq');
+  // ツールバーのカウント更新
+  var cntEl=document.getElementById('cnt-seq');
+  if(cntEl) cntEl.textContent=list.length+'枚';
+  initSeqSort();
+}
+
+function initSeqSort(){
+  var el=document.getElementById('seq-grid');
+  if(!el) return;
+  if(sorts['seq']){try{sorts['seq'].destroy();}catch(e){}}
+  sorts['seq']=new Sortable(el,{
+    handle:'.seq-card-hdr',
+    animation:150,
+    filter:'.seq-drop',
+    onEnd:function(){
+      var cards=el.querySelectorAll('.seq-card');
+      var r=[];
+      cards.forEach(function(c){
+        var f=(photos.seq||[]).find(function(p){return p.id===parseFloat(c.dataset.id);});
+        if(f) r.push(f);
+      });
+      photos.seq=r;
+      renderSeq();
+    }
+  });
+}
+
+function esc(s){
+  s = s || '';
+  s = s.replace(/&/g,'&amp;');
+  s = s.replace(/</g,'&lt;');
+  s = s.replace(/>/g,'&gt;');
+  s = s.replace(/"/g,'&quot;');
+  return s;
+}
+
+/* 写真ごとの拡大・縮小・位置調整ボタン */
+function addViewControls(root,ph){
+  if(!root) return;
+  root.querySelectorAll(ph==='seq'?'.seq-card':'.pcard').forEach(function(card){
+    var wrap=card.querySelector(ph==='seq'?'.seq-img-wrap':'.pcard-img-wrap');
+    var img=card.querySelector(ph==='seq'?'.seq-img':'.pcard-img');
+    var id=parseFloat(card.dataset.id);
+    var p=(photos[ph]||[]).find(function(x){return x.id===id;});
+    if(img&&p) img.style.transform=window.getImgTransform(p);
+    if(!wrap) return;
+    var tools=document.createElement('div');
+    tools.className='view-btns';
+    tools.innerHTML='<button class="view-btn" data-ph="'+ph+'" data-act="out" onclick="adjustPhotoView(this)" title="縮小">−</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="in" onclick="adjustPhotoView(this)" title="拡大">＋</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="left" onclick="adjustPhotoView(this)" title="左へ">←</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="up" onclick="adjustPhotoView(this)" title="上へ">↑</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="down" onclick="adjustPhotoView(this)" title="下へ">↓</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="right" onclick="adjustPhotoView(this)" title="右へ">→</button>'
+      +'<button class="view-btn" data-ph="'+ph+'" data-act="reset" onclick="adjustPhotoView(this)" title="表示位置を戻す">◎</button>';
+    wrap.appendChild(tools);
+  });
+}
+
+window.adjustPhotoView=function(btn){
+  var ph=btn.getAttribute('data-ph');
+  var card=btn.closest(ph==='seq'?'.seq-card':'.pcard');
+  if(!card) return;
+  var id=parseFloat(card.dataset.id);
+  var p=(photos[ph]||[]).find(function(x){return x.id===id;});
+  if(!p) return;
+  p.zoom=Number(p.zoom)||1;
+  p.offsetX=Number(p.offsetX)||0;
+  p.offsetY=Number(p.offsetY)||0;
+  var act=btn.getAttribute('data-act');
+  if(act==='in') p.zoom=Math.min(3,Math.round((p.zoom+0.1)*10)/10);
+  if(act==='out') p.zoom=Math.max(0.5,Math.round((p.zoom-0.1)*10)/10);
+  if(act==='left') p.offsetX=Math.max(-80,p.offsetX-5);
+  if(act==='right') p.offsetX=Math.min(80,p.offsetX+5);
+  if(act==='up') p.offsetY=Math.max(-80,p.offsetY-5);
+  if(act==='down') p.offsetY=Math.min(80,p.offsetY+5);
+  if(act==='reset'){p.zoom=1;p.offsetX=0;p.offsetY=0;}
+  var img=card.querySelector(ph==='seq'?'.seq-img':'.pcard-img');
+  if(img) img.style.transform=window.getImgTransform(p);
+};
+
+function cardHTML(p,ph,num){
+  return '<div class="pcard" data-id="'+p.id+'">'
+    +'<div class="pcard-hdr '+PH[ph].hcls+'">'
+    +'<span class="drag-h">⠿</span>'
+    +'<span class="pcard-num">'+PH[ph].lbl+' No.'+num+'</span>'
+    +'<button class="pcard-del" data-ph="'+ph+'" data-id="'+p.id
+      +'" onclick="delCard(this)">✕</button>'
+    +'</div>'
+    +'<div class="pcard-img-wrap" style="position:relative">'+'<img class="pcard-img" src="'+p.src+'" style="width:100%;height:100%;object-fit:contain;">'+'<div class="rot-btns">'+'<button class="rot-btn" data-ph="'+ph+'" onclick="rotateCard(this,-90)" title="左90°">↺</button>'+'<button class="rot-btn" data-ph="'+ph+'" onclick="rotateCard(this,90)" title="右90°">↻</button>'+'<button class="rot-btn" data-ph="'+ph+'" data-axis="H" onclick="flipCard(this)" title="左右反転">⇆</button>'+'<button class="rot-btn" data-ph="'+ph+'" data-axis="V" onclick="flipCard(this)" title="上下反転">⇅</button>'+'</div></div>'
+    +'<div class="pcard-body">'
+    +'<div class="f-lbl">撮影部位</div>'
+    +'<input class="f-txt" value="'+esc(p.name)+'" placeholder="工事名称（任意）"'
+      +' data-ph="'+ph+'" data-id="'+p.id+'" onchange="updName(this)">'
+    +'<div class="f-lbl">状況・原因・対処</div>'
+    +'<textarea class="f-area" rows="4" wrap="soft" maxlength="120" placeholder="コメントを入力（最大120字）" data-ph="'+ph+'" data-id="'+p.id
+      +'" onchange="updCmt(this)" oninput="updCmt(this)">'+esc(p.comment)+'</textarea>'
+    +'<div class="cmt-count'+((p.comment||'').length>120?' over':((p.comment||'').length>=100?' near':''))+'">'+((p.comment||'').length>120?'旧データ '+(p.comment||'').length+'字／PDFは120字まで':'あと '+(120-(p.comment||'').length)+'字')+'</div>'
+    +'</div></div>';
+}
+
+window.delCard=function(btn){
+  var ph=btn.dataset.ph, id=parseFloat(btn.dataset.id);
+  photos[ph]=photos[ph].filter(function(p){return p.id!==id;});
+  renderPh(ph);
+};
+window.updName=function(el){
+  var p=photos[el.dataset.ph].find(function(x){return x.id===parseFloat(el.dataset.id);});
+  if(p) p.name=el.value;
+};
+window.updCmt=function(el){
+  limitLines(el);
+  var p=photos[el.dataset.ph].find(function(x){return x.id===parseFloat(el.dataset.id);});
+  if(p) p.comment=el.value;
+};
+window.limitLines=function(el){
+  var n=el.value.length,remain=120-n;
+  var counter=el.parentNode&&el.parentNode.querySelector('.cmt-count');
+  if(!counter)return;
+  counter.classList.toggle('near',n>=100&&n<=120);
+  counter.classList.toggle('over',n>120);
+  counter.textContent=n>120?'旧データ '+n+'字／PDFは120字まで':'あと '+remain+'字';
+};
+
+function rebuildOrder(ph){
+  var r=[];
+  document.querySelectorAll('#cards-'+ph+' .pcard').forEach(function(c){
+    var f=photos[ph].find(function(p){return p.id===parseFloat(c.dataset.id);});
+    if(f) r.push(f);
+  });
+  photos[ph]=r;
+}
+function initSort(ph){
+  var el=document.getElementById('cards-'+ph);
+  if(!el) return;
+  if(sorts[ph]){try{sorts[ph].destroy();}catch(e){}}
+  sorts[ph]=new Sortable(el,{handle:'.pcard-hdr',animation:150,
+    onEnd:function(){rebuildOrder(ph);}});
+}
+
+/* 保存・印刷の直前に、編集中の入力値を写真データへ反映 */
+function syncPhotoInputs(){
+  ACTIVE.forEach(function(ph){
+    var selector=(ph==='seq')?'#seq-grid .seq-card':'#cards-'+ph+' .pcard';
+    document.querySelectorAll(selector).forEach(function(card){
+      var id=parseFloat(card.dataset.id);
+      var p=(photos[ph]||[]).find(function(x){return x.id===id;});
+      if(!p) return;
+      var ni=card.querySelector(ph==='seq'?'.seq-ftxt':'.f-txt');
+      var ci=card.querySelector(ph==='seq'?'.seq-farea':'.f-area');
+      if(ni) p.name=ni.value;
+      if(ci) p.comment=ci.value;
+    });
+  });
+}
+
+/* ★ プロジェクト保存 */
+window.saveProject=function(){
+  syncPhotoInputs();
+  /* デフォルトファイル名 */
+  var _c=cover||{};
+  var _d=(_c.today||'').replace(/-/g,'');
+  var _fname=[_c.managementNumber,_c.docTitle,_c.title].filter(Boolean).join('_')||'工事写真帳_project';
+  _fname=_fname.replace(/[\/\\:*?"<>|]/g,'_')+'.json';
+  /* モーダル表示 */
+  var inp=document.getElementById('save-fname');
+  if(inp) inp.value=_fname;
+  var canPick=typeof window.showSaveFilePicker==='function';
+  var note=document.getElementById('save-destination-note');
+  var btn=document.getElementById('save-exec-btn');
+  if(note){
+    note.innerHTML=canPick
+      ?'<b>「保存場所を選ぶ」を押すと、保存先とファイル名を選択できます。</b>'
+      :'<b>Safariでは、保存場所はSafariの設定で決まります。</b><br>保存先を毎回選ぶには、Safariのメニューから<br><b>Safari ＞ 設定 ＞ 一般 ＞ ファイルのダウンロード先 ＞ ダウンロードごとに確認</b><br>に変更してください。設定後は、この保存ボタンを押すたびに保存場所を選べます。';
+  }
+  if(btn)btn.textContent=canPick?'保存場所を選ぶ':'JSONをダウンロード';
+  document.getElementById('save-modal').style.display='flex';
+};
+
+window.execSave=function(){
+  var fname=(document.getElementById('save-fname').value||'工事写真帳_project.json').trim();
+  if(!fname.endsWith('.json')) fname+='.json';
+  document.getElementById('save-modal').style.display='none';
+  var data={ version:4, PAT:PAT, PER:PER, COLS:COLS, ORIENT:ORIENT, cover:cover, photos:photos };
+  var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  /* Chrome/Edge: フォルダ選択ダイアログ */
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({
+      suggestedName: fname,
+      types:[{description:'JSONファイル',accept:{'application/json':['.json']}}]
+    }).then(function(fh){ return fh.createWritable(); })
+    .then(function(w){ return w.write(blob).then(function(){return w;}); })
+    .then(function(w){ return w.close(); })
+    .catch(function(e){ if(e.name!=='AbortError') _fallbackSave(blob,fname); });
+  } else {
+    /* Safari/Firefox: ダウンロードフォルダへ保存 */
+    _fallbackSave(blob,fname);
+  }
+};
+function _fallbackSave(blob,fname){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download=fname; a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+};
+
+/* ★ プロジェクト読込 */
+window.loadProject=function(input){
+  var file=input.files[0];
+  if(!file) return;
+  input.value='';
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      /* 旧バージョン互換: version/PATが無くてもphotosがあれば読み込む */
+      if(!data || typeof data!=='object' || !data.photos || typeof data.photos!=='object'){
+        alert('このファイルは工事写真帳のプロジェクトファイルではありません');
+        return;
+      }
+      /* 欠損フィールドをデフォルト補完 */
+      if(!data.version) data.version=1;
+      if(!data.PAT) data.PAT='ABC';
+      if(!data.PER) data.PER=3;
+      if(!data.COLS) data.COLS=3;
+      if(!data.ORIENT) data.ORIENT='AUTO';
+      if(!data.photos) data.photos={before:[],during:[],after:[],seq:[]};
+      if(!Array.isArray(data.photos.before)) data.photos.before=[];
+      if(!Array.isArray(data.photos.during)) data.photos.during=[];
+      if(!Array.isArray(data.photos.after))  data.photos.after=[];
+      if(!Array.isArray(data.photos.seq))    data.photos.seq=[];
+      if(!data.cover || typeof data.cover!=='object') data.cover={};
+      /* 旧cover構造の互換（例: titleが工事名称だった場合など） */
+      var c=data.cover;
+      if(!c.managementNumber) c.managementNumber='';
+      if(!c.client) c.client='';
+      if(!c.room) c.room='';
+      if(!c.staff) c.staff='';
+      if(!c.docTitle) c.docTitle=c.title||'工事写真帳';
+      if(!c.zip)    c.zip='';
+      if(!c.addr)   c.addr='';
+      if(!c.years)  c.years='';
+      if(!c.comp)   c.comp='';
+      if(!c.amount) c.amount='';
+      if(!c.stamp)  c.stamp='';
+      if(!c.today)  c.today=TODAY;
+      PAT=data.PAT;
+      PER=data.PER;
+      COLS=data.COLS;
+      ORIENT=data.ORIENT;
+      cover=data.cover;
+      cover.co='株式会社イズミ装美';
+      photos=data.photos;
+      /* 表紙情報を入力欄にも反映（null安全） */
+      function _sv(id,val){ var el=document.getElementById(id); if(el&&val!==undefined&&val!==null) el.value=val; }
+      _sv('fi-management-number',cover.managementNumber);
+      _sv('fi-client',    cover.client);
+      _sv('fi-doc-title', cover.docTitle);
+      _sv('fi-title',     cover.title);
+      _sv('fi-loc',       cover.loc);
+      _sv('fi-room',      cover.room);
+      _sv('fi-staff',     cover.staff);
+      _sv('fi-co',        cover.co);
+      _sv('fi-zip',       cover.zip||'');
+      _sv('fi-addr',      cover.addr||'');
+      _sv('fi-years',     cover.years||'');
+      _sv('fi-start',     cover.start);
+      _sv('fi-end',       cover.end);
+      var _ce2=document.getElementById('fi-comp');
+      if(_ce2 && cover.comp){ _ce2.value=''; _ce2.value=cover.comp; }
+      var _et2=document.getElementById('auto-date-input');
+      if(_et2 && cover.today){ _et2.value=''; _et2.value=cover.today; }
+      var _amt=document.getElementById('fi-amount');
+      var _chkA=document.getElementById('chk-amount');
+      var _optA=document.getElementById('opt-amount');
+      if(_amt) _amt.value=cover.amount||'';
+      if(_chkA) _chkA.checked=!!cover.amount;
+      if(_optA) _optA.classList.toggle('hidden',!cover.amount);
+      window._stampSrc=cover.stamp||'';
+      var _chkS=document.getElementById('chk-stamp');
+      var _optS=document.getElementById('opt-stamp');
+      var _sp2=document.getElementById('stamp-preview');
+      var _db2=document.getElementById('btn-del-stamp');
+      if(_chkS) _chkS.checked=!!cover.stamp;
+      if(_optS) _optS.classList.toggle('hidden',!cover.stamp);
+      if(_sp2) _sp2.innerHTML='';
+      if(_db2) _db2.style.display='none';
+      if(cover.stamp){
+        if(_sp2) _sp2.innerHTML='<img src="'+cover.stamp+'" style="max-width:120px;max-height:120px">';
+        if(_db2) _db2.style.display='inline-block';
+      }
+      /* 読込済みフラグ（startApp時に写真をリセットしない） */
+      _appStarted=true;
+      /* メイン画面を表示 */
+      buildMain();
+      document.getElementById('setup').style.display='none';
+      document.getElementById('main').style.display='block';
+      /* 全フェーズを再描画 */
+      ACTIVE.forEach(function(ph){ renderPh(ph); });
+      var _loadedCount=(PAT==='SEQ')?(photos.seq||[]).length:
+        (photos.before||[]).length+(photos.during||[]).length+(photos.after||[]).length;
+      alert('プロジェクトを読み込みました（合計'+_loadedCount+'枚）');
+    }catch(err){
+      alert('読み込みエラー: '+err.message);
+    }
+  };
+  r.readAsText(file);
+};
+
+function fmtD(d){if(!d)return'';var p=d.split('-');if(p.length!==3)return d;return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日';}
+window.delStamp=function(){ window._stampSrc=''; var sp=document.getElementById('stamp-preview'); if(sp) sp.innerHTML=''; var db=document.getElementById('btn-del-stamp'); if(db) db.style.display='none'; var fi=document.getElementById('fi-stamp'); if(fi) fi.value=''; };
+
+/* ━━ 写真回転・反転: Canvasでピクセルデータを直接変換（余白なし）━━ */
+function _bakeTransform(srcImg, angle, flipH, flipV, callback){
+  var img = new Image();
+  img.onload = function(){
+    var ow=img.naturalWidth, oh=img.naturalHeight;
+    var sw=(angle===90||angle===270)?oh:ow;
+    var sh=(angle===90||angle===270)?ow:oh;
+    var c=document.createElement('canvas');
+    c.width=sw; c.height=sh;
+    var ctx=c.getContext('2d');
+    ctx.translate(sw/2, sh/2);
+    ctx.rotate(angle*Math.PI/180);
+    if(flipH) ctx.scale(-1, 1);
+    if(flipV) ctx.scale(1, -1);
+    ctx.drawImage(img, -ow/2, -oh/2);
+    callback(c.toDataURL('image/jpeg', 0.88));
+  };
+  img.src=srcImg;
+}
+
+function _applyToPhoto(p, ph, cardEl, angle, flipH, flipV){
+  _bakeTransform(p.src, angle, flipH, flipV, function(newSrc){
+    p.src=newSrc;
+    /* 比率を更新（90/270度回転で縦横が入れ替わる）*/
+    if(angle===90||angle===270){
+      p.ratio = p.ratio ? 1/p.ratio : 1;
+    }
+    /* UIの画像を更新 */
+    var img=cardEl.querySelector('.pcard-img, .seq-img');
+    if(img){ img.src=newSrc; img.style.transform=window.getImgTransform(p); }
+    /* ratio再計算のためにrenderPhも呼ぶ（必要なら）*/
+  });
+}
+
+window.rotateCard=function(btn, deg){
+  var card=btn.closest('.pcard');
+  var id=parseFloat(card.dataset.id);
+  var ph=btn.getAttribute('data-ph');
+  var p=photos[ph].find(function(x){return x.id===id;});
+  if(!p) return;
+  _applyToPhoto(p, ph, card, (deg+360)%360, false, false);
+};
+
+window.flipCard=function(btn){
+  var card=btn.closest('.pcard');
+  var id=parseFloat(card.dataset.id);
+  var ph=btn.getAttribute('data-ph');
+  var p=photos[ph].find(function(x){return x.id===id;});
+  if(!p) return;
+  var axis=btn.getAttribute('data-axis');
+  _applyToPhoto(p, ph, card, 0, axis==='H', axis==='V');
+};
+
+window.rotateSeqCard=function(btn, deg){
+  var card=btn.closest('.seq-card');
+  var id=parseFloat(card.dataset.id);
+  var p=(photos.seq||[]).find(function(x){return x.id===id;});
+  if(!p) return;
+  _applyToPhoto(p, 'seq', card, (deg+360)%360, false, false);
+};
+
+window.flipSeqCard=function(btn){
+  var card=btn.closest('.seq-card');
+  var id=parseFloat(card.dataset.id);
+  var p=(photos.seq||[]).find(function(x){return x.id===id;});
+  if(!p) return;
+  var axis=btn.getAttribute('data-axis');
+  _applyToPhoto(p, 'seq', card, 0, axis==='H', axis==='V');
+};
+
+/* 編集画面とPDFで同じ拡大率・表示位置を使用 */
+window.getImgTransform=function(p){
+  var z=Number(p&&p.zoom)||1;
+  var x=Number(p&&p.offsetX)||0;
+  var y=Number(p&&p.offsetY)||0;
+  return 'translate('+x+'%,'+y+'%) scale('+z+')';
+};
+
+function currentLayoutText(){
+  var q=document.getElementById('quick-layout'),txt='';
+  if(q&&q.selectedIndex>=0) txt=q.options[q.selectedIndex].text;
+  return (PAT_LABELS[PAT]||'')+(txt?' ／ '+txt:'');
+}
+window.closeLayoutPreview=function(){var p=document.getElementById('pdf-preview-float');if(p)p.style.display='none';};
+window.closeLayoutGallery=function(){var g=document.getElementById('layout-gallery');if(g)g.style.display='none';};
+
+function phaseListForPat(pat){
+  if(pat==='ABC')return ['before','during','after'];
+  if(pat==='AC')return ['before','after'];
+  if(pat==='BC')return ['during','after'];
+  return ['seq'];
+}
+/* PDFの表紙を除外し、2ページ目＝最初の写真ページだけを返す */
+function previewDocumentForKey(key){
+  var keep={pat:PAT,per:PER,cols:COLS,ori:ORIENT,active:ACTIVE.slice(),mode:window.__PREVIEW_MODE,capture:window.__PREVIEW_CAPTURE,pkey:window.__PREVIEW_LAYOUT_KEY};
+  var v=(key||'').split('|');if(v.length!==4)return '';
+  PAT=v[0];PER=parseInt(v[1],10);COLS=parseInt(v[2],10);ORIENT=v[3];ACTIVE=phaseListForPat(PAT);
+  window.__PREVIEW_MODE=true;window.__PREVIEW_LAYOUT_KEY=key;window.__PREVIEW_CAPTURE='';
+  window.doPrint();
+  var html=window.__PREVIEW_CAPTURE||'';
+  PAT=keep.pat;PER=keep.per;COLS=keep.cols;ORIENT=keep.ori;ACTIVE=keep.active;
+  window.__PREVIEW_MODE=keep.mode;window.__PREVIEW_CAPTURE=keep.capture;window.__PREVIEW_LAYOUT_KEY=keep.pkey;
+  if(!html)return '';
+  var parsed=new DOMParser().parseFromString(html,'text/html');
+  var styles=Array.prototype.map.call(parsed.querySelectorAll('style'),function(s){return s.outerHTML;}).join('');
+  var phase=parsed.querySelector('.phase');if(!phase)return '';
+  return '<!doctype html><html><head>'+styles+'<style>html,body{background:#fff!important;padding:0!important;margin:0!important}.a4{margin:0!important;box-shadow:none!important}</style></head><body>'+phase.outerHTML+'</body></html>';
+}
+
+window.openLayoutPreview=function(){
+  var main=document.getElementById('main');if(!main||main.style.display==='none')return;
+  var panel=document.getElementById('pdf-preview-float'),frame=document.getElementById('pdf-preview-frame'),stage=document.getElementById('pdf-preview-stage');
+  if(!panel||!frame||!stage)return;
+  var src=previewDocumentForKey(layoutKey());if(!src)return;
+  panel.style.display='block';
+  document.getElementById('pdf-preview-title').textContent='PDFプレビュー：'+currentLayoutText();
+  var note=document.getElementById('pdf-preview-note');if(note)note.style.display=isNonRecommended()?'inline':'none';
+  var scale=(stage.clientWidth||360)/794;stage.style.height=Math.round(1123*scale)+'px';frame.style.transform='scale('+scale+')';
+  frame.srcdoc=src;
+};
+window.chooseGalleryLayout=function(key){
+  var q=document.getElementById('quick-layout');if(q)q.value=key;
+  window.closeLayoutGallery();window.quickChangeLayout(key);
+};
+function fitGalleryFrames(){
+  var boxes=document.querySelectorAll('#layout-gallery-grid .gallery-preview');
+  Array.prototype.forEach.call(boxes,function(box){
+    var frame=box.querySelector('iframe'),scale=box.clientWidth/794;
+    if(frame&&scale>0)frame.style.transform='scale('+scale+')';
+  });
+}
+window.openLayoutGallery=function(){
+  var modal=document.getElementById('layout-gallery'),grid=document.getElementById('layout-gallery-grid'),q=document.getElementById('quick-layout');if(!modal||!grid||!q)return;
+  var current=layoutKey();grid.innerHTML='<div style="grid-column:1/-1;padding:20px;text-align:center;font-weight:700;color:#1A3E6E">写真ページを作成中…</div>';modal.style.display='block';
+  setTimeout(function(){
+    grid.innerHTML='';
+    Array.prototype.forEach.call(q.options,function(opt){
+      var v=opt.value.split('|'),key=opt.value,pat=v[0],bad=!!NON_RECOMMENDED[key];
+      var card=document.createElement('button');card.type='button';card.className='gallery-card'+(key===current?' active':'');card.setAttribute('onclick','chooseGalleryLayout(\''+key+'\')');
+      card.innerHTML='<div class="gallery-card-title">'+PAT_LABELS[pat]+'<br>'+opt.text+'</div>'+(bad?'<span class="gallery-bad">非推奨：余白多め</span>':'')+'<div class="gallery-preview"><iframe title="'+opt.text+'の写真ページ"></iframe></div>';
+      grid.appendChild(card);
+      card.querySelector('iframe').srcdoc=previewDocumentForKey(key);
+    });
+    requestAnimationFrame(function(){fitGalleryFrames();requestAnimationFrame(fitGalleryFrames);});
+  },30);
+};
+window.addEventListener('resize',function(){if(document.getElementById('layout-gallery').style.display==='block')fitGalleryFrames();});
+
+
+window.toggleOptional=function(t,s){document.getElementById('opt-'+t).classList.toggle('hidden',!s);};
+window.loadStamp=function(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){window._stampSrc=e.target.result;var sp=document.getElementById('stamp-preview');if(sp)sp.innerHTML='<img src="'+e.target.result+'" style="max-width:120px;max-height:120px;border:1px solid #ddd;border-radius:4px">';};r.readAsDataURL(f);};
+window.autoZip=function(val){var zip=val.replace(/[^0-9]/g,'');var st=document.getElementById('zip-status');if(zip.length<7){if(st)st.textContent='';return;}if(st)st.textContent='検索中…';var s=document.createElement('script');window._zipCb=function(data){if(data.status===200&&data.results){var r=data.results[0];document.getElementById('fi-addr').value=r.address1+r.address2+r.address3;if(st)st.textContent='OK';setTimeout(function(){if(st)st.textContent='';},2000);}else{if(st)st.textContent='未検索';}document.head.removeChild(s);};s.src='https://zipcloud.ibsnet.co.jp/api/search?zipcode='+zip+'&callback=_zipCb';document.head.appendChild(s);};
+
+window.doPrint=function(){
+  /* 編集画面では上部の簡易選択を正とする。表紙画面だけSTEP2を参照 */
+  var _mainNow=document.getElementById('main'),_quickPrint=document.getElementById('quick-layout');
+  if(window.__PREVIEW_LAYOUT_KEY){
+    var _pk=window.__PREVIEW_LAYOUT_KEY.split('|');
+    if(_pk.length===4){PAT=_pk[0];PER=parseInt(_pk[1],10);COLS=parseInt(_pk[2],10);ORIENT=_pk[3];}
+  } else if(_mainNow&&_mainNow.style.display!=='none'&&_quickPrint){
+    var _qp=(_quickPrint.value||'').split('|');
+    if(_qp.length===4){PAT=_qp[0];PER=parseInt(_qp[1],10);COLS=parseInt(_qp[2],10);ORIENT=_qp[3];}
+  } else {
+    var _activeCnt=document.querySelector('.cnt-btn.active');
+    if(_activeCnt){
+    var _n=parseInt(_activeCnt.getAttribute('data-per')||'0');
+    var _cols=parseInt(_activeCnt.getAttribute('data-cols')||'0');
+    var _ori=_activeCnt.getAttribute('data-ori')||'AUTO';
+    if(_n) PER=_n;
+    if(_cols) COLS=_cols;
+    ORIENT=_ori;
+    }
+  }
+  /* ★ 印刷前にDOMの入力値を確実にphotos配列へ反映
+     （onchangeはfocus離脱時のみ発火するため、直前の入力が未反映のことがある） */
+  syncPhotoInputs();
+  var c=cover;
+  var css="*{box-sizing:border-box;margin:0;padding:0}@page{size:A4;margin:0mm}@page:first{margin:0mm}html,body{margin:0;padding:0;width:210mm}body{font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}@media screen{body{background:#888;padding:24px 0}.a4{width:210mm;background:#fff;margin:0 auto 24px;box-shadow:0 4px 20px rgba(0,0,0,.4)}}@media print{@page{size:A4 portrait;margin:0}body{background:#fff;padding:0}.a4{width:210mm;page-break-after:always}.a4:last-child{page-break-after:avoid}}.cover{height:257mm;display:flex;flex-direction:column;padding:10mm 8mm;overflow:hidden;page-break-after:always;}.cov-top{background:#1A3E6E;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}.cov-co{font-size:13px;font-weight:700}.cov-dt{font-size:10px;opacity:.85}.cov-band{background:#122E54;color:rgba(255,255,255,.6);padding:4px 16px;font-size:10px;letter-spacing:.12em;flex-shrink:0}.cov-tw{padding:36px 20px 28px;text-align:center;border-bottom:3px solid #1A3E6E;margin:0 16px;flex-shrink:0}.cov-title{font-size:34px;font-weight:800;color:#1A3E6E;letter-spacing:.15em}.cov-en{font-size:11px;color:#888;letter-spacing:.2em;margin-top:8px}.cov-body{padding:24px 32px;flex-shrink:0}.cov-row{display:flex;border-bottom:1px solid #E5E2DE;padding:12px 0;gap:16px}.cov-key{color:#888;width:64px;flex-shrink:0;font-size:11px;padding-top:3px}.cov-val{font-weight:700;color:#1A1A1A;font-size:15px}..cov-foot{text-align:center;padding:10px;font-size:10px;color:#aaa;flex-shrink:0}.phase{height:257mm;display:flex;flex-direction:column;padding:6mm 8mm;overflow:hidden;page-break-after:always;}.pg-hdr{flex-shrink:0;display:flex;align-items:stretch;border-bottom:2px solid #1A3E6E;margin-bottom:5px;height:16mm;}.pg-hdr-ttl{background:#1A3E6E;color:#fff;padding:0 12px;font-size:13px;font-weight:800;display:flex;align-items:center;white-space:nowrap}.pg-hdr-info{flex:1;padding:4px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px}.pg-hdr-proj{font-size:11px;font-weight:700;color:#1A3E6E}.pg-hdr-sub{font-size:9px;color:#666}.pg-hdr-pg{padding:4px 8px;font-size:9px;color:#888;display:flex;align-items:center}.pg-cols{flex:1;display:flex;gap:5px;min-height:0;overflow:hidden;}.pg-col{flex:1;display:flex;flex-direction:column;border:2px solid;border-radius:4px;overflow:hidden;min-height:0;}.pg-col-hdr{flex-shrink:0;padding:5px 6px;font-size:11px;font-weight:800;color:#fff;text-align:center;}.pg-cards{flex:1;display:flex;flex-direction:column;align-content:space-around;justify-content:space-around;min-height:0;padding:0;overflow:hidden;}.pg-card{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;border-bottom:0.5px solid #ddd;padding:2px 0;min-height:0;}.pg-card:last-child{border-bottom:none}.pg-no{flex-shrink:0;font-size:8px;font-weight:700;color:#444;margin-bottom:4px;padding:0 4px}.pg-img-wrap{flex-shrink:0;position:relative;overflow:hidden;background:#f0f0f0;}.pg-img{width:100%;height:100%;object-fit:fill;display:block;}.pg-meta{flex-shrink:0;padding:3px 4px 2px;}.pg-meta-row{display:flex;gap:3px;align-items:flex-start;margin-bottom:1px}.pg-meta-key{font-size:7px;color:#333;white-space:nowrap;min-width:28px;padding-top:1px;font-weight:600}.pg-meta-val{font-size:8px;color:#000;line-height:1.4;white-space:pre-wrap;word-break:break-all;}.pg-empty{flex:1;color:#ccc;font-size:10px;text-align:center;display:flex;align-items:center;justify-content:center}"
+  /* 表紙フッター（旧CSS内の誤記を上書き補正） */
+  css+='.cov-foot{text-align:center;padding:10px;font-size:10px;color:#aaa;flex-shrink:0}';
+  /* 写真ごとの実際の縦横比で枠を作り、用紙全体の上下中央へ配置 */
+  css+='.phase{height:297mm;justify-content:center}.pg-cols{flex:none;min-height:auto;overflow:visible;align-items:center}.pg-col{min-height:0;align-self:auto}.pg-cards{flex:none;justify-content:center;gap:1.5mm;padding:1mm;background:#fff}.pg-card{flex:none;border:1px solid #D8D8D8;border-radius:3px;overflow:hidden;background:#fff;padding:0}.pg-img-wrap{background:#fff}.pg-img{object-fit:contain!important;transform-origin:center center}.pg-empty{border:1px dashed #ddd}.pg-no{height:4mm;display:flex;align-items:center;padding:0 2mm;margin:0}.pg-meta{height:14mm;padding:.7mm 2mm;overflow:hidden}.pg-meta-row{min-width:0}.pg-meta-val{min-width:0;max-width:100%;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.pg-txt-sm{font-size:7px}.pg-txt-xs{font-size:6px;line-height:1.2}';
+  var period=fmtD(c.start)+(c.end?' 〜 '+fmtD(c.end):'');
+    var MAX=PER||3;
+  /* 全パターン共通: ページの実列数と実段数から写真枠を計算 */
+  var _outerCols=(PAT==='SEQ')?COLS:ACTIVE.length;
+  var _seqCols=(PAT==='SEQ')?COLS:_outerCols;
+  var _rows=(PAT==='SEQ')?Math.ceil(MAX/_seqCols):MAX;
+  var _cardH=Math.floor(213/_rows);
+  function _imgH(p,cardH){
+    var ratio=(ORIENT==='H')?.70:(ORIENT==='P'?1.30:((p&&p.ratio)||1));
+    /* 実際のページ列幅を使用。段組み内で二重に列分割しない */
+    var _cw=Math.floor((194-(_outerCols-1)*5)/_outerCols);
+    /* 高さ = 幅 × ratio（比率から自然な高さ）*/
+    var hMm=Math.round(_cw*ratio);
+    /* 3段でもA4内に収まる余裕を残しつつ、一般的な縦写真(4:3)を大きく表示 */
+    return Math.min(hMm, cardH-14)+'mm';
+  }
+  /* PDFではコメント欄を固定高にし、写真サイズを文章量から独立させる。全文はphotos/JSONに保持する。 */
+  function _pdfComment(raw){
+    var full=String(raw||'').replace(/\r\n?/g,'\n');
+    var shown=full.length>120?full.slice(0,119)+'…':full;
+    var cls=full.length>80?' pg-txt-xs':(full.length>45?' pg-txt-sm':'');
+    return {text:shown,cls:cls};
+  }
+  function _emptySeqCard(frameH){
+    return '<div class="pg-card"><div class="pg-no">&nbsp;</div><div class="pg-img-wrap" style="height:'+frameH+'"></div><div class="pg-meta">&nbsp;</div></div>';
+  }
+  /* 表紙 */
+  var illustSVG="<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 595 311\" preserveAspectRatio=\"xMidYMax slice\">\n<defs><style>.b{fill:none;stroke:#D0D0D0;stroke-width:1.2;stroke-linejoin:round}\n</style></defs></defs>\n<!-- \u30de\u30f3\u30b7\u30e7\u30f3\u5de6 -->\n<rect class=\"b\" x=\"20\" y=\"60\" width=\"70\" height=\"220\"/>\n<line class=\"b\" x1=\"20\" y1=\"90\" x2=\"90\" y2=\"90\"/>\n<line class=\"b\" x1=\"20\" y1=\"120\" x2=\"90\" y2=\"120\"/>\n<line class=\"b\" x1=\"20\" y1=\"150\" x2=\"90\" y2=\"150\"/>\n<line class=\"b\" x1=\"20\" y1=\"180\" x2=\"90\" y2=\"180\"/>\n<line class=\"b\" x1=\"20\" y1=\"210\" x2=\"90\" y2=\"210\"/>\n<line class=\"b\" x1=\"55\" y1=\"60\" x2=\"55\" y2=\"280\"/>\n<rect class=\"b\" x=\"30\" y=\"100\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"48\" y=\"100\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"66\" y=\"100\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"30\" y=\"130\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"48\" y=\"130\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"66\" y=\"130\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"30\" y=\"160\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"48\" y=\"160\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"66\" y=\"160\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"30\" y=\"190\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"48\" y=\"190\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"66\" y=\"190\" width=\"12\" height=\"12\"/>\n<rect class=\"b\" x=\"38\" y=\"240\" width=\"24\" height=\"40\"/>\n<!-- \u6238\u5efa\u3066 -->\n<polygon class=\"b\" points=\"115,130 155,90 195,130\"/>\n<rect class=\"b\" x=\"115\" y=\"130\" width=\"80\" height=\"100\"/>\n<rect class=\"b\" x=\"148\" y=\"185\" width=\"18\" height=\"45\"/>\n<rect class=\"b\" x=\"122\" y=\"140\" width=\"20\" height=\"18\"/>\n<rect class=\"b\" x=\"170\" y=\"140\" width=\"20\" height=\"18\"/>\n<line class=\"b\" x1=\"115\" y1=\"130\" x2=\"115\" y2=\"230\"/>\n<rect class=\"b\" x=\"127\" y=\"95\" width=\"12\" height=\"10\"/>\n<!-- \u30d3\u30eb\u4e2d\u592e -->\n<rect class=\"b\" x=\"210\" y=\"30\" width=\"100\" height=\"250\"/>\n<line class=\"b\" x1=\"210\" y1=\"60\" x2=\"310\" y2=\"60\"/>\n<line class=\"b\" x1=\"210\" y1=\"90\" x2=\"310\" y2=\"90\"/>\n<line class=\"b\" x1=\"210\" y1=\"120\" x2=\"310\" y2=\"120\"/>\n<line class=\"b\" x1=\"210\" y1=\"150\" x2=\"310\" y2=\"150\"/>\n<line class=\"b\" x1=\"210\" y1=\"180\" x2=\"310\" y2=\"180\"/>\n<line class=\"b\" x1=\"210\" y1=\"210\" x2=\"310\" y2=\"210\"/>\n<line class=\"b\" x1=\"260\" y1=\"30\" x2=\"260\" y2=\"280\"/>\n<rect class=\"b\" x=\"220\" y=\"38\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"240\" y=\"38\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"268\" y=\"38\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"288\" y=\"38\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"220\" y=\"68\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"240\" y=\"68\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"268\" y=\"68\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"288\" y=\"68\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"220\" y=\"98\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"240\" y=\"98\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"268\" y=\"98\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"288\" y=\"98\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"220\" y=\"128\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"240\" y=\"128\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"268\" y=\"128\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"288\" y=\"128\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"220\" y=\"158\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"240\" y=\"158\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"268\" y=\"158\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"288\" y=\"158\" width=\"14\" height=\"14\"/>\n<rect class=\"b\" x=\"230\" y=\"240\" width=\"40\" height=\"40\"/>\n<!-- \u5e97\u8217 -->\n<rect class=\"b\" x=\"325\" y=\"150\" width=\"90\" height=\"130\"/>\n<rect class=\"b\" x=\"325\" y=\"130\" width=\"90\" height=\"20\"/>\n<rect class=\"b\" x=\"340\" y=\"165\" width=\"25\" height=\"40\"/>\n<rect class=\"b\" x=\"375\" y=\"165\" width=\"25\" height=\"40\"/>\n<rect class=\"b\" x=\"348\" y=\"220\" width=\"24\" height=\"60\"/>\n<line class=\"b\" x1=\"325\" y1=\"210\" x2=\"415\" y2=\"210\"/>\n<rect class=\"b\" x=\"330\" y=\"135\" width=\"12\" height=\"8\"/>\n<rect class=\"b\" x=\"348\" y=\"135\" width=\"12\" height=\"8\"/>\n<!-- \u6238\u5efa\u30662 -->\n<polygon class=\"b\" points=\"430,140 470,100 510,140\"/>\n<rect class=\"b\" x=\"430\" y=\"140\" width=\"80\" height=\"95\"/>\n<rect class=\"b\" x=\"462\" y=\"190\" width=\"16\" height=\"45\"/>\n<rect class=\"b\" x=\"437\" y=\"150\" width=\"18\" height=\"16\"/>\n<rect class=\"b\" x=\"475\" y=\"150\" width=\"18\" height=\"16\"/>\n<rect class=\"b\" x=\"440\" y=\"108\" width=\"10\" height=\"9\"/>\n<!-- \u30bf\u30ef\u30de\u30f3\u53f3 -->\n<rect class=\"b\" x=\"510\" y=\"10\" width=\"65\" height=\"270\"/>\n<line class=\"b\" x1=\"510\" y1=\"40\" x2=\"575\" y2=\"40\"/>\n<line class=\"b\" x1=\"510\" y1=\"70\" x2=\"575\" y2=\"70\"/>\n<line class=\"b\" x1=\"510\" y1=\"100\" x2=\"575\" y2=\"100\"/>\n<line class=\"b\" x1=\"510\" y1=\"130\" x2=\"575\" y2=\"130\"/>\n<line class=\"b\" x1=\"510\" y1=\"160\" x2=\"575\" y2=\"160\"/>\n<line class=\"b\" x1=\"510\" y1=\"190\" x2=\"575\" y2=\"190\"/>\n<line class=\"b\" x1=\"510\" y1=\"220\" x2=\"575\" y2=\"220\"/>\n<line class=\"b\" x1=\"542\" y1=\"10\" x2=\"542\" y2=\"280\"/>\n<rect class=\"b\" x=\"517\" y=\"16\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"533\" y=\"16\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"549\" y=\"16\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"565\" y=\"16\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"517\" y=\"46\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"533\" y=\"46\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"549\" y=\"46\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"565\" y=\"46\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"517\" y=\"76\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"533\" y=\"76\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"549\" y=\"76\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"565\" y=\"76\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"517\" y=\"106\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"533\" y=\"106\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"549\" y=\"106\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"565\" y=\"106\" width=\"10\" height=\"10\"/>\n<rect class=\"b\" x=\"525\" y=\"245\" width=\"20\" height=\"35\"/>\n<!-- \u5730\u9762\u30e9\u30a4\u30f3 -->\n<line class=\"b\" x1=\"0\" y1=\"280\" x2=\"595\" y2=\"280\" stroke-width=\"1.5\"/>\n</svg>";
+  var body='<div class="a4 cover">'
+    +'<div class="cov-top"><span class="cov-co">'+esc(c.co||'')+'</span>'
+    +'<span class="cov-dt">作成日：'+fmtD(c.today)+'</span></div>'
+    +'<div class="cov-band">CONSTRUCTION PHOTO ALBUM</div>'
+    +'<div class="cov-tw"><div class="cov-title">'+esc(c.docTitle||'工事写真帳')+'</div>'
+    +'<div class="cov-en">Construction Photo Album</div></div>'
+    +'<div class="cov-body">'
+    +(c.managementNumber?'<div class="cov-row"><span class="cov-key">管理番号</span><span class="cov-val">'+esc(c.managementNumber)+'</span></div>':'')
+    +(c.client?'<div class="cov-row"><span class="cov-key">客先名</span><span class="cov-val">'+esc(c.client)+'</span></div>':'')
+    +(c.title?'<div class="cov-row"><span class="cov-key">物件名</span><span class="cov-val">'+esc(c.title)+'</span></div>':'')
+    +(c.room?'<div class="cov-row"><span class="cov-key">部屋番号</span><span class="cov-val">'+esc(c.room)+'</span></div>':'')
+    +(c.loc?'<div class="cov-row"><span class="cov-key">工事名称</span><span class="cov-val">'+esc(c.loc)+'</span></div>':'')
+    +(c.staff?'<div class="cov-row"><span class="cov-key">工事担当者</span><span class="cov-val">'+esc(c.staff)+'</span></div>':'')
+    +(c.zip?'<div class="cov-row"><span class="cov-key">郵便番号</span><span class="cov-val">'+esc(c.zip)+'</span></div>':'')
+    +(c.addr?'<div class="cov-row"><span class="cov-key">物件住所</span><span class="cov-val">'+esc(c.addr)+'</span></div>':'')
+    +(c.co?'<div class="cov-row"><span class="cov-key">施工会社</span><span class="cov-val">'+esc(c.co)+'</span></div>':'')
+    +(c.years?'<div class="cov-row"><span class="cov-key">入居年数</span><span class="cov-val">'+esc(c.years)+'</span></div>':'')
+    +(period?'<div class="cov-row"><span class="cov-key">工事期間</span><span class="cov-val">'+esc(period)+'</span></div>':'')
+    +(c.comp?'<div class="cov-row"><span class="cov-key">完工日</span><span class="cov-val">'+fmtD(c.comp)+'</span></div>':'')
+    +(c.amount?'<div class="cov-row"><span class="cov-key">工事金額</span><span class="cov-val">'+esc(c.amount)+'円</span></div>':'')
+    +(c.stamp?'<div class="cov-row"><span class="cov-key">角印</span><span class="cov-val"><img src="'+c.stamp+'" style="width:80px;height:80px;object-fit:contain"></span></div>':'')
+    +'</div>'
+    +'</div>';
+
+  /* フォトページ */
+  var maxLen=0, totalPg=1;
+  if(PAT==='SEQ'){
+    totalPg=Math.ceil(((photos['seq']||[]).length)/MAX)||1;
+  } else {
+    ACTIVE.forEach(function(ph){if(photos[ph].length>maxLen)maxLen=photos[ph].length;});
+    if(maxLen===0) maxLen=1;
+    totalPg=Math.ceil(maxLen/MAX);
+  }
+
+  for(var pg=0;pg<totalPg;pg++){
+    var s=pg*MAX, e=s+MAX, pn=pg+1;
+    var hdr='<div class="pg-hdr">'
+      +'<div class="pg-hdr-ttl">'+esc(c.docTitle||'工事写真帳')+'</div>'
+      +'<div class="pg-hdr-info">'
+      +'<div class="pg-hdr-proj">'+esc(c.title||'')+'</div>'
+      +'<div class="pg-hdr-sub">'+esc(c.co||'')+'　|　'+esc(period)+'</div>'
+      +'</div>'
+      +'<div class="pg-hdr-pg">'+pn+' / '+totalPg+'</div></div>';
+
+    var cols;
+    if(PAT==='SEQ'){
+      var list=photos['seq']||[];
+      var seqS=pg*MAX, seqE=seqS+MAX;
+      var colBuckets=[];
+      for(var _ci=0;_ci<_seqCols;_ci++) colBuckets.push('');
+      /* 同じ段は3列とも同じ高さ。旧データの縦横混在時も最大の写真に揃える */
+      var _rowHs=[];
+      for(var _ri=seqS;_ri<seqE;_ri++){
+        var _rr=Math.floor((_ri-seqS)/_seqCols);
+        var _hh=(_ri<list.length)?parseFloat(_imgH(list[_ri],_cardH)):0;
+        _rowHs[_rr]=Math.max(_rowHs[_rr]||0,_hh);
+      }
+      for(var i=seqS;i<seqE;i++){
+        var _rowNo=Math.floor((i-seqS)/_seqCols);
+        var _rowFrame=(_rowHs[_rowNo]||parseFloat(_imgH(null,_cardH)))+'mm';
+        var card='';
+        if(i<list.length){
+          var p=list[i];
+          var cmt=_pdfComment(p.comment);
+          card='<div class="pg-card">'
+            +'<div class="pg-no">No.'+(i+1)+'</div>'
+            +'<div class="pg-img-wrap" style="height:'+_rowFrame+'"><img class="pg-img" src="'+p.src+'" style="transform:'+window.getImgTransform(p)+';"></div>' 
+            +'<div class="pg-meta">'+(p.name?'<div class="pg-meta-row"><span class="pg-meta-key">撮影部位</span><span class="pg-meta-val">'+esc(p.name)+'</span></div>':'')+(cmt.text?'<div class="pg-meta-row"><span class="pg-meta-key">状況・原因・対処</span><span class="pg-meta-val'+cmt.cls+'">'+esc(cmt.text)+'</span></div>':'')+'</div></div>';
+        } else {
+          card=_emptySeqCard(_rowFrame);
+        }
+        colBuckets[i%_seqCols]+=card;
+      }
+      cols='<div class="pg-cols">';
+      for(var _ci=0;_ci<_seqCols;_ci++){
+        cols+='<div class="pg-col" style="border-color:#555"><div class="pg-col-hdr" style="background:#555;padding:4px">連続写真</div><div class="pg-cards" style="padding:0">'+colBuckets[_ci]+'</div></div>';
+      }
+      cols+='</div>';
+    } else {
+      cols='<div class="pg-cols">';
+      /* 同じ段は全フェーズで同じ高さに揃える */
+      var _phaseRowHs=[];
+      for(var _pri=0;_pri<MAX;_pri++){
+        var _phMax=0;
+        ACTIVE.forEach(function(_pph){
+          var _pl=photos[_pph]||[];
+          var _pi=s+_pri;
+          if(_pi<_pl.length) _phMax=Math.max(_phMax,parseFloat(_imgH(_pl[_pi],_cardH)));
+        });
+        _phaseRowHs[_pri]=_phMax||parseFloat(_imgH(null,_cardH));
+      }
+      ACTIVE.forEach(function(ph){
+        var info=PH[ph], list=photos[ph], cards='';
+        for(var i=s;i<e;i++){
+          var _phaseFrame=_phaseRowHs[i-s]+'mm';
+          if(i<list.length){
+            var p=list[i];
+            var cmt=_pdfComment(p.comment);
+            cards+='<div class="pg-card">'
+              +'<div class="pg-no">No.'+(i+1)+'</div>'
+              +'<div class="pg-img-wrap" style="height:'+_phaseFrame+'"><img class="pg-img" src="'+p.src+'" style="transform:'+window.getImgTransform(p)+';"></div>' 
+              +'<div class="pg-meta">'+(p.name?'<div class="pg-meta-row"><span class="pg-meta-key">撮影部位</span><span class="pg-meta-val">'+esc(p.name)+'</span></div>':'')+(cmt.text?'<div class="pg-meta-row"><span class="pg-meta-key">状況・原因・対処</span><span class="pg-meta-val'+cmt.cls+'">'+esc(cmt.text)+'</span></div>':'')+'</div></div>';
+          } else {
+            cards+=_emptySeqCard(_phaseFrame);
+          }
+        }
+        cols+='<div class="pg-col" style="border-color:'+info.color+'">'
+          +'<div class="pg-col-hdr" style="background:'+info.color+'">'+info.lbl+'</div>'
+          +'<div class="pg-cards">' +cards+'</div></div>';
+      });
+      cols+='</div>';
+    }
+    body+='<div class="a4 phase">'+hdr+cols+'</div>';
+  }
+
+  /* ★ ポップアップ不要・iframeで印刷 → OS既定のPDFソフトに保存 */
+  var html='<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+    +'<title>'+(c.docTitle||c.title||'工事写真帳')+'</title><style>'+css+'</style><style>@page{margin:0!important}body{margin:0!important;padding:0!important}</style></head><body>'+body+'</body></html>';
+
+  if(window.__PREVIEW_MODE){window.__PREVIEW_CAPTURE=html;return html;}
+
+  /* 既存iframeを完全削除 */
+  var _old=document.getElementById('_pf');
+  if(_old) _old.parentNode.removeChild(_old);
+
+  var _origTitle=document.title;
+  document.title=(c.title||c.docTitle||'工事写真帳');
+
+  /* 非表示iframeで印刷（新タブを開かない・1回のみ）*/
+  var _fr=document.createElement('iframe');
+  _fr.id='_pf';
+  _fr.style.cssText='position:fixed;left:-9999px;top:-9999px;width:0;height:0;border:0';
+  document.body.appendChild(_fr);
+  var _doc=_fr.contentDocument||_fr.contentWindow.document;
+  _doc.open('text/html','replace');
+  _doc.write(html);
+  _doc.close();
+
+  var _printed=false;
+  function _doIt(){
+    if(_printed) return;
+    _printed=true;
+    try{
+      _fr.contentWindow.focus();
+      _fr.contentWindow.print();
+    }catch(err){ console.error('印刷エラー:',err); }
+    setTimeout(function(){ document.title=_origTitle; },3000);
+  }
+  setTimeout(_doIt, 800);
+};
+
+})();
+</script>
+
+<div id="save-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:28px 24px;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-size:17px;font-weight:800;color:#1A3E6E;margin-bottom:12px">💾 JSONデータを保存</div>
+    <div id="save-destination-note" style="padding:10px 12px;margin-bottom:14px;border-radius:9px;background:#FFF7E8;color:#594B37;font-size:11px;line-height:1.65"></div>
+    <label style="font-size:12px;color:#888;display:block;margin-bottom:4px">ファイル名</label>
+    <input id="save-fname" type="text" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #D6D0C8;border-radius:10px;font-size:14px;margin-bottom:20px">
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="document.getElementById('save-modal').style.display='none'" style="padding:10px 20px;border:1.5px solid #D6D0C8;border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:#666">キャンセル</button>
+      <button id="save-exec-btn" onclick="execSave()" style="padding:10px 24px;border:none;border-radius:10px;background:#1A3E6E;color:#fff;font-size:14px;font-weight:700;cursor:pointer">保存</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

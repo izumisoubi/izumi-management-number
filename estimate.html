@@ -651,6 +651,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="tab active" onclick="showTab('estimate',this)">見積</div>
   <div class="tab" onclick="showTab('order',this)">発注</div>
   <div class="tab" onclick="showTab('costtable',this)">売上原価管理表</div>
+  <div class="tab" onclick="openPhotoAlbum()" title="この案件の基本情報を引き継いで工事写真帖を開きます">工事写真帖</div>
   <div class="tab" onclick="showTab('invoice',this)">請求</div>
   <div class="tab" onclick="showTab('report',this)">完了報告書</div>
   <div class="tab" onclick="showTab('companies',this)">自社情報</div>
@@ -1697,6 +1698,19 @@ function openLedgerMenu(){
   const menuPath=location.protocol==='file:'?'管理番号取得システム/工事リスト.html':'工事リスト.html';
   const menuUrl=new URL(menuPath,location.href);
   location.assign(menuUrl.href);
+}
+
+function openPhotoAlbum(){
+  const managementNumber=vv('b-kanri').trim();
+  if(!managementNumber){
+    showToastMsg('先に基本情報で管理番号を取得または選択してください。');
+    const basicTab=Array.from(document.querySelectorAll('.tab')).find(tab=>(tab.getAttribute('onclick')||'').includes("showTab('basic'"));
+    if(basicTab)showTab('basic',basicTab);
+    return;
+  }
+  const target=new URL('工事写真帖.html',location.href);
+  target.searchParams.set('management_number',managementNumber);
+  location.href=target.href;
 }
 
 function showStorageHelp(){
