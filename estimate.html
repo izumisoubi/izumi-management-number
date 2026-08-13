@@ -630,6 +630,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   outline-offset:-1px;
 }
 
+.orderdoc-a4{width:297mm;min-height:210mm;margin:0 auto;padding:10mm 12mm;background:#fff;color:#111;box-shadow:0 4px 18px #0003;font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif}
+.od-top{display:flex;justify-content:space-between;align-items:flex-start;font-size:10px}.od-title{text-align:center;font-size:24px;letter-spacing:.75em;margin:-2mm 0 2mm;padding-bottom:2mm;border-bottom:2px solid #111}.od-party{display:grid;grid-template-columns:1fr 1fr;gap:18mm;min-height:23mm;font-size:10px;line-height:1.45}.od-party-name{font-size:15px;font-weight:700;border-bottom:1px solid #222;padding-bottom:1mm}.od-issuer{text-align:right;position:relative}.od-stamp{position:absolute;right:0;top:-3mm}.od-lead{font-size:10px;margin:1mm 0 2mm}.od-info{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.5px}.od-info th,.od-info td{border:1px solid #777;padding:1.2mm 2mm}.od-info th{width:25mm;background:#f4f4f4}.od-amount{font-size:14px;font-weight:700}.od-items{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.5px;margin-top:2mm}.od-items th,.od-items td{border:1px solid #777;padding:.9mm 1.2mm;height:6mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.od-items thead th{background:#eee;text-align:center}.od-num{text-align:right;font-variant-numeric:tabular-nums}.od-terms-title{font-size:9px;font-weight:700;margin:2mm 0 .6mm}.od-terms{column-count:2;column-gap:8mm;font-size:6.8px;line-height:1.35}.od-term{break-inside:avoid;margin:0 0 .7mm;padding-left:4mm;text-indent:-4mm}.od-note{font-size:6.8px;margin-top:1mm;border-top:1px solid #999;padding-top:.7mm}
+
 </style>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -658,6 +661,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="tab" onclick="openPhotoAlbum()" title="この案件の基本情報を引き継いで工事写真帖を開きます">工事写真帖</div>
   <div class="tab" onclick="showTab('report',this)">完了報告書</div>
   <div class="tab" onclick="showTab('invoice',this)">請求</div>
+  <div class="tab" onclick="showTab('orderdocs',this)">発注書・注文請書</div>
   <div class="tab" onclick="openLedgerMenu()" title="カレンダー・管理番号台帳・原価・未発注・請求を開きます">一覧メニュー</div>
   <div class="header-master-group" aria-label="マスタと本日の日付">
     <div class="tab" onclick="showTab('companies',this)">自社情報</div>
@@ -1227,6 +1231,26 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   </div>
 </div>
 
+<!-- 発注書・注文請書（発注タブの確定データを使用） -->
+<div class="screen" id="sc-orderdocs">
+  <div class="ui-wrap wide">
+    <div class="ui-card" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--tbr)">
+        <strong style="font-size:13px">発注書・注文請書</strong>
+        <button class="ubtn px" id="od-order-btn" onclick="setOrderDocumentType('order')">発注書</button>
+        <button class="ubtn" id="od-accept-btn" onclick="setOrderDocumentType('accept')">注文請書</button>
+        <label style="font-size:11px;color:var(--tm);margin-left:8px">発注先</label>
+        <select id="od-vendor" onchange="renderOrderDocuments()" style="min-width:220px;padding:6px 9px;border:1px solid var(--tbr);border-radius:5px;background:var(--ti);color:var(--tt)"></select>
+        <span style="font-size:10px;color:var(--tm)">発注タブで確定した業者・数量・発注単価をそのまま使用します</span>
+        <button class="ubtn px" style="margin-left:auto" onclick="doPrint('orderdocs')">印刷 / PDF</button>
+      </div>
+      <div style="overflow:auto;padding:14px;background:#dfe3e8">
+        <div class="a4 orderdoc-a4 font-mincho" id="a4orderdocs"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- INVOICE -->
 <div class="screen" id="sc-invoice">
 <div class="inv-outer">
@@ -1752,6 +1776,7 @@ function showTab(id,el){
   if(id==='report'){syncReport();setTimeout(applyReportLayout,50);}
   if(id==='estimate')setTimeout(applyEstLayout,50);
   if(id==='order'){setTimeout(function(){if(typeof renderOrder==='function'){renderOrder();loadOrdInfo();}},50);}
+  if(id==='orderdocs')renderOrderDocuments();
   if(id==='vendormaster'){loadVendors();renderVendorMaster();}
   if(id==='costtable'){
     if(typeof saveOrdRows==='function') saveOrdRows();
@@ -7063,6 +7088,7 @@ function printActiveTab(){
   if(activeScreen==='sc-report')return doPrint('report');
   if(activeScreen==='sc-costtable')return printCostTable();
   if(activeScreen==='sc-order')return printOrdPreview_all();
+  if(activeScreen==='sc-orderdocs')return doPrint('orderdocs');
   showToastMsg('このタブには印刷対象がありません');
 }
 
@@ -7071,7 +7097,7 @@ function doPrint(type){
   window._documentPreviewType=type||(activeScreen==='sc-invoice'?'invoice':activeScreen==='sc-report'?'report':'estimate');
   const pages=getDocumentPrintPages(window._documentPreviewType);
   window._documentPreviewSnapshot=pages.map(page=>page.cloneNode(true));
-  window._documentPreviewOrientation=window._documentPreviewType==='estimate'&&getEstimateLayout()==='landscape'
+  window._documentPreviewOrientation=window._documentPreviewType==='orderdocs'||(window._documentPreviewType==='estimate'&&getEstimateLayout()==='landscape')
     ?'landscape'
     :'portrait';
   const content=document.getElementById('docPreviewContent');
@@ -7103,7 +7129,7 @@ function doPrint(type){
 }
 
 function getDocumentPrintPages(type){
-  const pagesEl=document.getElementById(type==='invoice'?'a4inv':type==='report'?'a4report':'estPages');
+  const pagesEl=document.getElementById(type==='invoice'?'a4inv':type==='report'?'a4report':type==='orderdocs'?'a4orderdocs':'estPages');
   if(!pagesEl)return[];
   const sourcePages=pagesEl.classList.contains('a4')?[pagesEl]:[...pagesEl.querySelectorAll('.a4')];
   return sourcePages.map(source=>{
@@ -7136,7 +7162,7 @@ function getDocumentScreenCss(){
 
 function printDocumentPreviewWindow(){
   const type=window._documentPreviewType||'estimate';
-  const docLabel=type==='invoice'?'御請求書':type==='report'?'完了報告書':'御見積書';
+  const docLabel=type==='invoice'?'御請求書':type==='report'?'完了報告書':type==='orderdocs'?(orderDocumentType==='accept'?'注文請書':'発注書'):'御見積書';
   const editedPreview=[...document.querySelectorAll('#docPreviewContent .doc-modal-page>.a4')]
     .map(page=>page.cloneNode(true));
   const snapshot=editedPreview.length
@@ -8469,6 +8495,55 @@ function getVendorMap(){
     m[r.vendor].rows.push(r);
   });
   return m;
+}
+
+// ===== 発注書・注文請書（A4横） =====
+let orderDocumentType='order';
+function setOrderDocumentType(type){
+  orderDocumentType=type==='accept'?'accept':'order';
+  document.getElementById('od-order-btn')?.classList.toggle('px',orderDocumentType==='order');
+  document.getElementById('od-accept-btn')?.classList.toggle('px',orderDocumentType==='accept');
+  renderOrderDocuments();
+}
+function orderDocumentVendors(){
+  return [...new Set(ordRows.filter(r=>r.type==='item'&&r.vendor&&(r.name||r.qty||r.orderCost)).map(r=>r.vendor))];
+}
+function orderDocumentTerms(){
+  return [
+    '1．本工事の内容は、本書、図面、仕様書、見積書その他双方が合意した書面によります。内容に相違がある場合は、双方協議のうえ書面または電磁的方法で確認します。',
+    '2．追加・変更・中止が必要となった場合、発注者と受注者は、工事内容、代金および工期への影響を事前に協議し、合意内容を書面または電磁的方法で残します。緊急時は事後速やかに確認します。',
+    '3．受注者は、発注者の承諾なく本契約上の地位または債権債務を第三者へ譲渡しません。専門工事の再委託は、法令および発注者との合意に従い、受注者が責任をもって管理します。',
+    '4．工事に関連して第三者へ損害を与えた場合は、原因および双方の責任割合に応じて負担します。発注者の指示・提供情報等に起因する損害は発注者が、受注者の施工上の過失に起因する損害は受注者が負担します。',
+    '5．天災、感染症、資材供給の停止その他当事者の合理的な支配を超える事由により工事の遂行が困難となった場合、双方は工期、費用および施工方法を協議します。',
+    '6．受注者は完成後速やかに発注者へ通知し、発注者は合理的な期間内に検査します。手直しが必要な場合、双方で内容と期限を確認し、受注者は自己の責任による部分を是正します。',
+    '7．発注者は、検査合格および適法な請求書の受領後、本書記載の支払条件・期日までに工事代金を支払います。支払が遅延した場合、受注者は相当期間を定めて履行を求めることができます。',
+    '8．受注者の責任で工期が遅延する見込みのときは直ちに発注者へ報告し、回復計画を協議します。発注者の事情または追加変更により遅延・費用増が生じる場合は、工期および代金を協議して変更します。',
+    '9．契約不適合がある場合、発注者は相当期間を定めて修補を求めることができ、受注者は法令および本契約に従って対応します。原因が発注者の指示、支給材または第三者にある場合はこの限りではありません。',
+    '10．重大な契約違反があり、相当期間を定めた催告後も是正されない場合、相手方は契約の全部または一部を解除できます。解除時は、出来高、支給品、既発生費用および損害を双方協議のうえ精算します。',
+    '11．双方は関係法令、労働安全衛生、秘密保持および反社会的勢力排除を遵守します。受注者は必要な資格・許可・保険を確認し、安全に施工します。',
+    '12．本書に定めのない事項または疑義は、双方誠意をもって協議します。解決しない場合は建設工事紛争審査会の利用を検討し、なお解決しない場合の第一審専属的合意管轄裁判所は東京地方裁判所または東京簡易裁判所とします。'
+  ];
+}
+function renderOrderDocuments(){
+  const page=document.getElementById('a4orderdocs'); if(!page)return;
+  const select=document.getElementById('od-vendor');
+  const vendorNames=orderDocumentVendors();
+  const previous=select?.value||'';
+  if(select){select.innerHTML=vendorNames.length?vendorNames.map(v=>`<option value="${escAttr(v)}">${esc(v)}</option>`).join(''):'<option value="">発注先を先に割り当ててください</option>';if(vendorNames.includes(previous))select.value=previous;}
+  const vendor=select?.value||vendorNames[0]||'';
+  const data=getVendorMap()[vendor]||{rows:[],ord:0};
+  const issuer=getOrderIssuerCompany();
+  const info=getOrdInfo();
+  const net=Math.round(data.ord||0),tax=Math.round(net*.1),gross=net+tax;
+  const title=orderDocumentType==='accept'?'注　文　請　書':'発　注　書';
+  const today=new Date(),dateText=`${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+  const issuerName=esc(issuer.name||'株式会社イズミ装美');
+  const leftName=orderDocumentType==='accept'?issuerName:esc(vendor||'発注先未選択')+'　御中';
+  const rightName=orderDocumentType==='accept'?esc(vendor||'受注者未選択'):issuerName;
+  const rows=data.rows||[];
+  const body=[...Array(Math.max(8,rows.length))].map((_,index)=>{const r=rows[index];if(!r)return'<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';const qty=Number(r.qty)||0,unit=Number(r.orderCost)||0,amount=Math.round(qty*unit);return `<tr><td style="text-align:center">${index+1}</td><td>${esc(r.name)}</td><td>${esc(r.spec)}</td><td style="text-align:center">${esc(r.unit)}</td><td class="od-num">${fmtNum(r.qty)}</td><td class="od-num">${unit?fmt(unit):''}</td><td class="od-num">${amount?fmt(amount):''}</td><td>${esc(r.note)}</td></tr>`;}).join('');
+  const terms=orderDocumentTerms().map(t=>`<div class="od-term">${esc(t)}</div>`).join('');
+  page.innerHTML=`<div class="od-top"><span>管理番号　${esc(vv('b-kanri'))}</span><span>${dateText}</span></div><div class="od-title">${title}</div><div class="od-party"><div><div class="od-party-name">${leftName}</div><div class="od-lead">下記のとおり注文いたします。</div></div><div class="od-issuer"><div class="od-party-name">${rightName}</div><div>${esc(issuer.zip||'')}</div><div>${esc(issuer.addr||'')}</div><div>${esc(issuer.tel||'')}</div><div class="od-stamp">${orderDocumentType==='order'?buildOrderStampHtml(45):''}</div></div></div><table class="od-info"><tr><th>物件名</th><td>${esc([vv('b-property'),vv('b-room')].filter(Boolean).join(' '))}</td><th>施工場所</th><td>${esc(vv('b-place'))}</td></tr><tr><th>工事名及び概要</th><td colspan="3">${esc(vv('b-summary'))}</td></tr><tr><th>工期</th><td>${esc(fmtD(info.dateFrom))} ～ ${esc(fmtD(info.dateTo))}</td><th>支払条件</th><td>${esc(getPayment())}</td></tr><tr><th>発注金額（消費税込）</th><td colspan="3" class="od-amount">${yen(gross)}</td></tr></table><table class="od-items"><thead><tr><th style="width:6%">№</th><th style="width:24%">名称</th><th style="width:21%">仕様</th><th style="width:7%">呼称</th><th style="width:8%">数量</th><th style="width:11%">単価</th><th style="width:12%">金額</th><th>備考</th></tr></thead><tbody>${body}</tbody><tfoot><tr><th colspan="6">小計</th><td class="od-num">${fmt(net)}</td><td></td></tr><tr><th colspan="6">消費税（10%）</th><td class="od-num">${fmt(tax)}</td><td></td></tr><tr><th colspan="6">合計（税込）</th><td class="od-num">${fmt(gross)}</td><td></td></tr></tfoot></table><div class="od-terms-title">注文条項</div><div class="od-terms">${terms}</div>${/原状回復|退去/.test(vv('b-summary'))?'<div class="od-note">※退去後に確認された追加損傷等は、双方確認のうえ別途見積・発注とします。</div>':''}`;
 }
 
 // ===== 左パネル：KPI＋業者カード（情報量最大化） =====
