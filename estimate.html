@@ -637,8 +637,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <style>
 /* 発注書は、基本情報欄と明細表の左右端を全要素の基準線にする */
 .od-document-head{height:18mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
-.od-top-meta{position:absolute;right:0;top:0;width:115mm;display:grid;grid-template-columns:auto auto;align-items:center;justify-content:space-between;gap:0;font-size:10.5px;white-space:nowrap}
+.od-top-meta{position:absolute;right:0;top:0;width:max-content;max-width:92mm;display:flex;align-items:center;justify-content:flex-end;gap:8mm;font-size:10.5px;white-space:nowrap}
 .od-top-meta .od-date,.od-top-meta .od-ref{position:static;letter-spacing:.08em;font-size:inherit}
+.od-title{width:max-content;max-width:92mm;margin:6mm auto 0}
 .od-party{min-height:31mm;padding-top:3mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
 .od-party-right{justify-self:end;width:115mm;grid-template-columns:28mm minmax(0,1fr);justify-content:end;text-align:left}
 .od-lead,.od-info,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{width:calc(100% - 12mm)}
@@ -2403,7 +2404,7 @@ function attachPostalCodeFromAddress(addressId,postalId){
 }
 function syncEst(){
   st('e-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));st('e-kojiname',getDocumentPropertyName());
-  st('e-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));st('e-summary',vv('b-summary'));
+  st('e-place',getDocumentConstructionPlace());st('e-summary',vv('b-summary'));
   st('e-payment',getPayment());st('e-expire','見積日より'+vv('b-expire'));st('e-cond',vv('b-cond'));
   st('e-date',fmtD(displayDateValue('b-date')));
   _updatePageHeaders();
@@ -2458,7 +2459,7 @@ function syncReport(){
   st('r-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));
   st('r-property',vv('b-property'));
   st('r-project',vv('b-kojiname'));
-  st('r-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));
+  st('r-place',getDocumentConstructionPlace());
   st('r-completed',fmtD(completedDate));
   applyReportCo();
   saveReport();
@@ -3209,7 +3210,7 @@ function _updatePageHeaders(){
   const s=(cls,val)=>document.querySelectorAll('.'+cls).forEach(el=>el.textContent=val);
   s('p-client',vv('b-client')+(vv('b-honorific')?' '+vv('b-honorific'):''));s('p-date-top',fmtD(vv('b-date')));
   s('p-kanri',vv('b-kanri'));document.querySelectorAll('.p-kanri-row').forEach(el=>el.style.visibility=(vv('b-kanri')||vv('b-date'))?'visible':'hidden');
-  s('p-kojiname',getDocumentPropertyName());s('p-place',[vv('b-place'),vv('b-room')].filter(Boolean).join('　'));
+  s('p-kojiname',getDocumentPropertyName());s('p-place',getDocumentConstructionPlace());
   s('p-summary',vv('b-summary'));s('p-payment',getPayment());
   s('p-duration',vv('b-duration'));
   s('p-expire','見積日より'+vv('b-expire'));s('p-cond',vv('b-cond'));
@@ -5047,7 +5048,7 @@ function renderCostTable(){
   var kanri      = cgLinked('ct_kanri',     vv('b-kanri')||'');
   var propName   = cgLinked('ct_propName',  vv('b-property')||'');
   var room       = cgLinked('ct_room',      vv('b-room')||'');
-  var place      = cgLinked('ct_place',     vv('b-place')||'');
+  var place      = cgLinked('ct_place',     getDocumentConstructionPlace());
   var client     = cgLinked('ct_client',    vv('b-client')||'');
   var kjname     = cgLinked('ct_kjname',    vv('b-kojiname')||'');
   var summary    = cgLinked('ct_summary',   vv('b-summary')||'');
@@ -5962,7 +5963,11 @@ async function pickManagementMasterItem(index){
   const paymentSelect=document.getElementById('b-payment-sel');if(paymentSelect)paymentSelect.value='完工金100%';
   const paymentInput=document.getElementById('b-payment');if(paymentInput)paymentInput.value='完工金100%';
   const set=(id,value)=>{const el=document.getElementById(id);if(el&&value!==undefined&&value!==null&&value!=='')el.value=value;};
-  set('b-kanri',item.management_number);set('b-uketsuke',item.reception_date);set('b-category',item.category);set('b-keijo',item.accounting_month);set('b-kanko-date',item.scheduled_completion_date);set('b-completed-on',item.completed_on);set('b-client',item.customer_name||item.client_name||item.billing_client_name);set('b-client-contact',item.customer_contact_name||item.invoice_contact_name);set('b-property',item.property_name);set('b-room',item.room_number);set('b-postal',item.postal_code||item.property_postal_code);set('b-place',item.property_address||item.work_address);set('b-summary',item.work_name);
+  set('b-kanri',item.management_number);set('b-uketsuke',item.reception_date);set('b-category',item.category);set('b-keijo',item.accounting_month);set('b-kanko-date',item.scheduled_completion_date);set('b-completed-on',item.completed_on);set('b-client',item.customer_name||item.client_name||item.billing_client_name);set('b-client-contact',item.customer_contact_name||item.invoice_contact_name);set('b-property',item.property_name);set('b-room',item.room_number);set('b-postal',item.postal_code||item.property_postal_code);set('b-place',item.property_address||item.work_address||item.site_address||item.construction_address||item.location_address);set('b-summary',item.work_name);
+  if(!vv('b-place')){
+    const masterAddress=getPropertyMasterAddress(item.property_name);
+    if(masterAddress)set('b-place',masterAddress);
+  }
   if(item.property_name||item.room_number||item.work_name)autoFillKojiname();
   const staff=document.getElementById('b-staff');if(staff&&item.staff_name){let option=[...staff.options].find(o=>o.value===item.staff_name||o.textContent===item.staff_name);if(!option){option=new Option(item.staff_name,item.staff_name);staff.add(option);}staff.value=item.staff_name;}
   const mappedStatus=item.status==='受付'?'見積中':item.status||'見積中';const status=document.getElementById('b-status');if(status){let option=[...status.options].find(o=>o.value===mappedStatus);if(!option){option=new Option(mappedStatus,mappedStatus);status.add(option);}status.value=mappedStatus;}
@@ -8543,6 +8548,31 @@ function orderDocumentTerms(){
     '12．本書に定めのない事項または疑義は、双方誠意をもって協議します。解決しない場合は建設工事紛争審査会の利用を検討し、なお解決しない場合の第一審専属的合意管轄裁判所は東京地方裁判所または東京簡易裁判所とします。'
   ];
 }
+function normalizePropertyLookupName(value){
+  return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').toLowerCase();
+}
+function getPropertyMasterAddress(propertyName){
+  const key=normalizePropertyLookupName(propertyName);
+  if(!key||!Array.isArray(propertyList))return '';
+  const exact=propertyList.find(property=>normalizePropertyLookupName(property.name)===key);
+  const partial=propertyList.find(property=>{
+    const name=normalizePropertyLookupName(property.name);
+    return name&&(name.includes(key)||key.includes(name));
+  });
+  return String((exact||partial)?.addr||'').trim();
+}
+function getDocumentConstructionPlace(){
+  const property=String(vv('b-property')||'').trim();
+  const room=String(vv('b-room')||'').trim();
+  const direct=String(vv('b-place')||'').trim();
+  const directIsRoomOnly=room&&normalizePropertyLookupName(direct)===normalizePropertyLookupName(room);
+  const address=(directIsRoomOnly?'':direct)||getPropertyMasterAddress(property);
+  if(!address)return [property,room].filter(Boolean).join('　');
+  const compactAddress=normalizePropertyLookupName(address);
+  const compactRoom=normalizePropertyLookupName(room);
+  const alreadyHasRoom=compactRoom&&(compactAddress.endsWith(compactRoom)||compactAddress.includes(compactRoom+'号'));
+  return [address,alreadyHasRoom?'':room].filter(Boolean).join('　');
+}
 function renderOrderDocuments(){
   const page=document.getElementById('a4orderdocs'); if(!page)return;
   const issuer=getOrderIssuerCompany();
@@ -8559,6 +8589,7 @@ function renderOrderDocuments(){
   const rightParty=orderDocumentType==='accept'?issuerName:clientName;
   const managementNumber=vv('b-kanri');
   const project=[vv('b-property'),vv('b-room')].filter(Boolean).join(' ');
+  const constructionPlace=getDocumentConstructionPlace();
   const summary=vv('b-summary')||'工事一式';
   const period=[fmtD(info.dateFrom),fmtD(info.dateTo)].filter(Boolean).join('～');
   const workPeriod=(period||'　　　　　　　　　')+'（状況により工期変更あります）';
@@ -8569,7 +8600,7 @@ function renderOrderDocuments(){
     <div class="od-party"><div class="od-party-left">${leftParty}</div><div class="od-party-right"><span class="od-party-label">${rightLabel}</span><span class="od-party-value">${rightParty}</span></div></div>
     <div class="od-lead">下記のとおり注文いたします。</div>
     <table class="od-info"><colgroup><col style="width:34mm"><col><col style="width:24mm"><col style="width:91mm"></colgroup>
-      <tr><th>物件名</th><td>${esc(project)}</td><th class="od-place-head">施工場所</th><td>${esc(vv('b-place'))}</td></tr>
+      <tr><th>物件名</th><td>${esc(project)}</td><th class="od-place-head">施工場所</th><td>${esc(constructionPlace)}</td></tr>
       <tr><th>工事名及び概要</th><td colspan="3">${esc(summary)}</td></tr>
       <tr><th>工期</th><td colspan="3">${esc(workPeriod)}</td></tr>
       <tr><th>発注金額</th><td><span class="od-price">${yen(gross)}</span>　<span class="od-tax-label">（消費税込）</span></td><th class="od-place-head">支払条件</th><td>${esc(getPayment()||'従来通り')}</td></tr>
@@ -8656,7 +8687,7 @@ function openOrdPreview(vendor){
   const total=d.ord;
   const tax=Math.round(total*0.1);
   const property=vv('b-property')||'';
-  const place=[vv('b-place'),vv('b-room')].filter(Boolean).join('　');
+  const place=getDocumentConstructionPlace();
   const kanri=document.getElementById('b-kanri')?vv('b-kanri'):'';
   const today=new Date();
   const weekNames=['日','月','火','水','木','金','土'];
@@ -9828,7 +9859,7 @@ function printOrdPreview(){
   const totalIncTax=totalExTax+tax;
 
   const property=vv('b-property')||'';
-  const place=[vv('b-place'),vv('b-room')].filter(Boolean).join('　');
+  const place=getDocumentConstructionPlace();
   const kanri=vv('b-kanri')||'';
   const today=new Date();
   const weekNames=['日','月','火','水','木','金','土'];
