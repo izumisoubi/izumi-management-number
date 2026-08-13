@@ -637,6 +637,10 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <style>
 /* 元帳票の実印刷に合わせ、振込先は右側欄の開始位置へ揃える */
 .od-bank-row{grid-template-columns:42mm 1fr;width:46%}
+.od-document-head{height:18mm}
+.od-top-meta{position:absolute;right:0;top:0;display:flex;align-items:center;gap:8mm;font-size:10.5px;white-space:nowrap}
+.od-top-meta .od-date,.od-top-meta .od-ref{position:static;letter-spacing:.08em;font-size:inherit}
+.od-party{min-height:31mm;padding-top:3mm}
 </style>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -8550,7 +8554,7 @@ function renderOrderDocuments(){
   const bank=issuer.bank||'';
   const terms=orderDocumentTerms().map(t=>`<div class="od-term">${esc(t)}</div>`).join('');
   page.innerHTML=`
-    <div class="od-document-head"><div class="od-date">${dateText}</div><div class="od-title">${title}</div><div class="od-ref">見積${esc(managementNumber)}</div></div>
+    <div class="od-document-head"><div class="od-top-meta"><span class="od-ref">管理番号　${esc(managementNumber)}</span><span class="od-date">発行日　${dateText}</span></div><div class="od-title">${title}</div></div>
     <div class="od-party"><div class="od-party-left">${leftParty}</div><div class="od-party-right"><span class="od-party-label">${rightLabel}</span><span class="od-party-value">${rightParty}</span></div></div>
     <div class="od-lead">下記のとおり注文いたします。</div>
     <table class="od-info"><colgroup><col style="width:34mm"><col><col style="width:24mm"><col style="width:91mm"></colgroup>
