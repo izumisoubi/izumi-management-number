@@ -641,6 +641,16 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .od-top-meta{position:absolute;right:0;top:0;display:flex;align-items:center;gap:8mm;font-size:10.5px;white-space:nowrap}
 .od-top-meta .od-date,.od-top-meta .od-ref{position:static;letter-spacing:.08em;font-size:inherit}
 .od-party{min-height:31mm;padding-top:3mm}
+.od-party-right{justify-self:end;grid-template-columns:28mm max-content;justify-content:end;text-align:left}
+.od-lead,.od-info,.od-bank-row,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{width:calc(100% - 12mm)}
+.od-lead,.od-info,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{margin-left:auto;margin-right:auto}
+.od-info th,.od-info td{height:9mm;border-bottom:1px solid #777}
+.od-bank-row{margin-right:6mm}
+.od-items th,.od-items td,.od-items tbody td,.od-items tfoot td,.od-items tfoot th{border-style:solid}
+.od-items th,.od-items td{height:8mm}
+.od-items thead th{height:9mm}
+.od-items .od-summary-row td{height:8mm}
+.od-items .od-application-row td{height:8mm}
 </style>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -11109,6 +11119,6 @@ init();
 </script>
 
 <script src="common-nav.js?v=20260801-MOBILE4"></script>
-<script src="本日日付共通.js?v=20260813-TODAY2"></script>
+<script src="本日日付共通.js?v=20260813-TODAY3"></script>
 </body>
 </html>
