@@ -185,6 +185,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
       <ul>
         <li>管理番号から、案件の基本情報だけをオンライン版から自動取得します。</li>
         <li>写真本体はクラウドへ保存しません。工事写真帖のJSONとPDFは、このPCへ保存します。</li>
+        <li>読込・復元は、このPCに保存されている写真帖のJSONファイルを選んでください。</li>
         <li>別のPCや社員へ引き継ぐ場合は、保存したJSONファイルを渡して「保存データを読込」から開いてください。</li>
       </ul>
     </div>
@@ -194,7 +195,10 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
           <div class="s-step">STEP 1</div>
           <div class="s-sub" style="margin-bottom:0">写真パターンを選択</div>
         </div>
-        <label for="fup-load" style="padding:8px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;border:1.5px solid #E65100;background:#FFF3E0;color:#E65100;display:inline-block;white-space:nowrap">📂 保存データを読込</label>
+        <div style="text-align:right">
+          <label for="fup-load" style="padding:8px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;border:1.5px solid #E65100;background:#FFF3E0;color:#E65100;display:inline-block;white-space:nowrap">📂 JSONを読込・復元</label>
+          <div style="margin-top:5px;font-size:10px;line-height:1.35;color:#8A4B08">このPCに保存したJSONを選択</div>
+        </div>
         <input type="file" id="fup-load" accept=".json" style="display:none" onchange="loadProject(this)">
       </div>
       <div class="pat-grid">
