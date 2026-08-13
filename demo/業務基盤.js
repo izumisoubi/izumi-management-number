@@ -12,7 +12,7 @@ function exportLegacySnapshot(){
   const data={exported_at:new Date().toISOString(),device_id:localStorage.getItem('izumi_sales_demo_mirror__device_id')||crypto.randomUUID(),source:location.href,items:{}};
   localStorage.setItem('izumi_sales_demo_mirror__device_id',data.device_id);
   keys.forEach(key=>{try{data.items[key]=JSON.parse(localStorage.getItem(key)||'null')}catch{data.items[key]={parse_error:true,raw:localStorage.getItem(key)}}});
-  downloadJson(`サンプル装美_移行前バックアップ_${new Date().toLocaleDateString('sv-SE')}.json`,data);
+  downloadJson(`サンプル装美_移行前バックアップ_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})}.json`,data);
   return data;
 }
 function previewImport(file,onReady){

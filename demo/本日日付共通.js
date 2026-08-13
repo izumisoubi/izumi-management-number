@@ -4,14 +4,25 @@
   if (window.__izumiTodayDateDisplayLoaded) return;
   window.__izumiTodayDateDisplayLoaded = true;
 
-  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
   const styleId = 'todayDateDisplayStyle';
   const displayId = 'todayDateDisplay';
 
+  function japanDateParts(date = new Date()) {
+    const parts = {};
+    new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short'
+    }).formatToParts(date).forEach(part => {
+      if (part.type !== 'literal') parts[part.type] = part.value;
+    });
+    return parts;
+  }
+
   function dateLabels(date = new Date()) {
+    const parts = japanDateParts(date);
     return {
-      full: `本日　${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日（${weekdays[date.getDay()]}）`,
-      short: `本日 ${date.getMonth() + 1}/${date.getDate()}（${weekdays[date.getDay()]}）`
+      full: `本日　${parts.year}年${parts.month}月${parts.day}日（${parts.weekday}）`,
+      short: `本日 ${parts.month}/${parts.day}（${parts.weekday}）`
     };
   }
 
@@ -75,12 +86,10 @@
   }
 
   function scheduleNextDay(display) {
-    const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2);
     window.setTimeout(() => {
       updateDisplay(display);
       scheduleNextDay(display);
-    }, Math.max(1000, next.getTime() - now.getTime()));
+    }, 60000);
   }
 
   function mount() {

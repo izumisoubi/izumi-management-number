@@ -55,7 +55,7 @@
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const $=id=>document.getElementById(id);
     const esc=value=>String(value??'').replace(/[&<>"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
-    const todayLocal=()=>{const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());return now.toISOString().slice(0,10)};
+    const todayLocal=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
     $('receptionDate').value=todayLocal();
     const linkedCalendarEventId=new URL(location.href).searchParams.get('calendar_event_id')||'';
     const fiscalCodeFor=dateValue=>window.IzumiFiscalYear.codeForDate(dateValue?`${dateValue}T00:00:00`:new Date());

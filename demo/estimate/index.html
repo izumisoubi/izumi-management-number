@@ -1319,7 +1319,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
           <textarea class="inv-address" id="i-ov-addr" placeholder="空白なら基本情報の請求先住所" oninput="syncInv()"></textarea>
           <label title="発行日を入力すると自動保存され、台帳へ反映します">発行日</label>
           <div style="display:flex;align-items:center;gap:5px;min-width:0;">
-            <button type="button" class="abtn" onclick="const input=document.getElementById('i-date-in');input.value=new Date().toLocaleDateString('sv-SE');input.dispatchEvent(new Event('input',{bubbles:true}));" title="発行日に本日の日付を入力します" style="flex:none;padding:5px 9px;">本日</button>
+            <button type="button" class="abtn" onclick="const input=document.getElementById('i-date-in');input.value=todayDateValue();input.dispatchEvent(new Event('input',{bubbles:true}));" title="発行日に日本時間の本日の日付を入力します" style="flex:none;padding:5px 9px;">本日</button>
             <input type="date" id="i-date-in" oninput="syncInv()" title="発行日を入力すると、請求日・請求金額が自動で台帳へ反映されます" style="width:145px;min-width:145px;flex:none;">
           </div>
           <label>振込期日</label>
@@ -1548,7 +1548,11 @@ function duplicateProject(){
 const DATE_LOCK_STORAGE='izumi_sales_demo_estimate_date_locks_v1';
 function loadDateLocks(){try{return JSON.parse(localStorage.getItem(DATE_LOCK_STORAGE)||'{}');}catch(e){return {};}}
 function saveDateLocks(locks){try{localStorage.setItem(DATE_LOCK_STORAGE,JSON.stringify(locks));}catch(e){}}
-function todayDateValue(){return new Date().toLocaleDateString('sv-SE');}
+function todayDateValue(date=new Date()){
+  const parts={};
+  new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date).forEach(part=>{if(part.type!=='literal')parts[part.type]=part.value;});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
 function displayDateValue(id){
   const value=vv(id);
   if(value)return value;
@@ -1566,7 +1570,7 @@ function setupDateActions(){
     const lockButton=document.createElement('button'); lockButton.type='button';
     [todayButton,lockButton].forEach(button=>button.style.cssText='border:1px solid var(--tbr);background:var(--tb);color:var(--tt);border-radius:4px;padding:4px 7px;font-size:10px;font-weight:700;cursor:pointer;flex:none;');
     const update=()=>{const locked=!!locks[id];input.disabled=locked;todayButton.disabled=locked;todayButton.style.opacity=locked?'.45':'1';lockButton.textContent=locked?'ロック解除':'日付固定';lockButton.title='入力値はこの操作をしなくても自動保存・台帳転記されます。これは誤変更防止だけの機能です。';};
-    todayButton.onclick=()=>{input.value=new Date().toISOString().slice(0,10);input.dispatchEvent(new Event('input',{bubbles:true}));scheduleOnlineAutosave(250);};
+    todayButton.onclick=()=>{input.value=todayDateValue();input.dispatchEvent(new Event('input',{bubbles:true}));scheduleOnlineAutosave(250);};
     lockButton.onclick=()=>{locks[id]=!locks[id];saveDateLocks(locks);update();};
     input.addEventListener('input',()=>{if(locks[id]){locks[id]=false;saveDateLocks(locks);update();}});
     input.parentNode.insertBefore(tools,input);
@@ -1578,7 +1582,7 @@ function init(){
   loadMaster();
   loadCtData();
   loadBasic(); // ← 基本情報を復元
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayDateValue();
   if(!document.getElementById('b-date').value)document.getElementById('b-date').value=today;
   // 受付日：未保存の場合は今日の日付をセット
   const uketsukeEl=document.getElementById('b-uketsuke');
@@ -6870,7 +6874,7 @@ function buildInvoiceBurdenPage(kind,pageIndex){
   const taxTotal=grossTotal-netTotal;
   const burdenLabel=kind==='landlord'?'貸主負担分':kind==='tenant'?'借主負担分':'貸主・借主 月次一覧';
   const rowsHtml=detailRows.length?detailRows.map((row,index)=>`<tr><td class="center">${row.no||index+1}</td><td>${esc(row.property)}</td><td>${esc(row.content)}</td><td>${esc(row.spec)}</td><td class="center">${esc(row.date)}</td><td class="center">${esc(row.burdenType)}</td><td class="num">${fmt(row.net)}</td><td class="num">${fmt(row.tax)}</td><td class="num">${fmt(row.gross)}</td></tr>`).join(''):`<tr><td colspan="9" class="empty-row">該当する負担額が入力されていません。見積明細の貸主負担額・借主負担額を入力してください。</td></tr>`;
-  return `<section class="burden-page" data-page="${pageIndex}" contenteditable="true" spellcheck="false"><div class="top-date">発行日　${esc(fmtD(vv('i-date-in')||new Date().toISOString().slice(0,10)))}</div><h1>御　請　求　書</h1><div class="head-grid"><div class="recipient"><div class="recipient-name">${esc(party.name)} 御中</div>${party.dept?`<div>${esc(party.dept)}</div>`:''}${party.address?`<div class="recipient-address">${esc(party.address).replace(/\n/g,'<br>')}</div>`:''}${party.staff?`<div>ご担当：${esc(party.staff)}</div>`:''}<div class="project">件名：${esc(vv('b-kojiname')||[vv('b-property'),vv('b-room'),vv('b-summary')].filter(Boolean).join(' '))}</div></div>${buildStandaloneInvoiceCompany()}</div><div class="amount-box"><div><b>${burdenLabel}</b><small>管理番号：${esc(vv('b-kanri'))}</small></div><strong>${yen(grossTotal)}</strong></div><table class="burden-table"><thead><tr><th>No.</th><th>物件名</th><th>工事内容</th><th>仕様</th><th>実施日</th><th>種別</th><th>金額</th><th>消費税10%</th><th>税込金額</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr><th colspan="6">合計</th><td class="num">${fmt(netTotal)}</td><td class="num">${fmt(taxTotal)}</td><td class="num">${fmt(grossTotal)}</td></tr></tfoot></table><div class="remarks"><b>備考</b><div>${esc(document.getElementById('invMemo')?.value||vv('b-inv-note')).replace(/\n/g,'<br>')}</div></div></section>`;
+  return `<section class="burden-page" data-page="${pageIndex}" contenteditable="true" spellcheck="false"><div class="top-date">発行日　${esc(fmtD(vv('i-date-in')||todayDateValue()))}</div><h1>御　請　求　書</h1><div class="head-grid"><div class="recipient"><div class="recipient-name">${esc(party.name)} 御中</div>${party.dept?`<div>${esc(party.dept)}</div>`:''}${party.address?`<div class="recipient-address">${esc(party.address).replace(/\n/g,'<br>')}</div>`:''}${party.staff?`<div>ご担当：${esc(party.staff)}</div>`:''}<div class="project">件名：${esc(vv('b-kojiname')||[vv('b-property'),vv('b-room'),vv('b-summary')].filter(Boolean).join(' '))}</div></div>${buildStandaloneInvoiceCompany()}</div><div class="amount-box"><div><b>${burdenLabel}</b><small>管理番号：${esc(vv('b-kanri'))}</small></div><strong>${yen(grossTotal)}</strong></div><table class="burden-table"><thead><tr><th>No.</th><th>物件名</th><th>工事内容</th><th>仕様</th><th>実施日</th><th>種別</th><th>金額</th><th>消費税10%</th><th>税込金額</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr><th colspan="6">合計</th><td class="num">${fmt(netTotal)}</td><td class="num">${fmt(taxTotal)}</td><td class="num">${fmt(grossTotal)}</td></tr></tfoot></table><div class="remarks"><b>備考</b><div>${esc(document.getElementById('invMemo')?.value||vv('b-inv-note')).replace(/\n/g,'<br>')}</div></div></section>`;
 }
 function openSelectedInvoiceTemplate(autoPrint){
   const type=getInvoiceTemplateType();
