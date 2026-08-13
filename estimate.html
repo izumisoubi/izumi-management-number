@@ -26,6 +26,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .brand-nm{font-size:12px;font-weight:700;color:var(--tt);white-space:nowrap;}
 .tab{padding:12px 14px;color:var(--tm);font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
 .tab:hover{color:var(--tt);}.tab.active{color:var(--ta);border-bottom-color:var(--ta);}
+.header-actions{display:flex;align-items:center;flex:0 0 auto;margin-left:auto;color:var(--tt);}
 .bar-r{flex:1 0 100%;margin-left:0;display:flex;gap:5px;align-items:center;justify-content:flex-end;min-width:0;max-width:100%;padding:5px 0 6px;border-top:1px solid var(--tbr);overflow-x:auto;scrollbar-width:thin;}
 .th-dots{display:flex;gap:4px;align-items:center;}
 .th-dots span{font-size:10px;color:var(--tm);margin-right:2px;white-space:nowrap;}
@@ -659,6 +660,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="tab" onclick="showTab('clientmaster',this)">取引先マスタ</div>
   <div class="tab" onclick="showTab('propertymaster',this)">物件マスタ</div>
   <div class="tab" onclick="openLedgerMenu()" title="カレンダー・管理番号台帳・原価・未発注・請求を開きます">一覧メニュー</div>
+  <div class="header-actions"></div>
   <div class="bar-r">
     <div class="th-dots">
       <span>テーマ</span>
@@ -10999,6 +11001,6 @@ init();
 </script>
 
 <script src="common-nav.js?v=20260801-MOBILE4"></script>
-<script src="本日日付共通.js?v=20260808-TODAY1"></script>
+<script src="本日日付共通.js?v=20260813-TODAY2"></script>
 </body>
 </html>

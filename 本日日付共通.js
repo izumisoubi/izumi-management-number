@@ -46,6 +46,7 @@
 
   function findTarget() {
     const selectors = [
+      '.tabbar .header-actions',
       '.tabbar .bar-r',
       'header .header-actions',
       'header .toolbar-actions',
