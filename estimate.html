@@ -28,6 +28,8 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 .tab:hover{color:var(--tt);}.tab.active{color:var(--ta);border-bottom-color:var(--ta);}
 .header-actions{display:flex;align-items:center;flex:0 0 auto;margin-left:auto;color:var(--tt);}
 .bar-r{flex:1 0 100%;margin-left:0;display:flex;gap:5px;align-items:center;justify-content:flex-end;min-width:0;max-width:100%;padding:5px 0 6px;border-top:1px solid var(--tbr);overflow-x:auto;scrollbar-width:thin;}
+.header-master-group{margin-left:auto;display:flex;align-items:center;gap:0;min-width:0;white-space:nowrap}
+.header-master-group .tab{flex:0 0 auto}
 .th-dots{display:flex;gap:4px;align-items:center;}
 .th-dots span{font-size:10px;color:var(--tm);margin-right:2px;white-space:nowrap;}
 .th-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .12s;flex-shrink:0;}
@@ -57,6 +59,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   .brand,.tab{flex:0 0 auto}
   .brand{font-size:10px}.tab{padding:9px 7px;font-size:10px}
   .bar-r{flex:1 0 100%;justify-content:flex-start;padding:4px 0}
+  .header-master-group{margin-left:0;overflow-x:auto;max-width:100%;flex:1 0 100%;border-top:1px solid var(--tbr)}
 }
 .screen{display:none;}.screen.active{display:block;}
 /* #sc-order の幅上限は撤去（発注書タブは画面幅いっぱいに可変で表示。左右分割は.ord-outerのpadding-leftで調整済み） */
@@ -655,12 +658,14 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
   <div class="tab" onclick="openPhotoAlbum()" title="この案件の基本情報を引き継いで工事写真帖を開きます">工事写真帖</div>
   <div class="tab" onclick="showTab('report',this)">完了報告書</div>
   <div class="tab" onclick="showTab('invoice',this)">請求</div>
-  <div class="tab" onclick="showTab('companies',this)">自社情報</div>
-  <div class="tab" onclick="showTab('vendormaster',this)">業者マスタ</div>
-  <div class="tab" onclick="showTab('clientmaster',this)">取引先マスタ</div>
-  <div class="tab" onclick="showTab('propertymaster',this)">物件マスタ</div>
   <div class="tab" onclick="openLedgerMenu()" title="カレンダー・管理番号台帳・原価・未発注・請求を開きます">一覧メニュー</div>
-  <div class="header-actions"></div>
+  <div class="header-master-group" aria-label="マスタと本日の日付">
+    <div class="tab" onclick="showTab('companies',this)">自社情報</div>
+    <div class="tab" onclick="showTab('vendormaster',this)">業者マスタ</div>
+    <div class="tab" onclick="showTab('clientmaster',this)">取引先マスタ</div>
+    <div class="tab" onclick="showTab('propertymaster',this)">物件マスタ</div>
+    <div class="header-actions"></div>
+  </div>
   <div class="bar-r">
     <div class="th-dots">
       <span>テーマ</span>
