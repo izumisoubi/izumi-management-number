@@ -1708,7 +1708,7 @@ function openPhotoAlbum(){
     if(basicTab)showTab('basic',basicTab);
     return;
   }
-  const target=new URL('工事写真帖.html',location.href);
+  const target=new URL('photo-album.html',location.href);
   target.searchParams.set('management_number',managementNumber);
   location.href=target.href;
 }
