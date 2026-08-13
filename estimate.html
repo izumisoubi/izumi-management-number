@@ -636,10 +636,10 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 </style>
 <style>
 /* 発注書は、基本情報欄と明細表の左右端を全要素の基準線にする */
-.od-document-head{height:18mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
-.od-top-meta{position:absolute;right:0;top:0;width:max-content;max-width:92mm;display:flex;align-items:center;justify-content:flex-end;gap:8mm;font-size:10.5px;white-space:nowrap}
+.od-document-head{height:18mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:start}
+.od-top-meta{position:static;grid-column:3;grid-row:1;justify-self:end;width:max-content;max-width:none;display:flex;align-items:center;justify-content:flex-end;gap:8mm;padding-top:.4mm;font-size:10.5px;white-space:nowrap}
 .od-top-meta .od-date,.od-top-meta .od-ref{position:static;letter-spacing:.08em;font-size:inherit}
-.od-title{width:max-content;max-width:92mm;margin:6mm auto 0}
+.od-title{position:static;grid-column:2;grid-row:1;justify-self:center;width:max-content;max-width:none;margin:0;padding-top:0;letter-spacing:.18em;line-height:1.2;white-space:nowrap}
 .od-party{min-height:31mm;padding-top:3mm;width:calc(100% - 12mm);margin-left:auto;margin-right:auto}
 .od-party-right{justify-self:end;width:115mm;grid-template-columns:28mm minmax(0,1fr);justify-content:end;text-align:left}
 .od-lead,.od-info,.od-items-label,.od-items,.od-terms-title,.od-terms,.od-note{width:calc(100% - 12mm)}
