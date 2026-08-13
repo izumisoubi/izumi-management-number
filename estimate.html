@@ -8551,15 +8551,42 @@ function orderDocumentTerms(){
 function normalizePropertyLookupName(value){
   return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').toLowerCase();
 }
+const DOCUMENT_PROPERTY_ADDRESS_OVERRIDES=[
+  {
+    aliases:['LaSante浦和常盤公園','ラサンテ浦和常盤公園'],
+    postal:'330-0061',
+    address:'埼玉県さいたま市浦和区常盤1丁目4-14'
+  }
+];
+function getVerifiedPropertyAddress(propertyName){
+  const key=normalizePropertyLookupName(propertyName);
+  if(!key)return '';
+  const matched=DOCUMENT_PROPERTY_ADDRESS_OVERRIDES.find(entry=>
+    entry.aliases.some(alias=>{
+      const aliasKey=normalizePropertyLookupName(alias);
+      return key===aliasKey||key.includes(aliasKey)||aliasKey.includes(key);
+    })
+  );
+  return matched?.address||'';
+}
 function getPropertyMasterAddress(propertyName){
   const key=normalizePropertyLookupName(propertyName);
-  if(!key||!Array.isArray(propertyList))return '';
-  const exact=propertyList.find(property=>normalizePropertyLookupName(property.name)===key);
-  const partial=propertyList.find(property=>{
-    const name=normalizePropertyLookupName(property.name);
-    return name&&(name.includes(key)||key.includes(name));
-  });
-  return String((exact||partial)?.addr||'').trim();
+  if(!key)return '';
+  if(Array.isArray(propertyList)){
+    const exact=propertyList.find(property=>normalizePropertyLookupName(property.name)===key);
+    const partial=propertyList.find(property=>{
+      const name=normalizePropertyLookupName(property.name);
+      return name&&(name.includes(key)||key.includes(name));
+    });
+    const masterAddress=String((exact||partial)?.addr||'').trim();
+    if(masterAddress)return masterAddress;
+  }
+  return getVerifiedPropertyAddress(propertyName);
+}
+function formatConstructionRoom(room){
+  const value=String(room||'').trim();
+  if(!value)return '';
+  return /(?:号室?|室)$/.test(value)?value:value+'号室';
 }
 function getDocumentConstructionPlace(){
   const property=String(vv('b-property')||'').trim();
@@ -8571,7 +8598,7 @@ function getDocumentConstructionPlace(){
   const compactAddress=normalizePropertyLookupName(address);
   const compactRoom=normalizePropertyLookupName(room);
   const alreadyHasRoom=compactRoom&&(compactAddress.endsWith(compactRoom)||compactAddress.includes(compactRoom+'号'));
-  return [address,alreadyHasRoom?'':room].filter(Boolean).join('　');
+  return [address,alreadyHasRoom?'':formatConstructionRoom(room)].filter(Boolean).join('　');
 }
 function renderOrderDocuments(){
   const page=document.getElementById('a4orderdocs'); if(!page)return;
