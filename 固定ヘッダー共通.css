@@ -30,21 +30,26 @@ body>.tabbar:first-of-type{
   font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif!important;
 }
 body>header:first-of-type:not(.system-tabbar){
+  height:var(--izumi-header-height)!important;
   min-height:var(--izumi-header-height)!important;
   padding:0 max(18px,calc((100vw - var(--izumi-header-width))/2))!important;
+  overflow:hidden!important;
 }
 body>header:first-of-type>.header-inner,
 body>header:first-of-type>.head{
   box-sizing:border-box;
   width:100%!important;
   max-width:var(--izumi-header-width)!important;
+  height:var(--izumi-header-height)!important;
   min-height:var(--izumi-header-height)!important;
   margin:0 auto!important;
   padding:10px 0!important;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  overflow:hidden;
 }
 body>header:first-of-type.top{
   align-items:center!important;
@@ -74,9 +79,33 @@ body>header:first-of-type nav,
 body>header:first-of-type .header-actions,
 body>header:first-of-type .toolbar,
 body>header:first-of-type .user{
-  display:flex;
-  align-items:center;
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
   gap:5px!important;
+  min-width:0;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+}
+body>header:first-of-type .header-content,
+body>header:first-of-type .auth-controls:not(.hidden){
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+}
+body>header:first-of-type .account-row{
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  gap:6px!important;
+  white-space:nowrap;
 }
 body>header:first-of-type a,
 body>header:first-of-type button:not(.icon-btn){
@@ -114,7 +143,14 @@ body>header:first-of-type button[onclick*="signOut"]{
 }
 body>header.system-tabbar,
 body>.tabbar:first-of-type{
-  min-height:48px!important;
+  height:var(--izumi-header-height)!important;
+  min-height:var(--izumi-header-height)!important;
+  max-height:var(--izumi-header-height)!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:thin;
   padding-left:max(14px,calc((100vw - var(--izumi-header-width))/2))!important;
   padding-right:max(14px,calc((100vw - var(--izumi-header-width))/2))!important;
 }
@@ -140,6 +176,14 @@ body>.tabbar:first-of-type .tab.active{
 }
 body>.tabbar:first-of-type .bar-r,
 body>.tabbar:first-of-type .header-master-group{
+  flex:0 0 auto!important;
+  width:auto!important;
+  max-width:none!important;
+  margin-left:0!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  overflow:visible!important;
+  border-top:0!important;
   border-color:var(--izumi-header-line)!important;
 }
 
@@ -148,9 +192,16 @@ body>.tabbar:first-of-type .header-master-group{
   html{scroll-padding-top:78px}
   body>header:first-of-type:not(.system-tabbar){padding:0 12px!important}
   body>header:first-of-type>.header-inner,
-  body>header:first-of-type>.head{padding:10px 0!important;gap:9px!important}
+  body>header:first-of-type>.head{padding:8px 0!important;gap:9px!important}
   body>header:first-of-type h1,
   body>header:first-of-type .title{font-size:16px!important}
+  body>header:first-of-type .sub,
+  body>header:first-of-type h1+div,
+  body>header:first-of-type .head>div>div,
+  body>header:first-of-type .head>div>p{display:none!important}
+  body>header:first-of-type .header-content{width:auto!important;flex-direction:row!important;align-items:center!important}
+  body>header:first-of-type .auth-controls:not(.hidden){width:auto!important;flex-direction:row!important;align-items:center!important}
+  body>header:first-of-type .brand h1{padding-right:0!important}
   body>header:first-of-type nav,
   body>header:first-of-type .header-actions,
   body>header:first-of-type .toolbar,
