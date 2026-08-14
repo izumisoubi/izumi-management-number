@@ -19,9 +19,9 @@ test('見積システムを除く全画面のヘッダーを共通2段表示に�
   for(const page of unifiedHeaderPages){
     const html=read(page);
     assert.match(html,/本日日付共通\.js\?v=20260814-TODAY2/);
-    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER11/);
+    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER12/);
   }
-  assert.match(read('estimate.html'),/固定ヘッダー共通\.css\?v=20260814-HEADER11/);
+  assert.match(read('estimate.html'),/固定ヘッダー共通\.css\?v=20260814-HEADER12/);
   assert.match(headerScript,/body > \.tabbar:first-of-type/);
   assert.match(headerScript,/function normalizeHeaderLayout\(\)/);
   assert.match(headerScript,/izumi-ledger-primary/);
