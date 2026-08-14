@@ -53,6 +53,7 @@ test('写真帳ヘッダーは上段の空きへメニューを収めて専用�
   assert.match(html, /primary\.insertBefore\(item,dateSlot\)/);
   assert.match(html, /secondary\.remove\(\)/);
   assert.match(html, /photo-header-compact\{height:43px!important/);
+  assert.match(html, /\.photo-album-system \.online-project-bar\{justify-content:flex-end\}/);
 });
 
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
