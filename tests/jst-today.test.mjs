@@ -21,7 +21,7 @@ test('日本時間の午前0時台は前日のUTC日付にならない',()=>{
 
 test('本日表示と主要入力画面は日本時間を明示する',()=>{
   for(const file of [
-    '本日日付共通.js','estimate.html','index.html','支払通知書.html',
+    '本日日付共通.js','estimate.html','index.html','kanribangou.html','支払通知書.html',
     'demo/本日日付共通.js','demo/estimate/本日日付共通.js',
     'demo/estimate/index.html','demo/支払通知書.html','demo/管理番号取得.html'
   ]){
@@ -32,7 +32,7 @@ test('本日表示と主要入力画面は日本時間を明示する',()=>{
 
 test('日付だけの初期値にUTC日付の切り出しを使わない',()=>{
   for(const file of [
-    'estimate.html','index.html','台帳共通.js','業務基盤.js',
+    'estimate.html','index.html','kanribangou.html','台帳共通.js','業務基盤.js',
     'demo/estimate/index.html','demo/台帳共通.js','demo/業務基盤.js',
     'demo/管理番号取得.html','demo/支払通知書.html'
   ]){

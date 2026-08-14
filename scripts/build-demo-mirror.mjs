@@ -18,8 +18,8 @@ for(const file of sources){
 for(const file of ['表入力共通.js','見積計算共通.js','自社原価共通.js','年度共通.js','本日日付共通.js']){
   copyFileSync(join(root,file),join(demo,'estimate',file));
 }
-copyFileSync(join(root,'index.html'),join(demo,'管理番号取得.html'));
-copyFileSync(join(root,'イズミ装美社内システム.html'),join(demo,'index.html'));
+copyFileSync(join(root,'kanribangou.html'),join(demo,'管理番号取得.html'));
+copyFileSync(join(root,'index.html'),join(demo,'index.html'));
 
 const runtimeTags='<script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script>';
 const realSupabase='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -37,7 +37,7 @@ function sanitize(text,file){
     .replaceAll('イズミ装美','サンプル装美')
     .replace(/[A-Za-z0-9._%+-]+@izumisoubi\.co\.jp/g,'demo@sample-system.jp')
     .replaceAll('正式版','販売デモ')
-    .replaceAll('index.html','管理番号取得.html')
+    .replaceAll('kanribangou.html','管理番号取得.html')
     .replaceAll('href="assets/icons/','href="../assets/icons/')
     .replaceAll('href="site.webmanifest"','href="../site.webmanifest"')
     .replaceAll('href="favicon.ico"','href="../favicon.ico"');

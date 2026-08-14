@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-STICKY1">
 </head>
 <body>
-<header><div class="head"><div><h1>電子取引データ検索</h1><div>取引日・取引金額・取引先を範囲および組合せで検索します</div></div><nav><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
+<header><div class="head"><div><h1>電子取引データ検索</h1><div>取引日・取引金額・取引先を範囲および組合せで検索します</div></div><nav><a href="index.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
 <section id="loginCard" class="login-card hidden"><h2>社員ログイン</h2><label>メールアドレス<input id="email" type="email"></label><label>パスワード<input id="password" type="password"></label><button class="btn primary" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
 <main id="app" class="hidden">
   <section class="panel"><div class="filters"><label>取引日（開始）<input id="dateFrom" type="date"></label><label>取引日（終了）<input id="dateTo" type="date"></label><label>金額（下限）<input id="amountMin" inputmode="numeric"></label><label>金額（上限）<input id="amountMax" inputmode="numeric"></label><label>取引先<input id="vendor" placeholder="業者名の一部"></label></div><div class="toolbar"><button class="btn primary" onclick="searchRecords()">検索</button><button class="btn secondary" onclick="clearFilters()">解除</button><button class="btn secondary" onclick="downloadCsv()">CSV</button><span id="status" class="status"></span></div></section>

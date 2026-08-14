@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-STICKY1">
 </head>
 <body>
-<header><div class="head"><div><h1>銀行入金照合</h1><div>三菱UFJ BizSTATION・三井住友 Web21のCSVを管理番号へ照合</div></div><div class="toolbar"><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="請求.html">請求管理</a><button id="logoutButton" class="btn secondary" onclick="signOut()">ログアウト</button></div></div></header>
+<header><div class="head"><div><h1>銀行入金照合</h1><div>三菱UFJ BizSTATION・三井住友 Web21のCSVを管理番号へ照合</div></div><div class="toolbar"><a href="index.html">一覧メニュー</a><a href="請求.html">請求管理</a><button id="logoutButton" class="btn secondary" onclick="signOut()">ログアウト</button></div></div></header>
 <main>
   <section id="accessCard" class="panel"><h2>接続確認中…</h2><p class="muted">銀行情報は最高権限者だけが閲覧・操作できます。</p></section>
   <div id="app" class="hidden">
@@ -70,7 +70,7 @@ async function boot(){
   if(!session){location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search));return}
   const [enabled,admin]=await Promise.all([db.rpc('is_current_app_user_enabled'),db.rpc('is_management_admin')]);
   if(enabled.error||enabled.data!==true){await db.auth.signOut();location.replace('auth.html?next='+encodeURIComponent(location.pathname));return}
-  if(admin.error||admin.data!==true){$('accessCard').innerHTML='<h2>最高権限が必要です</h2><p class="muted">銀行明細と入金確定は最高権限者だけが操作できます。</p><a class="btn secondary" href="イズミ装美社内システム.html">一覧メニューへ戻る</a>';return}
+  if(admin.error||admin.data!==true){$('accessCard').innerHTML='<h2>最高権限が必要です</h2><p class="muted">銀行明細と入金確定は最高権限者だけが操作できます。</p><a class="btn secondary" href="index.html">一覧メニューへ戻る</a>';return}
   $('accessCard').classList.add('hidden');$('app').classList.remove('hidden');await loadTransactions();
 }
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
