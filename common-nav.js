@@ -17,13 +17,14 @@
     ['工事リスト・原価.html', '原価'], ['工事リスト・未発注.html', '未発注'], ['請求.html', '請求']
   ]);
   const ledgerHeaderPages = new Set([
-    '管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'
+    'calendar.html','管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'
   ]);
   if (ledgerHeaderPages.has(page)) {
     const header = document.querySelector('body>header:first-of-type');
-    const titleBlock = header ? [...header.children].find(child => child.querySelector('h1')) : null;
+    const titleBlock = header?.querySelector('h1')?.parentElement;
     const userBox = header?.querySelector('#userBox');
     if (header && titleBlock && userBox && !header.querySelector('.izumi-ledger-primary')) {
+      const formerContainers = new Set([titleBlock.parentElement,userBox.parentElement]);
       document.body.classList.add('ledger-system');
       const primary = document.createElement('div');
       primary.className = 'izumi-ledger-primary';
@@ -36,6 +37,9 @@
       primary.append(titleBlock,dateSlot);
       header.append(secondary);
       secondary.append(userBox);
+      formerContainers.forEach(container => {
+        if (container && container !== header && container.childElementCount === 0) container.remove();
+      });
     }
   }
   const headerLinks = [...document.querySelectorAll('header a[href]')];

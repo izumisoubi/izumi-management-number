@@ -45,6 +45,6 @@ function clearFilters(){['dateFrom','dateTo','amountMin','amountMax','vendor'].f
 function downloadCsv(){const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['通知番号','版','取引日','取引先','登録番号','税抜','消費税','税込','状態','送信日時','PDF SHA-256'],...records.map(r=>[r.payment_notice_groups?.notice_no,r.version,r.issue_date,r.vendor_name_snapshot,r.vendor_invoice_reg_no_snapshot,r.subtotal_snapshot,r.tax_snapshot,r.total_snapshot,r.status,r.sent_at,r.document_sha256])];const blob=new Blob(['\ufeff'+rows.map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`イズミ装美_電子取引検索_${new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 db.auth.getSession().then(({data})=>ready(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)ready(null)});
 </script>
-<script src="common-nav.js?v=20260814-HEADER3"></script>
+<script src="common-nav.js?v=20260814-HEADER4"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>
