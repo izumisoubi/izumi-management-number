@@ -32,6 +32,13 @@ test('Drive読込は会社指定フォルダだけを検索する', async () => 
   assert.match(html, /alt=media&supportsAllDrives=true/);
 });
 
+test('保存ダイアログの操作ボタンは3列で横並びにする', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  assert.match(html, /\.save-modal-actions\{display:grid;grid-template-columns:1fr 1fr 1\.25fr/);
+  assert.match(html, /<div class="save-modal-actions">/);
+  assert.match(html, />キャンセル<\/button>[\s\S]*>PCへ保存<\/button>[\s\S]*>Driveへ保存<\/button>/);
+});
+
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
   const html = await readFile(htmlPath, 'utf8');
   assert.match(html, /var _details=\[_c\.title,_c\.room,_c\.workContent,_c\.managementNumber\]/);
