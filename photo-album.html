@@ -22,6 +22,12 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 .online-project-bar.is-error{background:#fff0f0;color:#8a2b2b}.online-project-bar.is-loading .online-project-detail{opacity:.8}
 .photo-album-system.ledger-system>header.system-tabbar{padding-left:14px!important;padding-right:14px!important}
 .photo-album-system.ledger-system>header.system-tabbar>.izumi-ledger-secondary{justify-content:flex-start!important}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact{height:43px!important;min-height:43px!important;max-height:43px!important;flex-flow:row nowrap!important}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact::before{display:none!important}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact>.izumi-ledger-primary{height:43px!important;flex:1 1 auto!important;overflow-x:auto!important;overflow-y:hidden!important;justify-content:flex-start!important;scrollbar-width:none}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact>.izumi-ledger-primary::-webkit-scrollbar{display:none}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact>.izumi-ledger-primary>.system-tab{flex:0 0 auto!important}
+.photo-album-system.ledger-system>header.system-tabbar.photo-header-compact>.izumi-ledger-primary>.izumi-ledger-date-slot{margin-left:auto!important;position:sticky;right:0;background:#1f568c}
 .photo-album-system .online-project-detail{flex:0 1 auto;max-width:min(760px,48vw)}
 .photo-album-system .online-project-note{margin-right:0}
 .local-storage-policy{margin:14px 0 18px;padding:12px 14px;border:1px solid #efc36a;border-left:5px solid #e38b12;border-radius:9px;background:#fff9e9;color:#4d3b1d;font-size:12px;line-height:1.75}
@@ -837,6 +843,20 @@ window.openDriveJsonList=async function(){
   }
 };
 function setProjectField(id,value){var el=document.getElementById(id);if(el&&value!=null&&String(value).trim())el.value=String(value);}
+function compactPhotoHeader(){
+  var header=document.querySelector('body.photo-album-system>header.system-tabbar');
+  if(!header)return;
+  var primary=header.querySelector(':scope>.izumi-ledger-primary');
+  var secondary=header.querySelector(':scope>.izumi-ledger-secondary');
+  var dateSlot=primary&&primary.querySelector(':scope>.izumi-ledger-date-slot');
+  if(!primary||!secondary||!dateSlot)return;
+  Array.from(secondary.children).forEach(function(item){
+    if(item.classList.contains('header-actions')&&!item.textContent.trim()&&!item.childElementCount){item.remove();return;}
+    primary.insertBefore(item,dateSlot);
+  });
+  secondary.remove();
+  header.classList.add('photo-header-compact');
+}
 function updateSystemTabLinks(managementNumber){
   document.querySelectorAll('[data-est-tab]').forEach(function(link){
     var target=new URL('estimate.html',location.href);
@@ -863,7 +883,7 @@ async function loadLinkedProject(){
     if(bar)bar.classList.remove('is-loading','is-error');if(detail)detail.textContent=[b.kanri||managementNumber,[b.property,b.room].filter(Boolean).join(' '),b.summary||b.kojiname,b.client].filter(Boolean).join(' ｜ ');
   }catch(error){if(bar)bar.className='online-project-bar is-error';if(detail)detail.textContent='基本情報の取得に失敗しました：'+(error.message||error);}
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadLinkedProject,{once:true});else loadLinkedProject();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){compactPhotoHeader();loadLinkedProject();},{once:true});else{compactPhotoHeader();loadLinkedProject();}
 var PAT='', PER=0, COLS=3, ORIENT='AUTO', sorts={}, _appStarted=false;
 /* ユーティリティ: 先頭で定義（初期化コードから呼ばれるため） */
 function formatAmount(el){ var v=el.value.replace(/[^0-9]/g,''); if(v) el.value=Number(v).toLocaleString('ja-JP'); else el.value=''; }
