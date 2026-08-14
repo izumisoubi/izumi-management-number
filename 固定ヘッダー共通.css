@@ -196,11 +196,17 @@ body.estimate-system>.tabbar:first-of-type>.header-primary-row{
 }
 body.estimate-system>.tabbar:first-of-type>.header-primary-row::-webkit-scrollbar{display:none}
 body.estimate-system>.tabbar:first-of-type>.header-primary-row>.brand{flex:0 0 auto!important}
-body.estimate-system>.tabbar:first-of-type>.header-primary-row .brand-nm{font-size:14px!important}
+body.estimate-system>.tabbar:first-of-type>.header-primary-row .brand-nm{
+  font-size:16px!important;
+  font-weight:850!important;
+  letter-spacing:.01em!important;
+}
 body.estimate-system>.tabbar:first-of-type>.header-primary-row .tab{
   flex:0 0 auto!important;
-  padding:10px 8px!important;
-  font-size:10px!important;
+  padding:10px 9px!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
 }
 body>header.system-tabbar .system-brand,
 body>.tabbar:first-of-type .brand{
@@ -222,6 +228,9 @@ body>.tabbar:first-of-type .tab.active{
   border-bottom-color:#77b5ff!important;
   background:rgba(255,255,255,.11)!important;
 }
+body.estimate-system>.tabbar:first-of-type>.header-primary-row .tab{
+  color:rgba(255,255,255,.88)!important;
+}
 body.estimate-system>.tabbar:first-of-type .header-master-group{
   flex:0 0 auto!important;
   width:auto!important;
@@ -235,6 +244,8 @@ body.estimate-system>.tabbar:first-of-type .header-master-group{
 }
 body.estimate-system #todayDateDisplay.today-date-in-header{
   color:#fff!important;
+  font-size:12px!important;
+  font-weight:850!important;
   border-color:rgba(255,255,255,.38)!important;
   background:rgba(255,255,255,.12)!important;
 }
@@ -254,9 +265,20 @@ body.estimate-system>.tabbar:first-of-type .bar-r{
   box-shadow:none!important;
 }
 body.estimate-system>.tabbar:first-of-type .bar-r .th-dots span,
-body.estimate-system>.tabbar:first-of-type .bar-r #onlineSaveStatus{color:#52657a!important}
+body.estimate-system>.tabbar:first-of-type .bar-r #onlineSaveStatus{
+  color:#334966!important;
+  font-size:11.5px!important;
+  font-weight:750!important;
+}
 body.estimate-system>.tabbar:first-of-type .bar-r .bar-sep{background:#c4cfdd!important}
+body.estimate-system>.tabbar:first-of-type .bar-r .cosel{
+  font-size:12px!important;
+  font-weight:800!important;
+}
 body.estimate-system>.tabbar:first-of-type .bar-r .ubtn{
+  min-height:30px!important;
+  font-size:12px!important;
+  font-weight:800!important;
   background:#fff!important;
   color:#17345f!important;
   border-color:#b8c5d6!important;
