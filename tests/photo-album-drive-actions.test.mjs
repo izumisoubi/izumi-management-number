@@ -39,6 +39,14 @@ test('保存ダイアログの操作ボタンは3列で横並びにする', asyn
   assert.match(html, />キャンセル<\/button>[\s\S]*>PCへ保存<\/button>[\s\S]*>Driveへ保存<\/button>/);
 });
 
+test('写真帳の各操作段は超横長画面でも左から詰めて配置する', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  assert.match(html, /<body class="photo-album-system">/);
+  assert.match(html, /\.photo-album-system\.ledger-system>header\.system-tabbar>\.izumi-ledger-secondary\{justify-content:flex-start!important\}/);
+  assert.match(html, /\.toolbar\{display:flex;/);
+  assert.match(html, /\.tbar-r\{display:flex;[^}]*justify-content:flex-start/);
+});
+
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
   const html = await readFile(htmlPath, 'utf8');
   assert.match(html, /var _details=\[_c\.title,_c\.room,_c\.workContent,_c\.managementNumber\]/);

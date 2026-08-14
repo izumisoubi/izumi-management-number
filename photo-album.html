@@ -20,6 +20,10 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 .online-project-bar{position:relative;z-index:500;display:flex;align-items:center;gap:12px;padding:8px 18px;background:#f4f6fc;color:#0c1420;border-bottom:1px solid #c8d0e8;box-shadow:0 2px 8px rgba(20,42,80,.07);font-size:12px}
 .online-project-bar strong{white-space:nowrap;color:#2860d0}.online-project-detail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.online-project-note{font-size:11px;color:#506080;white-space:nowrap}.online-project-back{border:1px solid #c8d0e8;border-radius:7px;background:#fff;color:#2860d0;padding:6px 11px;font-weight:700;text-decoration:none;white-space:nowrap}
 .online-project-bar.is-error{background:#fff0f0;color:#8a2b2b}.online-project-bar.is-loading .online-project-detail{opacity:.8}
+.photo-album-system.ledger-system>header.system-tabbar{padding-left:14px!important;padding-right:14px!important}
+.photo-album-system.ledger-system>header.system-tabbar>.izumi-ledger-secondary{justify-content:flex-start!important}
+.photo-album-system .online-project-detail{flex:0 1 auto;max-width:min(760px,48vw)}
+.photo-album-system .online-project-note{margin-right:0}
 .local-storage-policy{margin:14px 0 18px;padding:12px 14px;border:1px solid #efc36a;border-left:5px solid #e38b12;border-radius:9px;background:#fff9e9;color:#4d3b1d;font-size:12px;line-height:1.75}
 .local-storage-policy strong{color:#8a5100}.local-storage-policy ul{margin:5px 0 0 18px;padding:0}
 .json-folder-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}.json-folder-btn{padding:8px 12px;border:1.5px solid #2e7d32;border-radius:7px;background:#e8f5e9;color:#246528;font:700 12px/1.2 inherit;cursor:pointer;white-space:nowrap}.json-folder-btn.secondary{border-color:#d07a16;background:#fff7e8;color:#8a4b08}.json-folder-btn.save{border-color:#1a3e6e;background:#1a3e6e;color:#fff}.json-folder-btn.save:hover{background:#122e54}.json-folder-btn.link{border-color:#c8d0e8;background:#fff;color:#506080;text-decoration:none}.json-folder-status{width:100%;color:#506080;font-size:10px;line-height:1.4;text-align:right}.json-folder-status.ok{color:#246528;font-weight:700}.json-folder-status.warn{color:#9a5a00}.drive-modal{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.5)}.drive-modal-box{width:min(560px,100%);max-height:min(680px,90vh);display:flex;flex-direction:column;padding:22px;border-radius:16px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.24)}.drive-modal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.drive-modal-head h2{flex:1;color:#1a3e6e;font-size:17px}.drive-close{width:32px;height:32px;border:0;border-radius:7px;background:#eee;color:#555;font-size:19px;cursor:pointer}.drive-file-list{min-height:110px;overflow:auto;border:1px solid #dedbd6;border-radius:10px;background:#faf9f7}.drive-file{width:100%;display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:11px 13px;border:0;border-bottom:1px solid #e5e2de;background:#fff;text-align:left;cursor:pointer;font-family:inherit}.drive-file:last-child{border-bottom:0}.drive-file:hover{background:#ebf0f9}.drive-file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#1a3e6e;font-size:12px;font-weight:700;white-space:nowrap}.drive-file-meta{color:#777;font-size:10px;white-space:nowrap}.drive-empty{padding:30px 16px;color:#777;font-size:12px;line-height:1.7;text-align:center}.save-progress{display:none;margin-top:12px}.save-progress-track{height:8px;overflow:hidden;border-radius:99px;background:#e5e2de}.save-progress-bar{width:0;height:100%;background:#2e7d32;transition:width .12s}.save-progress-text{margin-top:5px;color:#506080;font-size:10px;text-align:right}
@@ -56,10 +60,10 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 .company-setting{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:13px 15px;border:1.5px solid #d6d0c8;border-radius:9px;background:#f7f8fb}.company-setting-main{min-width:0}.company-setting-label{display:block;margin-bottom:3px;color:#555;font-size:12px;font-weight:700}.company-setting-name{color:#1a3e6e;font-size:14px;font-weight:700}.company-setting-toggle{display:flex;align-items:center;gap:6px;flex:0 0 auto;color:#555;font-size:12px;font-weight:700;cursor:pointer}
 .hidden{display:none!important}
 #main{display:none;min-height:100vh}
-.toolbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:10px 16px;background:#fff;border-bottom:1px solid #E5E2DE;position:sticky;top:43px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#fff;border-bottom:1px solid #E5E2DE;position:sticky;top:43px;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow-x:auto}
 .tbar-l{display:flex;align-items:center;gap:8px}
 .tbar-c{display:flex;align-items:center;gap:7px}
-.tbar-r{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.tbar-r{display:flex;align-items:center;gap:7px;justify-content:flex-start}
 .tbar-title{font-size:15px;font-weight:800;color:#1A3E6E}
 .pat-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:#EBF0F9;color:#1A3E6E;border:1px solid #1A3E6E;white-space:nowrap}
 .layout-select{max-width:190px;padding:5px 28px 5px 9px;border:1.5px solid #1A3E6E;border-radius:7px;background:#fff;color:#1A3E6E;font:700 11px/1.2 inherit;cursor:pointer;outline:none}
@@ -169,7 +173,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 </style>
 <link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER12">
 </head>
-<body>
+<body class="photo-album-system">
 
 <header class="system-tabbar">
   <div class="system-brand"><span class="system-brand-ico">📋</span><span>見積/発注/原価/管理請求システム</span></div>
