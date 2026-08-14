@@ -1495,7 +1495,7 @@ window.saveProject=function(){
   var _c=cover||{};
   var _docTitle=String(_c.docTitle||'工事写真帳').trim();
   var _details=[_c.title,_c.room,_c.workContent,_c.managementNumber].map(function(v){return String(v||'').trim();}).filter(Boolean);
-  var _fname='【'+_docTitle+'】'+_details.join('　');
+  var _fname='【'+_docTitle+'】'+_details.join(' ');
   _fname=_fname.replace(/[\/\\:*?"<>|]/g,'_')+'.json';
   /* モーダル表示 */
   var inp=document.getElementById('save-fname');
