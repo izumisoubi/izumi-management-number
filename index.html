@@ -19,8 +19,8 @@
     .feature-card{height:200px;padding:22px 24px;flex-direction:column}.feature-card .icon{display:grid;place-items:center;width:46px;height:46px;margin-bottom:13px;border-radius:14px;background:#edf3ff;color:#3f71d7;font-size:11px;font-weight:900}.feature-card b{display:block;color:var(--navy);font-size:17px;margin-bottom:6px}.feature-card .description{display:block;max-width:92%;color:var(--muted);font-size:13px;line-height:1.6}.feature-card em{display:block;margin-top:auto;padding-top:10px;color:var(--blue);font-size:12px;font-style:normal;font-weight:800}.feature-card em::after{content:"  →"}.tag{position:absolute;right:22px;top:22px;padding:6px 11px;border-radius:999px;background:#edf3ff;color:#2868dc;font-size:11px;font-weight:900}.accent-purple .icon,.accent-purple .tag{background:#f0ebff;color:#7559db}.accent-orange .icon,.accent-orange .tag{background:#fff1e3;color:#d97622}.accent-green .icon,.accent-green .tag{background:#e7f7f0;color:#16865f}.accent-red .icon,.accent-red .tag{background:#fff0f0;color:#dc4a4a}
     .more-menu{margin-top:18px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden;box-shadow:var(--shadow)}.more-menu summary{cursor:pointer;padding:20px 24px;color:var(--navy);font-size:15px;font-weight:900;list-style-position:inside}.more-grid{padding:0 18px 18px}.more-grid .card{min-height:104px;padding:18px;align-items:center;gap:14px;box-shadow:none}.more-grid .icon{display:grid;place-items:center;flex:0 0 44px;height:44px;border-radius:13px;background:#edf3ff;color:#376bc9;font-size:10px;font-weight:900}.more-grid b{display:block;color:var(--navy);font-size:14px;margin-bottom:5px}.more-grid .description{display:block;color:var(--muted);font-size:11px;line-height:1.55}
     .meeting-grid{margin-top:18px}.meeting-card{min-height:112px;padding:20px 22px;align-items:center;gap:18px;background:linear-gradient(115deg,#fffdf3,#fff);border-color:#ead48a}.meeting-card .icon{display:grid;place-items:center;flex:0 0 54px;height:54px;border-radius:16px;background:#fff1bd;color:#765600;font-size:11px;font-weight:900}.meeting-card b{display:block;color:#674d00;font-size:16px;margin-bottom:5px}.meeting-card .description{display:block;color:#776a3d;font-size:12px;line-height:1.55}.meeting-card em{display:none}.meeting-card::after{content:"限定";position:absolute;right:15px;top:14px;padding:3px 8px;border-radius:999px;background:#fff1bd;color:#674d00;font-size:9px;font-weight:900}
-    .footer{display:flex;gap:14px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.hidden{display:none!important}
-    @media(max-width:720px){.header-inner{min-height:64px;padding:14px;align-items:stretch;flex-direction:column;gap:13px}.header-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.header-link{text-align:center;padding:9px 7px}.wrap{padding:18px 14px 32px}.intro{justify-content:flex-start;margin-bottom:12px}.section-head{align-items:flex-start;flex-direction:column;gap:5px}.section-head h2{font-size:21px}.section-head p{text-align:left}.feature-grid,.status-grid,.link-grid,.more-grid,.meeting-grid{grid-template-columns:1fr;gap:10px}.menu-section{margin-top:26px}.feature-card{height:200px;padding:19px 20px}.feature-card .description{max-width:none}.tag{right:20px;top:19px}.more-grid{padding:0 12px 12px}.more-grid .card{min-height:94px}.meeting-card{min-height:104px}}
+    .footer{display:flex;align-items:center;gap:14px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.menu-logout{margin-left:auto;padding:10px 16px;border:1px solid #d7a8a8;border-radius:10px;background:#fff;color:#a33131;font:800 12px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(120,35,35,.08)}.menu-logout:hover,.menu-logout:focus-visible{background:#fff3f3;border-color:#bd6666;outline:3px solid #f2cccc;outline-offset:2px}.menu-logout:disabled{opacity:.58;cursor:wait}.hidden{display:none!important}
+    @media(max-width:720px){.header-inner{min-height:64px;padding:14px;align-items:stretch;flex-direction:column;gap:13px}.header-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.header-link{text-align:center;padding:9px 7px}.wrap{padding:18px 14px 32px}.intro{justify-content:flex-start;margin-bottom:12px}.section-head{align-items:flex-start;flex-direction:column;gap:5px}.section-head h2{font-size:21px}.section-head p{text-align:left}.feature-grid,.status-grid,.link-grid,.more-grid,.meeting-grid{grid-template-columns:1fr;gap:10px}.menu-section{margin-top:26px}.feature-card{height:200px;padding:19px 20px}.feature-card .description{max-width:none}.tag{right:20px;top:19px}.more-grid{padding:0 12px 12px}.more-grid .card{min-height:94px}.meeting-card{min-height:104px}.footer{align-items:stretch;flex-direction:column}.menu-logout{width:100%;margin-left:0}}
   </style>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -28,7 +28,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
 </head>
 <body>
   <header>
@@ -40,7 +40,7 @@
   <main class="wrap">
     <section class="intro">
       <div><h2>一覧メニュー</h2><p>目的の台帳を選択してください。見積の入力中データは、元の見積タブへ戻ってから保存してください。</p></div>
-      <div id="sessionLabel" class="session">ログイン状態を確認中…</div>
+      <div id="sessionLabel" class="session" aria-live="polite">ログイン状態を確認中…</div>
     </section>
     <section class="menu-section">
       <div class="section-head"><h2>よく使う業務</h2><p>日常操作は、この4つから始められます</p></div>
@@ -86,13 +86,14 @@
       <a id="meetingCasesCard" class="card meeting-card hidden" href="会議用案件一覧.html"><span class="icon">案件</span><span><b>会議用案件一覧</b><span class="description">会議対象案件の売上・原価・粗利・入金状況を一覧表示します。</span></span></a>
       <a id="meetingCard" class="card meeting-card hidden" href="経営会議資料.html"><span class="icon">会議</span><span><b>経営会議資料</b><span class="description">対象月の業績、推移、担当者別・取引先別実績を集計します。</span></span></a>
     </div>
-    <div class="footer"><a href="kanribangou.html">← 管理番号取得へ戻る</a></div>
+    <div class="footer"><a href="kanribangou.html">← 管理番号取得へ戻る</a><button id="menuLogout" class="menu-logout hidden" type="button" onclick="signOutFromMenu()">ログアウト</button></div>
   </main>
   <script>
     function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
     normalizeStablePageUrls();
     const db=window.createIzumiSupabaseClient();
     const meetingUsers=new Set(['iida@izumisoubi.co.jp','demachi@izumisoubi.co.jp','ooshima@izumisoubi.co.jp','tanaka@izumisoubi.co.jp']);
+    async function signOutFromMenu(){const button=document.getElementById('menuLogout');const label=document.getElementById('sessionLabel');button.disabled=true;button.textContent='ログアウト中…';try{const {error}=await db.auth.signOut();if(error)throw error;location.replace('auth.html?next=index.html')}catch(error){button.disabled=false;button.textContent='ログアウト';label.textContent=`ログアウトできませんでした：${error.message||'通信状態を確認してください'}`}}
     async function updateAccess(session){
       if(session?.user){
         const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
@@ -103,6 +104,7 @@
       }
       const email=String(session?.user?.email||'').toLowerCase();
       document.getElementById('sessionLabel').textContent=email?`${email} でログイン中`:'各台帳を開くとログイン画面が表示されます';
+      document.getElementById('menuLogout').classList.toggle('hidden',!email);
       let allowed=meetingUsers.has(email);
       if(session?.user){
         const {data,error}=await db.rpc('can_view_meeting');

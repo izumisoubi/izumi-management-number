@@ -22,7 +22,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
 </head>
 <body>
 <header><div class="header-inner"><div><h1>支払通知書</h1><div class="sub">業者別の発注実績から作成・版管理・確認証跡を保存</div></div><div class="header-actions"><span id="sessionUser" class="session-user"></span><a href="index.html">一覧メニュー</a><a href="請求.html">請求管理</a><button type="button" onclick="signOut()">ログアウト</button></div></div></header>
@@ -223,6 +223,6 @@ async function sendNotice(){
 $('vendorSelect').addEventListener('change',loadVendorOrders);
 db.auth.getSession().then(({data})=>sessionReady(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)sessionReady(null)});
 </script>
-<script src="common-nav.js?v=20260814-HEADER2"></script>
+<script src="common-nav.js?v=20260814-HEADER3"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>
