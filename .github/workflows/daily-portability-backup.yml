@@ -1,0 +1,62 @@
+name: Daily Supabase portability backup
+
+on:
+  schedule:
+    - cron: '30 17 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-supabase-portability-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_S3_ENDPOINT: ${{ secrets.SUPABASE_S3_ENDPOINT }}
+      SUPABASE_S3_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+      SUPABASE_S3_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+      SUPABASE_STORAGE_BUCKETS: ${{ vars.SUPABASE_STORAGE_BUCKETS }}
+      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+      BACKUP_S3_PREFIX: ${{ vars.BACKUP_S3_PREFIX }}
+      BACKUP_S3_REGION: ${{ vars.BACKUP_S3_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check backup configuration
+        id: preflight
+        run: |
+          missing=()
+          for name in SUPABASE_DB_URL SUPABASE_S3_ENDPOINT SUPABASE_S3_ACCESS_KEY_ID SUPABASE_S3_SECRET_ACCESS_KEY SUPABASE_STORAGE_BUCKETS BACKUP_S3_ENDPOINT BACKUP_S3_BUCKET BACKUP_S3_ACCESS_KEY_ID BACKUP_S3_SECRET_ACCESS_KEY; do
+            [[ -n "${!name:-}" ]] || missing+=("$name")
+          done
+          if ((${#missing[@]})); then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "### Supabase portability backup" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Result: not configured" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Missing names: ${missing[*]}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install backup tools
+        if: steps.preflight.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client rclone awscli
+      - name: Create and upload database and Storage backup
+        if: steps.preflight.outputs.enabled == 'true'
+        run: scripts/portability/create-backup.sh
+      - name: Write completion record
+        if: success() && steps.preflight.outputs.enabled == 'true'
+        run: |
+          echo "### Supabase portability backup" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: success" >> "$GITHUB_STEP_SUMMARY"
+          echo "- UTC: $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Includes: PostgreSQL full dump, schema, data, Storage buckets, checksums" >> "$GITHUB_STEP_SUMMARY"

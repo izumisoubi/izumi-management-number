@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>イズミ装美 銀行入金照合</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX39">
   <style>
     .import-grid{display:grid;grid-template-columns:180px minmax(250px,1fr) auto;gap:12px;align-items:end}
@@ -57,7 +57,7 @@
 <script src="業務基盤.js?v=20260724-UX39"></script>
 <script src="銀行CSV解析.js?v=20260724-UX39"></script>
 <script>
-const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),money=value=>'¥'+Number(value||0).toLocaleString('ja-JP'),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 let parsedFile=null,transactions=[],selectedTx=null,candidates=[],combinationSuggestion=null,transactionOffset=0,transactionCount=0,transactionLoading=false,transactionHasMore=true;
 const transactionPageSize=200;

@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#163b6d"><title>サンプル装美 会議用案件一覧</title>
-  <link rel="stylesheet" href="台帳共通.css?v=20260807-MONTH55"><script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <link rel="stylesheet" href="台帳共通.css?v=20260807-MONTH55"><script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
 <link rel="icon" href="../favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
   <header>
     <div><h1>サンプル装美　会議用案件一覧</h1><div class="sub">会議対象の売上・原価・粗利・入金状況を案件単位で確認します</div></div>
-    <div id="userBox" class="user hidden"><nav class="nav"><a href="管理番号取得.html">番号取得</a><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト・原価.html">原価</a><a href="工事リスト・未発注.html">未発注</a><a href="請求.html">請求</a></nav><span id="userEmail"></span><button class="logout" onclick="signOut()">ログアウト</button></div>
+    <div id="userBox" class="user hidden"><nav class="nav"><a href="管理番号取得.html">番号取得</a><a href="index.html">一覧メニュー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">管理番号台帳</a><a href="工事リスト・原価.html">原価</a><a href="工事リスト・未発注.html">未発注</a><a href="請求.html">請求</a></nav><span id="userEmail"></span><button class="logout" onclick="signOut()">ログアウト</button></div>
   </header>
   <section id="loginCard" class="login hidden"><h2>社員ログイン</h2><div>会議用案件一覧は経営会議メンバーのみ閲覧できます。</div><label>メールアドレス</label><input id="email" type="email"><label>パスワード</label><input id="password" type="password"><button class="primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
   <main id="app" class="hidden">
@@ -48,9 +49,9 @@
         {label:'原価（税抜）',key:'external_cost'},{label:'粗利（税抜）',key:'gross_profit_ex_tax'}
       ]
     };
-  </script><script src="表入力共通.js?v=20260729-UX46"></script><script src="会議月度共通.js?v=20260729-UX50"></script><script src="年度共通.js?v=20260729-UX51"></script><script src="台帳共通.js?v=20260808-MONTH56"></script>
+  </script><script src="表入力共通.js?v=20260729-UX46"></script><script src="会議月度共通.js?v=20260729-UX50"></script><script src="年度共通.js?v=20260814-YEAR2030"></script><script src="台帳共通.js?v=20260808-MONTH56"></script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

@@ -7,8 +7,8 @@
 <script>
 (()=>{const url=new URL(location.href);if(location.protocol==='file:'||['localhost','127.0.0.1'].includes(location.hostname)||url.searchParams.has('_fresh'))return;url.searchParams.set('_fresh',Date.now().toString(36));location.replace(url.href)})();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
-<script src="年度共通.js?v=20260729-UX51"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+<script src="年度共通.js?v=20260814-YEAR2030"></script>
 <script src="表入力共通.js?v=20260729-UX46"></script>
 <script src="見積計算共通.js?v=20260807-RECON63"></script>
 <script src="自社原価共通.js?v=20260803-IME61"></script>
@@ -661,9 +661,9 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER4">
 </head>
-<body class="t-light">
+<body class="t-light estimate-system">
 
 <!-- 単位は候補から選べるだけでなく、現場固有の呼称も直接入力できます。 -->
 <datalist id="estimateUnitOptions">
@@ -702,7 +702,7 @@ body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;font-size:
       <div class="th-dot"     style="background:#f0f2f5;border:1px solid #aaa" onclick="setTheme('t-white',this)"></div>
     </div>
     <div class="bar-sep"></div>
-    <select class="cosel" id="coSel" onchange="applyEstCo();document.getElementById('b-impl-co').value=this.value;"></select>
+    <select class="cosel" id="coSel" onchange="applyEstCo();document.getElementById('b-impl-co').value=this.value;" hidden aria-hidden="true" tabindex="-1"></select>
     <button class="ubtn" onclick="undoRows()" title="元に戻す Ctrl+Z">↩</button>
     <button class="ubtn" onclick="redoRows()" title="やり直し Ctrl+Y">↪</button>
     <button class="ubtn" onclick="duplicateProject()" title="内容を複製し、管理番号・請求日・完工日・部屋番号をクリア">⧉ 複製</button>
@@ -5770,9 +5770,8 @@ document.addEventListener('mousedown',e=>{
 },{capture:true});
 
 // ===== Supabase 管理番号台帳から選択 =====
-const MANAGEMENT_SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-const MANAGEMENT_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
-const managementDb=window.supabase?.createClient(MANAGEMENT_SUPABASE_URL,MANAGEMENT_SUPABASE_ANON_KEY);
+const {url:MANAGEMENT_SUPABASE_URL,anonKey:MANAGEMENT_SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+const managementDb=window.createIzumiSupabaseClient();
 let managementMasterItems=[];
 let pendingOnlineManagementNumber='';
 

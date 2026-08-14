@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
   <title>イズミ装美 工事・経営管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#172d4f;--blue:#246cff;--line:#d9e3f1;--text:#162238;--muted:#73839b;--bg:#f5f8fd;--shadow:0 9px 26px rgba(31,67,116,.06)}
     *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f9fbff 0,var(--bg) 460px);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -91,10 +91,7 @@
   <script>
     function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
     normalizeStablePageUrls();
-    const db=window.supabase.createClient(
-      'https://jjowjnrsknmakcunblzq.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs'
-    );
+    const db=window.createIzumiSupabaseClient();
     const meetingUsers=new Set(['iida@izumisoubi.co.jp','demachi@izumisoubi.co.jp','ooshima@izumisoubi.co.jp','tanaka@izumisoubi.co.jp']);
     async function updateAccess(session){
       if(session?.user){

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>イズミ装美 電子取引検索</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script><link rel="stylesheet" href="業務基盤.css?v=20260724-UX36">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script><link rel="stylesheet" href="業務基盤.css?v=20260724-UX36">
   <style>
     main{max-width:1300px}.filters{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:9px}.filters label{font-size:10px;font-weight:800}.filters input{margin-top:4px}.table-scroll{overflow:auto;max-height:72vh}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:8px;border-bottom:1px solid #d7e0ed;text-align:left;font-size:11px}th{background:#eef3f9}.num{text-align:right}.hash{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace}@media(max-width:760px){.filters{grid-template-columns:1fr 1fr}}
   </style>
@@ -23,7 +23,7 @@
   <section class="panel"><div id="recordScroll" class="table-scroll"><table><thead><tr><th>通知番号</th><th>版</th><th>取引日</th><th>取引先</th><th>登録番号</th><th>税抜</th><th>消費税</th><th>税込</th><th>状態</th><th>送信日時</th><th>PDF SHA-256</th></tr></thead><tbody id="body"></tbody></table></div></section>
 </main>
 <script>
-const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),yen=v=>'¥'+Math.round(Number(v)||0).toLocaleString('ja-JP');
 let records=[],visibleRecordCount=200;const recordBatchSize=200;
 function setStatus(text,error=false){$('status').textContent=text;$('status').className='status '+(error?'error':'')}

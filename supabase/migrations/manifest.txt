@@ -1,0 +1,2 @@
+# Apply in this order. Paths are relative to the repository root.
+SUPABASE_UX42_台帳入力を正本へ反映.sql

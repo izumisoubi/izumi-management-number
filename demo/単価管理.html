@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>業者・単価管理</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX29">
   <style>
     .login-card{max-width:480px;margin:22px auto}.save-mark{font-size:9px;color:var(--muted);min-width:58px}.save-mark.saving{color:#986c00}.save-mark.saved{color:#168657}.save-mark.error{color:#c93442}
@@ -15,9 +15,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-<header><div class="head"><div><h1>業者・単価管理</h1><div>共通の標準単価＋業者ごとの個別設定</div></div><div class="toolbar"><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="マスタ管理.html">マスタ管理</a><button id="logoutButton" class="btn secondary hidden" onclick="signOut()">ログアウト</button></div></div></header>
+<header><div class="head"><div><h1>業者・単価管理</h1><div>共通の標準単価＋業者ごとの個別設定</div></div><div class="toolbar"><a href="index.html">一覧メニュー</a><a href="マスタ管理.html">マスタ管理</a><button id="logoutButton" class="btn secondary hidden" onclick="signOut()">ログアウト</button></div></div></header>
 <main>
   <section id="loginCard" class="panel login-card hidden"><h2>社員ログイン</h2><label>メールアドレス</label><input id="email" type="email" autocomplete="username"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button class="btn primary" style="width:100%;margin-top:12px" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
   <section id="priceApp" class="panel hidden">
@@ -36,7 +37,7 @@
 </main>
 <script src="業務基盤.js?v=20260804-DEC1"></script>
 <script>
-const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),LS_VENDOR='izumi_sales_demo_mirror__vendors_v3',LS_LEGACY='izumi_sales_demo_mirror__vendor_price_drafts_v1',LS_COMMON='izumi_sales_demo_mirror__common_prices_v1',LS_OVERRIDES='izumi_sales_demo_mirror__vendor_price_overrides_v2';
 let fallbackVendors=[{name:'株式会社美装'},{name:'染谷住宅サービス'},{name:'有限会社林硝子工業所'},{name:'RE・BOX株式会社'},{name:'ネックス株式会社'},{name:'稲垣機材株式会社'}];
 let currentVendor='',currentVendorId='',commonItems=[],vendorOverrides={},cloudVendors=[],cloudOverrides=new Map(),pendingOverrides=new Map(),cloudReady=false,isAdmin=false,saveTimers=new Map();

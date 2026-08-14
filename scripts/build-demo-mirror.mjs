@@ -24,12 +24,14 @@ copyFileSync(join(root,'index.html'),join(demo,'index.html'));
 const runtimeTags='<script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script>';
 const realSupabase='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 const realProject='https://jjowjnrsknmakcunblzq.supabase.co';
+const realProjectRef='jjowjnrsknmakcunblzq';
 const realKey=/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g;
 
 function sanitize(text,file){
   let value=text
     .replaceAll(`<script src="${realSupabase}"></script>`,runtimeTags)
     .replaceAll(realProject,'https://demo.invalid')
+    .replaceAll(realProjectRef,'demo-project')
     .replace(realKey,'demo-anon-key')
     .replaceAll('T7011601015057','T1234567890123')
     .replaceAll('東京都中央区日本橋浜町2-16-5 東味ビルディング5F','東京都千代田区丸の内1-1-1 サンプルビル5F')
@@ -55,6 +57,7 @@ function sanitize(text,file){
 function sanitizeIdentity(text){
   return text
     .replaceAll(realProject,'https://demo.invalid')
+    .replaceAll(realProjectRef,'demo-project')
     .replace(realKey,'demo-anon-key')
     .replaceAll('T7011601015057','T1234567890123')
     .replaceAll('東京都中央区日本橋浜町2-16-5 東味ビルディング5F','東京都千代田区丸の内1-1-1 サンプルビル5F')

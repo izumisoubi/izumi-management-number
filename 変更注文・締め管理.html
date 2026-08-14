@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>イズミ装美 変更注文・締め管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX36">
   <style>
     main{max-width:1200px}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.kpi{padding:18px;border:1px solid #d8e1ed;border-radius:12px;background:#fff}.kpi strong{display:block;font-size:36px;color:#173e70}.kpi.ok{border-color:#9ed7ba;background:#effaf4}.kpi.warn{border-color:#f1bd75;background:#fff8eb}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th,td{padding:8px;border-bottom:1px solid #d8e1ed;text-align:left;font-size:11px}th{background:#eef3f9}.num{text-align:right}.row-actions{display:flex;gap:6px}.row-actions button{padding:6px 9px}.create-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.create-grid textarea{grid-column:1/-1}.hidden{display:none!important}
@@ -27,7 +27,7 @@
   <div id="globalStatus" class="status"></div>
 </main>
 <script>
-const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),yen=v=>'¥'+Math.round(Number(v)||0).toLocaleString('ja-JP');
 let orders=[],changeOrders=[],notices=[],isAdmin=false,pendingCoCount=0,pendingNoticeCount=0;
 const setStatus=(id,text,error=false)=>{$(id).textContent=text;$(id).className='status '+(error?'error':'')};

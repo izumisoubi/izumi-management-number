@@ -1,6 +1,5 @@
-const SUPABASE_URL='https://demo.invalid';
-const SUPABASE_ANON_KEY='demo-anon-key';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+const db=window.createIzumiSupabaseClient();
 const config=window.LEDGER_CONFIG;
 const gridCore=window.IzumiGridCore;
 const meetingPeriod=window.IzumiMeetingPeriod;
@@ -40,7 +39,7 @@ const numberValue=value=>{const parsed=Number(String(value??'').replace(/[,，¥
 const formatNumber=value=>Math.round(numberValue(value)).toLocaleString('ja-JP');
 const money=value=>'¥'+formatNumber(value);
 const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
-const fiscalYearOptions=['',...(fiscalYearCore?.options({minimumCode:22,futureYears:3})||[]).map(item=>item.label)];
+const fiscalYearOptions=['',...(fiscalYearCore?.options()||[]).map(item=>item.label)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
 // 台帳は年度内の全件を一続きで確認する。検索・集計・CSVも同じ全件が対象。
@@ -863,7 +862,8 @@ async function loadData(){
   projectMap=new Map(projects.map(project=>[project.id,project]));
   lineItems=lineResult.data||[];
   employees=employeeResult.data||[];
-  const staffNames=[...new Set([...projects.map(project=>project.staff_name).filter(Boolean),'林'])];
+  const fallbackStaff=['大島','花田','池野','大塚','古磯','水口','出町','田中','飯田','林','長谷川','中井'];
+  const staffNames=[...new Set([...projects.map(project=>project.staff_name).filter(Boolean),...fallbackStaff])];
   staffNames.forEach((name,index)=>{
     if(!employees.some(employee=>employee.name===name))employees.push({name,display_order:900+index});
   });
@@ -890,7 +890,7 @@ function populateYearFilter(){
   const select=$('yearFilter');
   const previous=loadedLedgerYear||select.value;
   const yearItems=fiscalYearCore
-    ?fiscalYearCore.options({minimumCode:22,futureYears:3})
+    ?fiscalYearCore.options()
     :Array.from({length:Math.max(1,Number(currentFiscalCode())-21)},(_,index)=>{
       const code=String(Number(currentFiscalCode())-index).padStart(2,'0');
       return {code,label:`${1999+Number(code)}年度`};

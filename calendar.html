@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17345f">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>イズミ装美 行動予定</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
     *{box-sizing:border-box}html,body{min-height:100%}html{scroll-snap-type:y mandatory;scroll-padding-top:8px}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}body>header{scroll-snap-align:start;scroll-snap-stop:always}
@@ -250,9 +250,8 @@
   <script>
   function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
   normalizeStablePageUrls();
-  const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-  const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
-  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY),$=id=>document.getElementById(id);
+  const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+  const db=window.createIzumiSupabaseClient(),$=id=>document.getElementById(id);
   const DEFAULT_STAFF=['大島','林','長谷川','中井','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
   const COLOR_PALETTE={blue:{line:'#2563eb',bg:'#eef5ff'},purple:{line:'#7c3aed',bg:'#f5f0ff'},green:{line:'#15805d',bg:'#edf9f3'},cyan:{line:'#0891b2',bg:'#ebfbff'},yellow:{line:'#d59b12',bg:'#fff8d7'},orange:{line:'#e46c1a',bg:'#fff1e6'},red:{line:'#c94352',bg:'#fff0f2'},gray:{line:'#64748b',bg:'#f1f5f9'}};
   const AUTO_COLORS={'現地調査':'purple','見積訪問':'purple','工事':'green','完工確認':'cyan','休み':'gray','その他':'yellow','退去立会':'blue'};

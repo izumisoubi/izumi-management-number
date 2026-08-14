@@ -3,106 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#17345f">
-  <title>サンプル装美 工事・経営管理</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
-  <style>
-    :root{--navy:#17345f;--blue:#2563eb;--line:#d9e1ed;--text:#172033;--muted:#637188;--bg:#f4f7fb}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -180px,#fff 0,#f7f9fc 420px,var(--bg) 820px);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
-    header{background:linear-gradient(115deg,#15345f,#1e4c83);color:#fff;box-shadow:0 4px 16px #17345f2a}.header-inner{max-width:1600px;min-height:78px;margin:auto;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-    h1{font-size:21px;letter-spacing:.01em;margin:0}.version{display:inline-flex;vertical-align:middle;margin-left:7px;padding:2px 7px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff12;font-size:9px;letter-spacing:.04em}.sub{font-size:11px;opacity:.78;margin-top:5px}.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.header-link{color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:8px 11px;border:1px solid #ffffff55;border-radius:8px}
-    .wrap{max-width:1600px;margin:auto;padding:28px 22px 40px}.intro{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:17px}.intro h2{font-size:20px;margin:0 0 5px}.intro p{font-size:12px;color:var(--muted);margin:0}.session{font-size:10px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{position:relative;display:flex;gap:14px;min-height:126px;padding:19px;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 7px 22px #17345f0c;transition:transform .15s,border-color .15s,box-shadow .15s}.card:hover{transform:translateY(-2px);border-color:#88a9e8;box-shadow:0 12px 28px #17345f18}
-    .icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:#eaf2ff;color:#285da8;font-size:13px;font-weight:900}.card b{display:block;color:var(--navy);font-size:16px;margin:2px 0 7px}.card span{display:block;color:#59687f;font-size:11px;line-height:1.75}.card em{display:block;margin-top:9px;color:var(--blue);font-size:10px;font-style:normal;font-weight:800}
-    .meeting-card{grid-column:1/-1;background:linear-gradient(115deg,#fffdf3,#fff);border-color:#ead48a}.meeting-card .icon{background:#fff1bd;color:#765600}.meeting-card b{color:#674d00}.meeting-card::after{content:"限定";position:absolute;right:15px;top:14px;padding:3px 8px;border-radius:999px;background:#fff1bd;color:#674d00;font-size:9px;font-weight:900}
-    .more-menu{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}.more-menu summary{cursor:pointer;padding:16px 19px;color:var(--navy);font-weight:900}.more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 14px 14px}.more-grid .card{min-height:100px;box-shadow:none}.footer{display:flex;gap:14px;margin-top:20px}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.hidden{display:none!important}
-    @media(max-width:720px){.header-inner{min-height:64px;padding:14px;align-items:stretch;flex-direction:column;gap:13px}.header-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.header-link{text-align:center;padding:9px 7px}.wrap{padding:18px 14px}.grid,.more-grid{grid-template-columns:1fr}.meeting-card,.more-menu{grid-column:auto}.intro{align-items:flex-start;flex-direction:column}.card{min-height:112px}}
-  </style>
-<link rel="icon" href="../favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
-<link rel="manifest" href="../site.webmanifest">
-<meta name="theme-color" content="#006699">
-</head>
-<body>
-  <header>
-    <div class="header-inner">
-      <div><h1>サンプル装美　工事・経営管理 <span class="version">販売デモ</span></h1><div class="sub">案件の受付から見積・発注・請求・入金まで、業務の順番に整理しています</div></div>
-      <div class="header-actions"><a class="header-link" href="管理番号取得.html">管理番号取得</a><a class="header-link" href="calendar.html">カレンダー</a><a class="header-link" href="estimate.html">見積・発注</a><a class="header-link" href="ユーザー設定.html">ユーザー設定</a></div>
-    </div>
-  </header>
-  <main class="wrap">
-    <section class="intro">
-      <div><h2>一覧メニュー</h2><p>目的の台帳を選択してください。見積の入力中データは、元の見積タブへ戻ってから保存してください。</p></div>
-      <div id="sessionLabel" class="session">ログイン状態を確認中…</div>
-    </section>
-    <div class="grid">
-      <a class="card" href="calendar.html"><span class="icon">予定</span><span><b>予定カレンダー</b><span>電話・メールで受けた予定、退去立会、現地調査、工事予定を社員別に登録します。各日は7行を基準に個別増減できます。</span><em>行動予定を開く →</em></span></a>
-      <a class="card" href="管理番号取得.html"><span class="icon">番号</span><span><b>管理番号取得</b><span>新しい案件を始めるときに管理番号を取得します。番号は重複せず、以後の見積・台帳・請求をこの番号で結びます。</span><em>管理番号を取得する →</em></span></a>
-      <a class="card" href="管理番号台帳.html"><span class="icon">台帳</span><span><b>管理番号台帳</b><span>すべての案件の正本です。管理番号、担当、物件、売上、請求、入金、計上月を管理し、案件削除もここで行います。</span><em>案件全体を見る →</em></span></a>
-      <a class="card" href="estimate.html"><span class="icon">見積</span><span><b>見積・発注・原価・請求</b><span>見積、業者発注、原価、請求、完了報告を入力します。保存すると各台帳の自動連携項目へ反映します。</span><em>見積を開く →</em></span></a>
-      <a class="card" href="工事リスト・未発注.html"><span class="icon">未発注</span><span><b>工事リスト・未発注</b><span>未割当、業者未設定、または注文確認書をまだ発行していない明細だけを表示します。</span><em>未発注を確認する →</em></span></a>
-      <a class="card" href="工事リスト・原価.html"><span class="icon">原価</span><span><b>工事リスト・原価</b><span>発注済みの明細を業者・カテゴリ単位で表示し、外注請求額、差異、支払状況を確認します。</span><em>原価を管理する →</em></span></a>
-      <a class="card" href="請求.html"><span class="icon">請求</span><span><b>請求管理</b><span>客先への請求・入金と、業者への外注費支払を案件単位で確認します。双方完了で緑表示になります。</span><em>請求状況を見る →</em></span></a>
-      <a class="card" href="請求.html?filter=outstanding"><span class="icon">未入金</span><span><b>未入金リスト</b><span>未入金額が残っている請求だけを表示します。請求日から3か月以上経過した案件は薄い赤で自動表示します。</span><em>未入金を確認する →</em></span></a>
-      <a class="card" href="銀行入金照合.html"><span class="icon">入金</span><span><b>銀行入金照合</b><span>三菱UFJ・三井住友のCSVを取り込み、候補の管理番号を確認して台帳へ入金反映します。最高権限者限定です。</span><em>銀行入金を照合する →</em></span></a>
-      <a class="card" href="支払通知書.html"><span class="icon">支払</span><span><b>支払通知書</b><span>業者別の発注実績から支払額をまとめ、版・確認期限・同意・経理確定の証跡を管理します。</span><em>支払通知書を開く →</em></span></a>
-      <a class="card" href="変更注文・締め管理.html"><span class="icon">変更</span><span><b>変更注文・締め管理</b><span>追加工事の変更注文を申請・承認し、未承認の変更注文と支払通知書を確認します。</span><em>締め状況を確認する →</em></span></a>
-      <a class="card" href="マスタ管理.html"><span class="icon">設定</span><span><b>マスタ管理</b><span>自社・社員・印鑑、業者、取引先、物件、単価を一か所で管理します。</span><em>基本設定を開く →</em></span></a>
-      <details class="more-menu"><summary>その他・管理・ヘルプを開く</summary><div class="more-grid">
-        <a class="card" href="業務フロー.html"><span class="icon">流れ</span><span><b>受注から入金まで</b><span>受注から立会・見積・発注・完工・請求・入金までの業務の流れを確認します。</span></span></a>
-        <a class="card" href="操作履歴.html"><span class="icon">履歴</span><span><b>操作履歴</b><span>保存・変更・削除・採番の履歴を確認します。</span></span></a>
-        <a class="card" href="電子帳簿検索.html"><span class="icon">保存</span><span><b>電子取引検索</b><span>取引日・金額・取引先を範囲・組合せで検索し、CSV保存します。</span></span></a>
-        <a class="card" href="ユーザー設定.html"><span class="icon">個人</span><span><b>ユーザー設定</b><span>表示名・パスワードを変更します。</span></span></a>
-        <a class="card" href="配布用案内.html"><span class="icon">案内</span><span><b>使い方</b><span>基本操作を確認します。</span></span></a>
-        <a class="card" href="データ取込.html"><span class="icon">移行</span><span><b>データ取込・出力</b><span>旧データの取込とExcel出力を行います。</span></span></a>
-        <a id="adminCard" class="card hidden" href="システム管理.html"><span class="icon">管理</span><span><b>システム管理</b><span>利用者と権限を管理します。</span></span></a>
-        <a id="backupCard" class="card hidden" href="バックアップ管理.html"><span class="icon">保全</span><span><b>バックアップ管理</b><span>保存状態と復旧用データを管理します。</span></span></a>
-      </div></details>
-      <a id="meetingCasesCard" class="card meeting-card hidden" href="会議用案件一覧.html"><span class="icon">案件</span><span><b>会議用案件一覧</b><span>会議チェック、管理番号、物件・部屋、担当者名、売上請求、原価、粗利、粗利率、入金済、備考を一覧表示します。</span><em>会議対象を確認する →</em></span></a>
-      <a id="meetingCard" class="card meeting-card hidden" href="経営会議資料.html"><span class="icon">会議</span><span><b>経営会議資料</b><span>対象月の業績、推移、担当者別・取引先別実績、入金状況を集計し、各資料を画像コピーできます。</span><em>経営会議資料を開く →</em></span></a>
-    </div>
-    <div class="footer"><a href="管理番号取得.html">← 管理番号取得へ戻る</a></div>
-  </main>
+  <title>一覧メニューへ移動します</title>
+  <meta http-equiv="refresh" content="0;url=index.html">
+  <link rel="canonical" href="index.html">
+  <script src="本日日付共通.js?v=20260808-TODAY1"></script>
   <script>
-    function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
-    normalizeStablePageUrls();
-    const db=window.supabase.createClient(
-      'https://demo.invalid',
-      'demo-anon-key'
-    );
-    const meetingUsers=new Set(['demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp']);
-    async function updateAccess(session){
-      if(session?.user){
-        const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');
-        if(error||enabled!==true){
-          await db.auth.signOut();
-          session=null;
-        }
-      }
-      const email=String(session?.user?.email||'').toLowerCase();
-      document.getElementById('sessionLabel').textContent=email?`${email} でログイン中`:'各台帳を開くとログイン画面が表示されます';
-      let allowed=meetingUsers.has(email);
-      if(session?.user){
-        const {data,error}=await db.rpc('can_view_meeting');
-        if(!error)allowed=data===true;
-      }
-      let isAdmin=false;
-      if(session?.user){
-        const {data,error}=await db.rpc('is_management_admin');
-        if(!error)isAdmin=data===true;
-      }
-      document.getElementById('meetingCard').classList.toggle('hidden',!allowed);
-      document.getElementById('meetingCasesCard').classList.toggle('hidden',!allowed);
-      document.getElementById('adminCard').classList.toggle('hidden',!isAdmin);
-      document.getElementById('backupCard').classList.toggle('hidden',!isAdmin);
-    }
-    db.auth.getSession().then(({data:{session}})=>updateAccess(session));
-    db.auth.onAuthStateChange((_event,session)=>updateAccess(session));
+    (function(){
+      var target=new URL('index.html',location.href);
+      target.search=location.search;
+      target.hash=location.hash;
+      location.replace(target.href);
+    })();
   </script>
-<link rel="stylesheet" href="mobile-ui.css?v=20260801-MOBILE3">
-<script src="mobile-ui.js?v=20260801-MOBILE3"></script>
-<script src="本日日付共通.js?v=20260808-TODAY1"></script>
-</body>
+<script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script></head>
+<body><p><a href="index.html">一覧メニューを開く</a></p></body>
 </html>

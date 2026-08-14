@@ -1,6 +1,5 @@
-const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+const db=window.createIzumiSupabaseClient();
 const config=window.LEDGER_CONFIG;
 const gridCore=window.IzumiGridCore;
 const meetingPeriod=window.IzumiMeetingPeriod;
@@ -40,7 +39,7 @@ const numberValue=value=>{const parsed=Number(String(value??'').replace(/[,，¥
 const formatNumber=value=>Math.round(numberValue(value)).toLocaleString('ja-JP');
 const money=value=>'¥'+formatNumber(value);
 const monthOptions=['',...Array.from({length:12},(_,index)=>`${index+1}月`)];
-const fiscalYearOptions=['',...(fiscalYearCore?.options({minimumCode:22,futureYears:3})||[]).map(item=>item.label)];
+const fiscalYearOptions=['',...(fiscalYearCore?.options()||[]).map(item=>item.label)];
 let projects=[],projectMap=new Map(),lineItems=[],employees=[],overrides=new Map(),overrideRevisions=new Map(),allRows=[],viewRows=[],isAdmin=false,currentUser=null,meetingAccessAllowed=false;
 let sortField='management_number',sortDirection='desc',dragStart=null,dragging=false,activeCell=null,selectionFocus=null,checkboxBrush=null;
 // 台帳は年度内の全件を一続きで確認する。検索・集計・CSVも同じ全件が対象。
@@ -891,7 +890,7 @@ function populateYearFilter(){
   const select=$('yearFilter');
   const previous=loadedLedgerYear||select.value;
   const yearItems=fiscalYearCore
-    ?fiscalYearCore.options({minimumCode:22,futureYears:3})
+    ?fiscalYearCore.options()
     :Array.from({length:Math.max(1,Number(currentFiscalCode())-21)},(_,index)=>{
       const code=String(Number(currentFiscalCode())-index).padStart(2,'0');
       return {code,label:`${1999+Number(code)}年度`};

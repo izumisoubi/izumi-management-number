@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#078b4b">
   <title>サンプル装美 経営会議資料</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
-  <script src="年度共通.js?v=20260729-UX51"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="年度共通.js?v=20260814-YEAR2030"></script>
   <script src="会議月度共通.js?v=20260729-UX50"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -37,9 +37,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-  <header class="top"><h1>サンプル装美　経営会議資料</h1><nav><a href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="請求.html">請求管理</a><a href="ユーザー設定.html">ユーザー設定</a></nav></header>
+  <header class="top"><h1>サンプル装美　経営会議資料</h1><nav><a href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="index.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="請求.html">請求管理</a><a href="ユーザー設定.html">ユーザー設定</a></nav></header>
   <section id="loginCard" class="login hidden">
     <h2>経営会議閲覧者ログイン</h2>
     <div>飯田・出町・大島・田中、および閲覧者設定で追加したアカウントが利用できます。</div>
@@ -119,10 +120,9 @@
     </article>
   </main>
   <script>
-    const SUPABASE_URL='https://demo.invalid';
-    const SUPABASE_ANON_KEY='demo-anon-key';
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
     const ALLOWED=['demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp'];
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const db=window.createIzumiSupabaseClient();
     const $=id=>document.getElementById(id);
     const num=value=>{const parsed=Number(String(value??'').replace(/[,，¥￥\s]/g,''));return Number.isFinite(parsed)?parsed:0};
     const yen=value=>'¥'+Math.round(num(value)).toLocaleString('ja-JP');
@@ -347,7 +347,7 @@
     }
     function populateFiscalYears(){
       const codes=new Set(projects.map(project=>String(project.management_number||'').match(/^(\d{2})-/)?.[1]).filter(Boolean));
-      const options=window.IzumiFiscalYear.options({minimumCode:22,futureYears:3,includeCodes:[...codes]}).map(item=>item.code);
+      const options=window.IzumiFiscalYear.options().map(item=>item.code);
       const current=$('fiscalYear').value;
       $('fiscalYear').innerHTML=options.map(code=>`<option value="${esc(code)}">20${esc(code)}年度</option>`).join('');
       $('fiscalYear').value=options.includes(current)?current:fiscalCodeForDate();
@@ -610,7 +610,7 @@
     db.auth.getSession().then(({data:{session}})=>{if(session)authorize(session.user);else revealLogin()});
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

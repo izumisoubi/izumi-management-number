@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#078b4b">
   <title>イズミ装美 経営会議資料</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
-  <script src="年度共通.js?v=20260729-UX51"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="年度共通.js?v=20260814-YEAR2030"></script>
   <script src="会議月度共通.js?v=20260729-UX50"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -120,10 +120,9 @@
     </article>
   </main>
   <script>
-    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
     const ALLOWED=['iida@izumisoubi.co.jp','demachi@izumisoubi.co.jp','ooshima@izumisoubi.co.jp','tanaka@izumisoubi.co.jp'];
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const db=window.createIzumiSupabaseClient();
     const $=id=>document.getElementById(id);
     const num=value=>{const parsed=Number(String(value??'').replace(/[,，¥￥\s]/g,''));return Number.isFinite(parsed)?parsed:0};
     const yen=value=>'¥'+Math.round(num(value)).toLocaleString('ja-JP');
@@ -348,7 +347,7 @@
     }
     function populateFiscalYears(){
       const codes=new Set(projects.map(project=>String(project.management_number||'').match(/^(\d{2})-/)?.[1]).filter(Boolean));
-      const options=window.IzumiFiscalYear.options({minimumCode:22,futureYears:3,includeCodes:[...codes]}).map(item=>item.code);
+      const options=window.IzumiFiscalYear.options().map(item=>item.code);
       const current=$('fiscalYear').value;
       $('fiscalYear').innerHTML=options.map(code=>`<option value="${esc(code)}">20${esc(code)}年度</option>`).join('');
       $('fiscalYear').value=options.includes(current)?current:fiscalCodeForDate();
