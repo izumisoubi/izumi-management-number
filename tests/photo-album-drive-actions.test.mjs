@@ -47,6 +47,14 @@ test('写真帳の各操作段は超横長画面でも左から詰めて配置�
   assert.match(html, /\.tbar-r\{display:flex;[^}]*justify-content:flex-start/);
 });
 
+test('写真帳ヘッダーは上段の空きへメニューを収めて専用段を削除する', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  assert.match(html, /function compactPhotoHeader\(\)/);
+  assert.match(html, /primary\.insertBefore\(item,dateSlot\)/);
+  assert.match(html, /secondary\.remove\(\)/);
+  assert.match(html, /photo-header-compact\{height:43px!important/);
+});
+
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
   const html = await readFile(htmlPath, 'utf8');
   assert.match(html, /var _details=\[_c\.title,_c\.room,_c\.workContent,_c\.managementNumber\]/);
