@@ -222,8 +222,8 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
           <button type="button" class="json-folder-btn" onclick="openDriveJsonList()">☁️ Driveから読込</button>
           <button type="button" class="json-folder-btn secondary" onclick="connectJsonFolder()">📁 保存先を設定</button>
           <label for="fup-load" class="json-folder-btn link">PCから読込</label>
-          <button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 JSONを保存</button>
-          <a class="json-folder-btn link" href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener">Driveを開く</a>
+          <button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 DriveへJSON保存</button>
+          <a class="json-folder-btn link" href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener">保存先を確認</a>
           <div id="json-folder-status" class="json-folder-status">保存先を確認しています…</div>
         </div>
         <input type="file" id="fup-load" accept=".json" style="display:none" onchange="loadProject(this)">
@@ -704,7 +704,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
       <label for="fup-after"  class="upbtn up-aft hidden" id="lbl-after">📷 工事後</label>
     </div>
     <div class="tbar-r">
-      <button class="tbtn tb-save" onclick="saveProject()">💾 JSON保存</button>
+      <button class="tbtn tb-save" onclick="saveProject()">💾 DriveへJSON保存</button>
 
       <button class="tbtn tb-pdf" onclick="doPrint()">📄 PDF保存</button>
       <button class="tbtn tb-cfg" onclick="goSetup()">表紙編集</button>

@@ -4,16 +4,16 @@ import test from 'node:test';
 
 const htmlPath = new URL('../photo-album.html', import.meta.url);
 
-test('写真帳はJSON保存をDriveを開くより先に表示する', async () => {
+test('写真帳はDrive保存と保存先確認を別の操作として表示する', async () => {
   const html = await readFile(htmlPath, 'utf8');
-  const saveButton = '<button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 JSONを保存</button>';
-  const driveLink = '>Driveを開く</a>';
+  const saveButton = '<button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 DriveへJSON保存</button>';
+  const driveLink = '>保存先を確認</a>';
   const saveIndex = html.indexOf(saveButton);
   const driveIndex = html.indexOf(driveLink);
 
   assert.notEqual(saveIndex, -1, '既存のJSON保存処理を呼ぶボタンが必要です');
-  assert.notEqual(driveIndex, -1, '指定Driveフォルダを開くリンクが必要です');
-  assert.ok(saveIndex < driveIndex, 'JSON保存ボタンは「Driveを開く」より先に配置します');
+  assert.notEqual(driveIndex, -1, '保存後に指定Driveフォルダを確認するリンクが必要です');
+  assert.ok(saveIndex < driveIndex, 'Drive保存ボタンは保存先確認より先に配置します');
 });
 
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
