@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+
+const htmlPath = new URL('../photo-album.html', import.meta.url);
+
+test('写真帳はJSON保存をDriveを開くより先に表示する', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  const saveButton = '<button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 JSONを保存</button>';
+  const driveLink = '>Driveを開く</a>';
+  const saveIndex = html.indexOf(saveButton);
+  const driveIndex = html.indexOf(driveLink);
+
+  assert.notEqual(saveIndex, -1, '既存のJSON保存処理を呼ぶボタンが必要です');
+  assert.notEqual(driveIndex, -1, '指定Driveフォルダを開くリンクが必要です');
+  assert.ok(saveIndex < driveIndex, 'JSON保存ボタンは「Driveを開く」より先に配置します');
+});
+
+test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  assert.match(html, /var _details=\[_c\.title,_c\.room,_c\.workContent,_c\.managementNumber\]/);
+  assert.match(html, /var _fname='【'\+_docTitle\+'】'\+_details\.join\('　'\)/);
+});
+
+test('工事内容は元の施工会社欄に入り、施工会社は作成開始の直前へ移動する', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  const workField = '<div class="fg"><label class="fl">工事内容</label><input class="fi" id="fi-work-content"';
+  const companyBlock = '<div class="company-setting">';
+  const startButton = '<button class="go-btn" id="go-btn" onclick="startApp()">作成開始 →</button>';
+  const workIndex = html.indexOf(workField);
+  const companyIndex = html.indexOf(companyBlock);
+  const startIndex = html.indexOf(startButton);
+
+  assert.notEqual(workIndex, -1);
+  assert.notEqual(companyIndex, -1);
+  assert.ok(workIndex < companyIndex && companyIndex < startIndex);
+  assert.match(html, /setProjectField\('fi-work-content',b\.summary\|\|b\.kojiname\)/);
+  assert.match(html, /id="chk-company" checked/);
+});
