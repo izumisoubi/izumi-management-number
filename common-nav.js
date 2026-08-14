@@ -10,9 +10,9 @@
   mobileScript.defer = true;
   document.head.append(mobileScript);
   const page = decodeURIComponent(location.pathname.split('/').pop() || '');
-  const menuPage = 'イズミ装美社内システム.html';
+  const menuPage = 'index.html';
   const labels = new Map([
-    ['index.html', '管理番号取得'], ['calendar.html', 'カレンダー'],
+    ['kanribangou.html', '管理番号取得'], ['calendar.html', 'カレンダー'],
     ['estimate.html', '見積・発注'], ['管理番号台帳.html', '台帳'],
     ['工事リスト・原価.html', '原価'], ['工事リスト・未発注.html', '未発注'], ['請求.html', '請求']
   ]);
