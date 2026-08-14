@@ -17,7 +17,7 @@ test('全画面のヘッダーを上段と薄グレーの下段に統一する',
   for(const page of headerPages){
     const html=read(page);
     assert.match(html,/本日日付共通\.js\?v=20260814-TODAY2/);
-    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER9/);
+    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER10/);
   }
   assert.match(headerScript,/function normalizeHeaderLayout\(\)/);
   assert.match(headerScript,/izumi-ledger-primary/);
