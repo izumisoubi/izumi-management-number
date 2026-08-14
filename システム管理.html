@@ -6,7 +6,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER9">
 </head>
 <body>
 <header><div class="header-inner"><div><h1>システム管理</h1><div class="sub">利用者・権限・招待・バックアップを管理</div></div><div class="header-actions"><span id="sessionUser" class="session-user"></span><a href="index.html">一覧メニュー</a><a href="バックアップ管理.html">バックアップ</a><a href="操作履歴.html">操作履歴</a><button type="button" onclick="signOut()">ログアウト</button></div></div></header>
@@ -35,5 +35,5 @@ async function addMeetingViewer(){const email=$('meetingEmail').value.trim().toL
 async function toggleMeetingViewer(index){const viewer=meetingViewers[index];if(!viewer)return;const next=!viewer.active;if(!confirm(`${viewer.display_name||viewer.email} を${next?'経営会議の閲覧者として再開':'経営会議の閲覧対象から外す'}しますか？`))return;const {error}=await db.from('meeting_access_members').update({active:next}).eq('email',viewer.email);if(error)return status('meetingStatus','閲覧者設定を変更できませんでした。',true);await loadMeetingViewers()}
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
 (async()=>{if(await requireAdmin())await Promise.all([loadUsers(),loadMeetingViewers()])})();
-</script><script src="common-nav.js?v=20260814-HEADER4"></script><script src="本日日付共通.js?v=20260808-TODAY1"></script>
+</script><script src="common-nav.js?v=20260814-HEADER5"></script><script src="本日日付共通.js?v=20260814-TODAY2"></script>
 </body></html>
