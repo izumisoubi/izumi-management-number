@@ -780,7 +780,7 @@ async function _refreshFolderStatus(){
   }
   try{
     var handle=await _readJsonFolderHandle();
-    if(!handle){_setFolderStatus('初回のみ「保存先を設定」が必要です','warn');return;}
+    if(!handle){_setFolderStatus('初回保存時にDrive同期フォルダを選択します','warn');return;}
     var permitted=await _folderPermission(handle,'readwrite',false);
     _setFolderStatus(permitted?'接続済み：'+handle.name:'保存先：'+handle.name+'（次回操作時に再許可）',permitted?'ok':'warn');
   }catch(err){_setFolderStatus('保存先を確認できません：'+err.message,'warn');}
@@ -807,7 +807,8 @@ window.connectJsonFolder=async function(){
 async function _getJsonFolder(mode){
   if(!_supportsFolderAccess())throw new Error('ChromeまたはEdgeで開いてください');
   var handle=await _readJsonFolderHandle();
-  if(!handle)throw new Error('先に「保存先を設定」を押してください');
+  if(!handle&&mode==='readwrite')handle=await window.connectJsonFolder();
+  if(!handle)throw new Error(mode==='readwrite'?'保存先が選択されませんでした':'先にDrive保存先を選択してください');
   if(handle.name!==JSON_FOLDER_NAME)throw new Error('保存先が指定フォルダではありません。設定し直してください');
   if(!(await _folderPermission(handle,mode||'read',true)))throw new Error('フォルダへのアクセスが許可されませんでした');
   return handle;
