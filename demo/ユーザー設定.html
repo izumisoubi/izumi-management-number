@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#006699">
 </head>
 <body>
-<header><div class="header-inner"><div><h1>ユーザー設定</h1><div class="sub">自分の表示名・パスワードを管理</div></div><div class="header-actions"><a href="工事リスト.html">一覧メニュー</a><button onclick="signOut()">ログアウト</button></div></div></header>
+<header><div class="header-inner"><div><h1>ユーザー設定</h1><div class="sub">自分の表示名・パスワードを管理</div></div><div class="header-actions"><a href="イズミ装美社内システム.html">一覧メニュー</a><button onclick="signOut()">ログアウト</button></div></div></header>
 <main class="wrap narrow">
   <section class="card"><h2>アカウント情報</h2><p id="loginSummary" class="notice">ログイン情報を確認中…</p><div class="grid" style="margin-top:12px"><div class="full"><label>メールアドレス</label><input id="email" readonly></div><div class="full"><label>表示名</label><input id="displayName" placeholder="社員名"></div></div><div class="button-row"><button class="primary" onclick="saveProfile()">表示名を保存</button></div><div id="profileStatus" class="status"></div></section>
   <section class="card"><h2>パスワード変更</h2><p class="notice">現在ログイン中の場合は、ここで新しいパスワードへ直接変更できます。</p><div class="grid" style="margin-top:12px"><div class="full"><label>新しいパスワード</label><input id="password" type="password" minlength="8" autocomplete="new-password"></div><div class="full"><label>パスワード（確認）</label><input id="password2" type="password" minlength="8" autocomplete="new-password"></div></div><div class="button-row"><button class="primary" onclick="changePassword()">パスワードを変更</button><button onclick="sendReset()">再設定メールを送る</button></div><div id="passwordStatus" class="status"></div></section>

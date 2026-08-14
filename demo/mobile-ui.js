@@ -9,7 +9,7 @@
   const page = decodeURIComponent(location.pathname.split('/').pop() || '');
   const cleanTarget = href => decodeURIComponent((href || '').split('?')[0].split('#')[0].split('/').pop());
   const links = [
-    ['工事リスト.html', '▦', '一覧'],
+    ['イズミ装美社内システム.html', '▦', '一覧'],
     ['calendar.html', '□', '予定'],
     ['管理番号取得.html', '＋', '番号'],
     ['estimate.html', '¥', '見積'],
