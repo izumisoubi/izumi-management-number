@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>イズミ装美 工事写真帖</title>
+<title>イズミ装美 工事写真帳</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="認証セッション共通.js?v=20260729-UX56"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
@@ -21,6 +21,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 .online-project-bar.is-error{background:#fff0f0;color:#8a2b2b}.online-project-bar.is-loading .online-project-detail{opacity:.8}
 .local-storage-policy{margin:14px 0 18px;padding:12px 14px;border:1px solid #efc36a;border-left:5px solid #e38b12;border-radius:9px;background:#fff9e9;color:#4d3b1d;font-size:12px;line-height:1.75}
 .local-storage-policy strong{color:#8a5100}.local-storage-policy ul{margin:5px 0 0 18px;padding:0}
+.json-folder-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:7px}.json-folder-btn{padding:8px 12px;border:1.5px solid #2e7d32;border-radius:7px;background:#e8f5e9;color:#246528;font:700 12px/1.2 inherit;cursor:pointer;white-space:nowrap}.json-folder-btn.secondary{border-color:#d07a16;background:#fff7e8;color:#8a4b08}.json-folder-btn.link{border-color:#c8d0e8;background:#fff;color:#506080;text-decoration:none}.json-folder-status{width:100%;color:#506080;font-size:10px;line-height:1.4;text-align:right}.json-folder-status.ok{color:#246528;font-weight:700}.json-folder-status.warn{color:#9a5a00}.drive-modal{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.5)}.drive-modal-box{width:min(560px,100%);max-height:min(680px,90vh);display:flex;flex-direction:column;padding:22px;border-radius:16px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.24)}.drive-modal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.drive-modal-head h2{flex:1;color:#1a3e6e;font-size:17px}.drive-close{width:32px;height:32px;border:0;border-radius:7px;background:#eee;color:#555;font-size:19px;cursor:pointer}.drive-file-list{min-height:110px;overflow:auto;border:1px solid #dedbd6;border-radius:10px;background:#faf9f7}.drive-file{width:100%;display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:11px 13px;border:0;border-bottom:1px solid #e5e2de;background:#fff;text-align:left;cursor:pointer;font-family:inherit}.drive-file:last-child{border-bottom:0}.drive-file:hover{background:#ebf0f9}.drive-file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#1a3e6e;font-size:12px;font-weight:700;white-space:nowrap}.drive-file-meta{color:#777;font-size:10px;white-space:nowrap}.drive-empty{padding:30px 16px;color:#777;font-size:12px;line-height:1.7;text-align:center}.save-progress{display:none;margin-top:12px}.save-progress-track{height:8px;overflow:hidden;border-radius:99px;background:#e5e2de}.save-progress-bar{width:0;height:100%;background:#2e7d32;transition:width .12s}.save-progress-text{margin-top:5px;color:#506080;font-size:10px;text-align:right}
 @media(max-width:700px){.system-tabbar{padding:0 7px}.system-brand{padding-right:8px}.system-tab{padding:10px 9px;font-size:11px}.header-actions{padding-left:3px}.online-project-bar{flex-wrap:wrap;padding:8px 10px;gap:7px}.online-project-detail{order:3;flex-basis:100%}.online-project-note{display:none}}
 #setup{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px}
 .scard{background:#fff;border-radius:16px;padding:36px 42px;max-width:820px;width:100%;box-shadow:0 6px 30px rgba(0,0,0,.12)}
@@ -146,7 +147,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
   .f-txt,.f-area,.fi{font-size:16px}
   .f-lbl{font-size:10px}
   .seq-grid{grid-template-columns:1fr;gap:10px;padding:10px}
-  #setup{padding:10px}.scard{padding:24px 18px;margin:0;max-width:100%}.pat-grid{grid-template-columns:1fr}.cover-grid{grid-template-columns:1fr;column-gap:0}.cover-grid>.fg,.cover-grid>.fg-zip,.cover-grid>.fg-address,.cover-grid>.fg-wide,.cover-grid>.fg-complete,.cover-grid>.fg-amount{grid-column:1}
+  #setup{padding:10px}.scard{padding:24px 18px;margin:0;max-width:100%}.pat-grid{grid-template-columns:1fr}.cover-grid{grid-template-columns:1fr;column-gap:0}.cover-grid>.fg,.cover-grid>.fg-zip,.cover-grid>.fg-address,.cover-grid>.fg-wide,.cover-grid>.fg-complete,.cover-grid>.fg-amount{grid-column:1}.json-folder-actions{justify-content:flex-start}.json-folder-status{text-align:left}
   .pat-ph{font-size:13px}
   .dh{padding:28px 12px;font-size:13px}
 }
@@ -172,7 +173,7 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
   <a class="system-tab" data-est-tab="estimate" href="estimate.html?open_tab=estimate">見積</a>
   <a class="system-tab" data-est-tab="order" href="estimate.html?open_tab=order">発注</a>
   <a class="system-tab" data-est-tab="costtable" href="estimate.html?open_tab=costtable">売上原価管理表</a>
-  <a class="system-tab active" href="#" aria-current="page">工事写真帖</a>
+  <a class="system-tab active" href="#" aria-current="page">工事写真帳</a>
   <a class="system-tab" data-est-tab="invoice" href="estimate.html?open_tab=invoice">請求</a>
   <a class="system-tab" data-est-tab="report" href="estimate.html?open_tab=report">完了報告書</a>
   <a class="system-tab" data-est-tab="companies" href="estimate.html?open_tab=companies">自社情報</a>
@@ -184,9 +185,9 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 </header>
 
 <div id="online-project-bar" class="online-project-bar is-loading">
-  <strong>工事写真帖</strong>
+  <strong>工事写真帳</strong>
   <span id="online-project-detail" class="online-project-detail">案件の基本情報を確認しています…</span>
-  <span class="online-project-note">基本情報のみ自動取得／写真本体・JSON・PDFはPC保存</span>
+  <span class="online-project-note">基本情報のみ自動取得／JSONは指定Driveフォルダ・PDFはPC保存</span>
   <a id="online-project-back" class="online-project-back" href="estimate.html">見積システムへ戻る</a>
 </div>
 
@@ -203,9 +204,10 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
       <strong>保存について（重要）</strong>
       <ul>
         <li>管理番号から、案件の基本情報だけをオンライン版から自動取得します。</li>
-        <li>写真本体はクラウドへ保存しません。工事写真帖のJSONとPDFは、このPCへ保存します。</li>
-        <li>読込・復元は、このPCに保存されている写真帖のJSONファイルを選んでください。</li>
-        <li>別のPCや社員へ引き継ぐ場合は、保存したJSONファイルを渡して「保存データを読込」から開いてください。</li>
+        <li>写真本体はJSONの中に含め、会社指定のGoogle Driveフォルダへ保存します。PDFはこのPCへ保存します。</li>
+        <li>初回だけGoogle Drive for desktop上の「工事写真帳JSON保存先」を選択してください。</li>
+        <li>以後の保存・読込は、選択したフォルダ内だけで行います。Googleの許可画面や秘密鍵は不要です。</li>
+        <li>Drive for desktopを使えない場合に備え、PCへのJSON保存・読込も残しています。</li>
       </ul>
     </div>
     <div id="step1">
@@ -214,9 +216,12 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
           <div class="s-step">STEP 1</div>
           <div class="s-sub" style="margin-bottom:0">写真パターンを選択</div>
         </div>
-        <div style="text-align:right">
-          <label for="fup-load" style="padding:8px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;border:1.5px solid #E65100;background:#FFF3E0;color:#E65100;display:inline-block;white-space:nowrap">📂 JSONを読込・復元</label>
-          <div style="margin-top:5px;font-size:10px;line-height:1.35;color:#8A4B08">このPCに保存したJSONを選択</div>
+        <div class="json-folder-actions">
+          <button type="button" class="json-folder-btn" onclick="openDriveJsonList()">☁️ Driveから読込</button>
+          <button type="button" class="json-folder-btn secondary" onclick="connectJsonFolder()">📁 保存先を設定</button>
+          <label for="fup-load" class="json-folder-btn link">PCから読込</label>
+          <a class="json-folder-btn link" href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener">Driveを開く</a>
+          <div id="json-folder-status" class="json-folder-status">保存先を確認しています…</div>
         </div>
         <input type="file" id="fup-load" accept=".json" style="display:none" onchange="loadProject(this)">
       </div>
@@ -717,6 +722,127 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 var PHOTO_SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
 var PHOTO_SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
 var photoDb=window.supabase&&window.supabase.createClient(PHOTO_SUPABASE_URL,PHOTO_SUPABASE_ANON_KEY);
+var JSON_FOLDER_NAME='工事写真帳JSON保存先';
+var JSON_HANDLE_DB='izumi-photo-album-folders';
+var JSON_HANDLE_STORE='handles';
+var JSON_HANDLE_KEY='photo-album-json-folder-v1';
+
+function _supportsFolderAccess(){return typeof window.showDirectoryPicker==='function'&&typeof window.indexedDB!=='undefined';}
+function _openHandleDb(){
+  return new Promise(function(resolve,reject){
+    var req=indexedDB.open(JSON_HANDLE_DB,1);
+    req.onupgradeneeded=function(){if(!req.result.objectStoreNames.contains(JSON_HANDLE_STORE))req.result.createObjectStore(JSON_HANDLE_STORE);};
+    req.onsuccess=function(){resolve(req.result);};
+    req.onerror=function(){reject(req.error||new Error('保存先情報を開けませんでした'));};
+  });
+}
+async function _storeJsonFolderHandle(handle){
+  var db=await _openHandleDb();
+  return new Promise(function(resolve,reject){
+    var tx=db.transaction(JSON_HANDLE_STORE,'readwrite');
+    tx.objectStore(JSON_HANDLE_STORE).put(handle,JSON_HANDLE_KEY);
+    tx.oncomplete=function(){db.close();resolve();};
+    tx.onerror=function(){db.close();reject(tx.error||new Error('保存先を記憶できませんでした'));};
+  });
+}
+async function _readJsonFolderHandle(){
+  var db=await _openHandleDb();
+  return new Promise(function(resolve,reject){
+    var tx=db.transaction(JSON_HANDLE_STORE,'readonly');
+    var req=tx.objectStore(JSON_HANDLE_STORE).get(JSON_HANDLE_KEY);
+    req.onsuccess=function(){resolve(req.result||null);};
+    req.onerror=function(){reject(req.error||new Error('保存先を確認できませんでした'));};
+    tx.oncomplete=function(){db.close();};
+  });
+}
+async function _folderPermission(handle,mode,ask){
+  var opts={mode:mode||'read'};
+  if((await handle.queryPermission(opts))==='granted')return true;
+  return !!ask&&(await handle.requestPermission(opts))==='granted';
+}
+function _setFolderStatus(message,state){
+  var el=document.getElementById('json-folder-status');
+  if(!el)return;
+  el.textContent=message;
+  el.className='json-folder-status '+(state||'');
+}
+async function _refreshFolderStatus(){
+  if(!_supportsFolderAccess()){
+    _setFolderStatus('このブラウザではDrive同期フォルダを直接操作できません（PC保存をご利用ください）','warn');
+    return;
+  }
+  try{
+    var handle=await _readJsonFolderHandle();
+    if(!handle){_setFolderStatus('初回のみ「保存先を設定」が必要です','warn');return;}
+    var permitted=await _folderPermission(handle,'readwrite',false);
+    _setFolderStatus(permitted?'接続済み：'+handle.name:'保存先：'+handle.name+'（次回操作時に再許可）',permitted?'ok':'warn');
+  }catch(err){_setFolderStatus('保存先を確認できません：'+err.message,'warn');}
+}
+window.connectJsonFolder=async function(){
+  if(!_supportsFolderAccess()){
+    alert('この機能はChromeまたはEdgeで利用できます。Google Drive for desktopをインストールし、共有ドライブをPCに表示してください。');
+    return null;
+  }
+  try{
+    var handle=await window.showDirectoryPicker({id:'izumi-photo-album-json-folder',mode:'readwrite',startIn:'documents'});
+    if(handle.name!==JSON_FOLDER_NAME){
+      alert('指定フォルダ「'+JSON_FOLDER_NAME+'」を選択してください。\n選択されたフォルダ：'+handle.name);
+      return null;
+    }
+    await _storeJsonFolderHandle(handle);
+    _setFolderStatus('接続済み：'+handle.name,'ok');
+    return handle;
+  }catch(err){
+    if(err&&err.name!=='AbortError')alert('保存先の設定に失敗しました：'+err.message);
+    return null;
+  }
+};
+async function _getJsonFolder(mode){
+  if(!_supportsFolderAccess())throw new Error('ChromeまたはEdgeで開いてください');
+  var handle=await _readJsonFolderHandle();
+  if(!handle)throw new Error('先に「保存先を設定」を押してください');
+  if(handle.name!==JSON_FOLDER_NAME)throw new Error('保存先が指定フォルダではありません。設定し直してください');
+  if(!(await _folderPermission(handle,mode||'read',true)))throw new Error('フォルダへのアクセスが許可されませんでした');
+  return handle;
+}
+function _formatJsonSize(bytes){
+  if(bytes<1024)return bytes+' B';
+  if(bytes<1024*1024)return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/1024/1024).toFixed(1)+' MB';
+}
+window.openDriveJsonList=async function(){
+  var modal=document.getElementById('drive-load-modal');
+  var list=document.getElementById('drive-file-list');
+  if(modal)modal.style.display='flex';
+  if(list)list.innerHTML='<div class="drive-empty">指定フォルダを確認しています…</div>';
+  try{
+    var dir=await _getJsonFolder('read');
+    var files=[];
+    for await(var pair of dir.entries()){
+      var name=pair[0],entry=pair[1];
+      if(entry.kind!=='file'||!/\.json$/i.test(name))continue;
+      try{var file=await entry.getFile();files.push({file:file});}catch(e){}
+    }
+    files.sort(function(a,b){return b.file.lastModified-a.file.lastModified;});
+    if(!list)return;
+    list.innerHTML='';
+    if(!files.length){list.innerHTML='<div class="drive-empty">このフォルダにJSONファイルはありません。</div>';return;}
+    files.forEach(function(item){
+      var button=document.createElement('button');
+      button.type='button';button.className='drive-file';
+      var name=document.createElement('span');name.className='drive-file-name';name.textContent=item.file.name;
+      var meta=document.createElement('span');meta.className='drive-file-meta';meta.textContent=_formatJsonSize(item.file.size);
+      var date=document.createElement('span');date.className='drive-file-meta';date.textContent=new Date(item.file.lastModified).toLocaleString('ja-JP');
+      button.appendChild(name);button.appendChild(meta);button.appendChild(date);
+      button.onclick=function(){document.getElementById('drive-load-modal').style.display='none';window.loadProject({files:[item.file],value:''});};
+      list.appendChild(button);
+    });
+    _setFolderStatus('接続済み：'+dir.name,'ok');
+  }catch(err){
+    if(list)list.innerHTML='<div class="drive-empty">'+String(err.message||err)+'<br>「保存先を設定」から指定フォルダを選び直してください。</div>';
+  }
+};
+setTimeout(_refreshFolderStatus,0);
 function setProjectField(id,value){var el=document.getElementById(id);if(el&&value!=null&&String(value).trim())el.value=String(value);}
 function updateSystemTabLinks(managementNumber){
   document.querySelectorAll('[data-est-tab]').forEach(function(link){
@@ -1355,24 +1481,60 @@ window.saveProject=function(){
   /* モーダル表示 */
   var inp=document.getElementById('save-fname');
   if(inp) inp.value=_fname;
-  var canPick=typeof window.showSaveFilePicker==='function';
   var note=document.getElementById('save-destination-note');
   var btn=document.getElementById('save-exec-btn');
   if(note){
-    note.innerHTML=canPick
-      ?'<b>「保存場所を選ぶ」を押すと、保存先とファイル名を選択できます。</b>'
-      :'<b>Safariでは、保存場所はSafariの設定で決まります。</b><br>保存先を毎回選ぶには、Safariのメニューから<br><b>Safari ＞ 設定 ＞ 一般 ＞ ファイルのダウンロード先 ＞ ダウンロードごとに確認</b><br>に変更してください。設定後は、この保存ボタンを押すたびに保存場所を選べます。';
+    note.innerHTML='<b>指定フォルダ「'+JSON_FOLDER_NAME+'」へ保存します。</b><br>同名ファイルがある場合は上書きし、Google Drive for desktopがオンラインへ同期します。';
   }
-  if(btn)btn.textContent=canPick?'保存場所を選ぶ':'JSONをダウンロード';
+  if(btn)btn.textContent='指定Driveフォルダへ保存';
+  _setSaveProgress(0,'');
   document.getElementById('save-modal').style.display='flex';
 };
 
-window.execSave=function(){
+function _projectBlob(){
+  var data={ version:4, PAT:PAT, PER:PER, COLS:COLS, ORIENT:ORIENT, cover:cover, photos:photos };
+  return new Blob([JSON.stringify(data)],{type:'application/json'});
+}
+function _saveFileName(){
   var fname=(document.getElementById('save-fname').value||'工事写真帳_project.json').trim();
   if(!fname.endsWith('.json')) fname+='.json';
+  return fname;
+}
+function _setSaveProgress(percent,message){
+  var box=document.getElementById('save-progress'),bar=document.getElementById('save-progress-bar'),text=document.getElementById('save-progress-text');
+  if(!box||!bar||!text)return;
+  box.style.display=message?'block':'none';bar.style.width=Math.max(0,Math.min(100,percent))+'%';text.textContent=message||'';
+}
+window.execSave=async function(){
+  var fname=_saveFileName(),blob=_projectBlob();
+  var button=document.getElementById('save-exec-btn');
+  if(button)button.disabled=true;
+  try{
+    var dir=await _getJsonFolder('readwrite');
+    var fileHandle=await dir.getFileHandle(fname,{create:true});
+    var writable=await fileHandle.createWritable();
+    var reader=blob.stream().getReader(),written=0;
+    try{
+      while(true){
+        var part=await reader.read();
+        if(part.done)break;
+        await writable.write(part.value);
+        written+=part.value.byteLength;
+        _setSaveProgress(blob.size?Math.round(written/blob.size*100):100,'保存中… '+_formatJsonSize(written)+' / '+_formatJsonSize(blob.size));
+      }
+      await writable.close();
+    }catch(writeErr){try{await writable.abort();}catch(ignore){}throw writeErr;}
+    _setSaveProgress(100,'保存完了：'+fname+'（Driveへの同期は自動で続きます）');
+    _setFolderStatus('接続済み：'+dir.name,'ok');
+    setTimeout(function(){document.getElementById('save-modal').style.display='none';_setSaveProgress(0,'');},900);
+  }catch(err){
+    _setSaveProgress(0,'保存できませんでした：'+String(err.message||err));
+  }finally{if(button)button.disabled=false;}
+};
+
+window.saveProjectToPc=function(){
+  var fname=_saveFileName(),blob=_projectBlob();
   document.getElementById('save-modal').style.display='none';
-  var data={ version:4, PAT:PAT, PER:PER, COLS:COLS, ORIENT:ORIENT, cover:cover, photos:photos };
-  var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   /* Chrome/Edge: フォルダ選択ダイアログ */
   if(window.showSaveFilePicker){
     window.showSaveFilePicker({
@@ -1870,9 +2032,22 @@ window.doPrint=function(){
     <div id="save-destination-note" style="padding:10px 12px;margin-bottom:14px;border-radius:9px;background:#FFF7E8;color:#594B37;font-size:11px;line-height:1.65"></div>
     <label style="font-size:12px;color:#888;display:block;margin-bottom:4px">ファイル名</label>
     <input id="save-fname" type="text" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #D6D0C8;border-radius:10px;font-size:14px;margin-bottom:20px">
-    <div style="display:flex;gap:10px;justify-content:flex-end">
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
       <button onclick="document.getElementById('save-modal').style.display='none'" style="padding:10px 20px;border:1.5px solid #D6D0C8;border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:#666">キャンセル</button>
-      <button id="save-exec-btn" onclick="execSave()" style="padding:10px 24px;border:none;border-radius:10px;background:#1A3E6E;color:#fff;font-size:14px;font-weight:700;cursor:pointer">保存</button>
+      <button onclick="saveProjectToPc()" style="padding:10px 18px;border:1.5px solid #D07A16;border-radius:10px;background:#FFF7E8;color:#8A4B08;font-size:13px;font-weight:700;cursor:pointer">PCへ保存</button>
+      <button id="save-exec-btn" onclick="execSave()" style="padding:10px 20px;border:none;border-radius:10px;background:#2E7D32;color:#fff;font-size:13px;font-weight:700;cursor:pointer">指定Driveフォルダへ保存</button>
+    </div>
+    <div id="save-progress" class="save-progress"><div class="save-progress-track"><div id="save-progress-bar" class="save-progress-bar"></div></div><div id="save-progress-text" class="save-progress-text"></div></div>
+  </div>
+</div>
+
+<div id="drive-load-modal" class="drive-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="drive-modal-box">
+    <div class="drive-modal-head"><h2>☁️ DriveのJSONを読込</h2><button type="button" class="drive-close" onclick="document.getElementById('drive-load-modal').style.display='none'">×</button></div>
+    <div id="drive-file-list" class="drive-file-list"><div class="drive-empty">指定フォルダを確認しています…</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:11px">
+      <a href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener" style="color:#246cff">Google Driveでフォルダを開く</a>
+      <button type="button" class="json-folder-btn secondary" onclick="connectJsonFolder()">保存先を設定し直す</button>
     </div>
   </div>
 </div>
