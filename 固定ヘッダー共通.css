@@ -1,0 +1,14 @@
+:root{--izumi-sticky-header-z:2000}
+html{scroll-padding-top:96px}
+body>header:first-of-type,
+body>.tabbar:first-of-type{
+  position:sticky!important;
+  position:-webkit-sticky!important;
+  top:0!important;
+  z-index:var(--izumi-sticky-header-z)!important;
+}
+body>header:first-of-type{isolation:isolate}
+@media print{
+  body>header:first-of-type,
+  body>.tabbar:first-of-type{position:static!important}
+}
