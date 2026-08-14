@@ -10,7 +10,7 @@
   mobileScript.defer = true;
   document.head.append(mobileScript);
   const page = decodeURIComponent(location.pathname.split('/').pop() || '');
-  const menuPage = '工事リスト.html';
+  const menuPage = 'イズミ装美社内システム.html';
   const labels = new Map([
     ['管理番号取得.html', '管理番号取得'], ['calendar.html', 'カレンダー'],
     ['estimate.html', '見積・発注'], ['管理番号台帳.html', '台帳'],

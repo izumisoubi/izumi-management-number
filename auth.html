@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#006699">
 </head>
 <body>
-<header><div class="header-inner"><div><h1>イズミ装美　社員ログイン</h1><div class="sub">見積・発注・原価・請求・台帳・予定カレンダー 共通アカウント</div></div><div class="header-actions"><a href="工事リスト.html">一覧メニュー</a></div></div></header>
+<header><div class="header-inner"><div><h1>イズミ装美　社員ログイン</h1><div class="sub">見積・発注・原価・請求・台帳・予定カレンダー 共通アカウント</div></div><div class="header-actions"><a href="イズミ装美社内システム.html">一覧メニュー</a></div></div></header>
 <main class="wrap narrow">
   <section class="card">
     <div class="tabs"><button id="loginTab" class="active" onclick="showMode('login')">ログイン</button><button id="signupTab" onclick="showMode('signup')">初回登録</button><button id="forgotTab" onclick="showMode('forgot')">パスワードを忘れた</button></div>
@@ -50,7 +50,7 @@
 const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
-const safeNext=()=>{const next=params.get('next')||'工事リスト.html';try{const target=new URL(next,location.href);return target.origin===location.origin?target.href:new URL('工事リスト.html',location.href).href}catch(_error){return new URL('工事リスト.html',location.href).href}};
+const safeNext=()=>{const next=params.get('next')||'イズミ装美社内システム.html';try{const target=new URL(next,location.href);return target.origin===location.origin?target.href:new URL('イズミ装美社内システム.html',location.href).href}catch(_error){return new URL('イズミ装美社内システム.html',location.href).href}};
 function setStatus(text,error=false){$('status').textContent=text;$('status').className='status '+(error?'error':'success')}
 function showMode(mode){
   ['login','signup','forgot','recovery'].forEach(name=>$(name+'Panel').classList.toggle('hidden',name!==mode));

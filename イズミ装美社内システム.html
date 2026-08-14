@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
-  <title>サンプル装美 工事・経営管理</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <title>イズミ装美 工事・経営管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#172d4f;--blue:#246cff;--line:#d9e3f1;--text:#162238;--muted:#73839b;--bg:#f5f8fd;--shadow:0 9px 26px rgba(31,67,116,.06)}
     *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f9fbff 0,var(--bg) 460px);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -21,18 +21,18 @@
     .footer{display:flex;gap:14px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}.footer a{color:var(--blue);font-size:11px;font-weight:800;text-decoration:none}.hidden{display:none!important}
     @media(max-width:720px){.header-inner{min-height:64px;padding:14px;align-items:stretch;flex-direction:column;gap:13px}.header-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.header-link{text-align:center;padding:9px 7px}.wrap{padding:18px 14px 32px}.intro{justify-content:flex-start;margin-bottom:12px}.section-head{align-items:flex-start;flex-direction:column;gap:5px}.section-head h2{font-size:21px}.section-head p{text-align:left}.feature-grid,.status-grid,.link-grid,.more-grid,.meeting-grid{grid-template-columns:1fr;gap:10px}.menu-section{margin-top:26px}.feature-card{height:200px;padding:19px 20px}.feature-card .description{max-width:none}.tag{right:20px;top:19px}.more-grid{padding:0 12px 12px}.more-grid .card{min-height:94px}.meeting-card{min-height:104px}}
   </style>
-<link rel="icon" href="../favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
-<link rel="manifest" href="../site.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
 </head>
 <body>
   <header>
     <div class="header-inner">
-      <div><h1>サンプル装美　工事・経営管理 <span class="version">販売デモ</span></h1><div class="sub">案件の受付から見積・発注・請求・入金まで、業務の順番に整理しています</div></div>
-      <div class="header-actions"><a class="header-link" href="管理番号取得.html">管理番号取得</a><a class="header-link" href="calendar.html">カレンダー</a><a class="header-link" href="estimate.html">見積・発注</a><a class="header-link" href="ユーザー設定.html">ユーザー設定</a></div>
+      <div><h1>イズミ装美　工事・経営管理 <span class="version">正式版</span></h1><div class="sub">案件の受付から見積・発注・請求・入金まで、業務の順番に整理しています</div></div>
+      <div class="header-actions"><a class="header-link" href="index.html">管理番号取得</a><a class="header-link" href="calendar.html">カレンダー</a><a class="header-link" href="estimate.html">見積・発注</a><a class="header-link" href="ユーザー設定.html">ユーザー設定</a></div>
     </div>
   </header>
   <main class="wrap">
@@ -44,7 +44,7 @@
       <div class="section-head"><h2>よく使う業務</h2><p>日常操作は、この4つから始められます</p></div>
       <div class="feature-grid">
         <a class="card feature-card accent-purple" href="calendar.html"><span class="tag">予定</span><span class="icon">CAL</span><b>予定カレンダー</b><span class="description">社員ごとの予定、現場調査、工事予定、休みを登録します。</span><em>行動予定を開く</em></a>
-        <a class="card feature-card" href="管理番号取得.html"><span class="tag">新規</span><span class="icon">NO.</span><b>管理番号取得</b><span class="description">新しい案件を開始し、見積・台帳・請求を一つの番号で結びます。</span><em>管理番号を取得</em></a>
+        <a class="card feature-card" href="index.html"><span class="tag">新規</span><span class="icon">NO.</span><b>管理番号取得</b><span class="description">新しい案件を開始し、見積・台帳・請求を一つの番号で結びます。</span><em>管理番号を取得</em></a>
         <a class="card feature-card accent-orange" href="estimate.html"><span class="tag">作成</span><span class="icon">DOC</span><b>見積・発注・原価・請求</b><span class="description">案件の基本情報、明細、帳票を一つの画面で作成します。</span><em>案件を開く</em></a>
         <a class="card feature-card accent-green" href="管理番号台帳.html"><span class="tag">正本</span><span class="icon">台帳</span><b>管理番号台帳</b><span class="description">すべての案件の担当・売上・請求・入金・計上月を確認します。</span><em>案件全体を見る</em></a>
       </div>
@@ -84,16 +84,16 @@
       <a id="meetingCasesCard" class="card meeting-card hidden" href="会議用案件一覧.html"><span class="icon">案件</span><span><b>会議用案件一覧</b><span class="description">会議対象案件の売上・原価・粗利・入金状況を一覧表示します。</span></span></a>
       <a id="meetingCard" class="card meeting-card hidden" href="経営会議資料.html"><span class="icon">会議</span><span><b>経営会議資料</b><span class="description">対象月の業績、推移、担当者別・取引先別実績を集計します。</span></span></a>
     </div>
-    <div class="footer"><a href="管理番号取得.html">← 管理番号取得へ戻る</a></div>
+    <div class="footer"><a href="index.html">← 管理番号取得へ戻る</a></div>
   </main>
   <script>
     function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
     normalizeStablePageUrls();
     const db=window.supabase.createClient(
-      'https://demo.invalid',
-      'demo-anon-key'
+      'https://jjowjnrsknmakcunblzq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs'
     );
-    const meetingUsers=new Set(['demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp','demo@sample-system.jp']);
+    const meetingUsers=new Set(['iida@izumisoubi.co.jp','demachi@izumisoubi.co.jp','ooshima@izumisoubi.co.jp','tanaka@izumisoubi.co.jp']);
     async function updateAccess(session){
       if(session?.user){
         const {data:enabled,error}=await db.rpc('is_current_app_user_enabled');

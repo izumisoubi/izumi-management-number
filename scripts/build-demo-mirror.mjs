@@ -19,7 +19,7 @@ for(const file of ['表入力共通.js','見積計算共通.js','自社原価共
   copyFileSync(join(root,file),join(demo,'estimate',file));
 }
 copyFileSync(join(root,'index.html'),join(demo,'管理番号取得.html'));
-copyFileSync(join(root,'工事リスト.html'),join(demo,'index.html'));
+copyFileSync(join(root,'イズミ装美社内システム.html'),join(demo,'index.html'));
 
 const runtimeTags='<script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script>';
 const realSupabase='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
