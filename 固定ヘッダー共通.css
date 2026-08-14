@@ -158,9 +158,9 @@ body>.tabbar:first-of-type{
 /* The estimate system intentionally uses two rows: primary work tabs above,
    theme/company/save controls below. Do not flatten this task toolbar. */
 body.estimate-system>.tabbar:first-of-type{
-  height:84px!important;
-  min-height:84px!important;
-  max-height:84px!important;
+  height:auto!important;
+  min-height:var(--izumi-header-height)!important;
+  max-height:none!important;
   flex-flow:row wrap!important;
   align-items:center!important;
   overflow-x:hidden!important;
@@ -193,7 +193,6 @@ body.estimate-system>.tabbar:first-of-type>.header-primary-row{
   scrollbar-width:none;
   position:relative;
   z-index:1;
-  height:42px!important;
 }
 body.estimate-system>.tabbar:first-of-type>.header-primary-row::-webkit-scrollbar{display:none}
 body.estimate-system>.tabbar:first-of-type>.header-primary-row>.brand{flex:0 0 auto!important}
@@ -240,9 +239,8 @@ body.estimate-system #todayDateDisplay.today-date-in-header{
   background:rgba(255,255,255,.12)!important;
 }
 body.estimate-system>.tabbar:first-of-type .bar-r{
-  flex:1 0 42px!important;
+  flex:1 0 100%!important;
   width:100%!important;
-  height:42px!important;
   max-width:100%!important;
   margin-left:0!important;
   padding:5px 8px 6px!important;

@@ -11,14 +11,18 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const headerPages=readdirSync(root)
   .filter(file=>file.endsWith('.html'))
   .filter(file=>/<header\b|class="tabbar"/.test(read(file)));
+const unifiedHeaderPages=headerPages.filter(file=>file!=='estimate.html');
 
-test('全画面のヘッダーを上段と薄グレーの下段に統一する',()=>{
+test('見積システムを除く全画面のヘッダーを共通2段表示にする',()=>{
   assert.equal(headerPages.length,28,'ヘッダー画面の増減を確認してください');
-  for(const page of headerPages){
+  assert.equal(unifiedHeaderPages.length,27);
+  for(const page of unifiedHeaderPages){
     const html=read(page);
     assert.match(html,/本日日付共通\.js\?v=20260814-TODAY2/);
-    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER10/);
+    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER11/);
   }
+  assert.match(read('estimate.html'),/固定ヘッダー共通\.css\?v=20260814-HEADER11/);
+  assert.match(headerScript,/body > \.tabbar:first-of-type/);
   assert.match(headerScript,/function normalizeHeaderLayout\(\)/);
   assert.match(headerScript,/izumi-ledger-primary/);
   assert.match(headerScript,/izumi-ledger-secondary/);
