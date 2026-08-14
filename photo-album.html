@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>イズミ装美 工事写真帳</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script>
 <script src="認証セッション共通.js?v=20260729-UX56"></script>
 <script src="本日日付共通.js?v=20260814-TODAY2"></script>
@@ -207,9 +208,9 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
       <ul>
         <li>管理番号から、案件の基本情報だけをオンライン版から自動取得します。</li>
         <li>写真本体はJSONの中に含め、会社指定のGoogle Driveフォルダへ保存します。PDFはこのPCへ保存します。</li>
-        <li>初回だけGoogle Drive for desktop上の「工事写真帳JSON保存先」を選択してください。</li>
-        <li>以後の保存・読込は、選択したフォルダ内だけで行います。Googleの許可画面や秘密鍵は不要です。</li>
-        <li>Drive for desktopを使えない場合に備え、PCへのJSON保存・読込も残しています。</li>
+        <li>保存先は会社指定のGoogle Driveフォルダに固定されています。フォルダを先に選ぶ必要はありません。</li>
+        <li>初回だけ社員のGoogleアカウントで許可してください。以後は同じ画面から直接保存・読込できます。</li>
+        <li>Google Driveを利用できない場合に備え、PCへのJSON保存・読込も残しています。</li>
       </ul>
     </div>
     <div id="step1">
@@ -220,11 +221,10 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
         </div>
         <div class="json-folder-actions">
           <button type="button" class="json-folder-btn" onclick="openDriveJsonList()">☁️ Driveから読込</button>
-          <button type="button" class="json-folder-btn secondary" onclick="connectJsonFolder()">📁 保存先を設定</button>
           <label for="fup-load" class="json-folder-btn link">PCから読込</label>
           <button type="button" class="json-folder-btn save" onclick="saveProjectFromSetup()">💾 DriveへJSON保存</button>
           <a class="json-folder-btn link" href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener">保存先を確認</a>
-          <div id="json-folder-status" class="json-folder-status">保存先を確認しています…</div>
+          <div id="json-folder-status" class="json-folder-status">保存先：会社指定Google Driveフォルダ</div>
         </div>
         <input type="file" id="fup-load" accept=".json" style="display:none" onchange="loadProject(this)">
       </div>
@@ -729,89 +729,67 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;backg
 var PHOTO_SUPABASE_URL=window.IZUMI_SUPABASE_CONFIG.url;
 var PHOTO_SUPABASE_ANON_KEY=window.IZUMI_SUPABASE_CONFIG.anonKey;
 var photoDb=window.createIzumiSupabaseClient();
-var JSON_FOLDER_NAME='工事写真帳JSON保存先';
-var JSON_HANDLE_DB='izumi-photo-album-folders';
-var JSON_HANDLE_STORE='handles';
-var JSON_HANDLE_KEY='photo-album-json-folder-v1';
+var GOOGLE_DRIVE_CLIENT_ID='494107865207-c8vadqe8m4nisojp3dghpb11o3q7pav3.apps.googleusercontent.com';
+var GOOGLE_DRIVE_FOLDER_ID='1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve';
+var GOOGLE_DRIVE_SCOPE='https://www.googleapis.com/auth/drive';
+var googleDriveTokenClient=null;
+var googleDriveAccessToken='';
+var googleDriveTokenExpiresAt=0;
 
-function _supportsFolderAccess(){return typeof window.showDirectoryPicker==='function'&&typeof window.indexedDB!=='undefined';}
-function _openHandleDb(){
-  return new Promise(function(resolve,reject){
-    var req=indexedDB.open(JSON_HANDLE_DB,1);
-    req.onupgradeneeded=function(){if(!req.result.objectStoreNames.contains(JSON_HANDLE_STORE))req.result.createObjectStore(JSON_HANDLE_STORE);};
-    req.onsuccess=function(){resolve(req.result);};
-    req.onerror=function(){reject(req.error||new Error('保存先情報を開けませんでした'));};
-  });
-}
-async function _storeJsonFolderHandle(handle){
-  var db=await _openHandleDb();
-  return new Promise(function(resolve,reject){
-    var tx=db.transaction(JSON_HANDLE_STORE,'readwrite');
-    tx.objectStore(JSON_HANDLE_STORE).put(handle,JSON_HANDLE_KEY);
-    tx.oncomplete=function(){db.close();resolve();};
-    tx.onerror=function(){db.close();reject(tx.error||new Error('保存先を記憶できませんでした'));};
-  });
-}
-async function _readJsonFolderHandle(){
-  var db=await _openHandleDb();
-  return new Promise(function(resolve,reject){
-    var tx=db.transaction(JSON_HANDLE_STORE,'readonly');
-    var req=tx.objectStore(JSON_HANDLE_STORE).get(JSON_HANDLE_KEY);
-    req.onsuccess=function(){resolve(req.result||null);};
-    req.onerror=function(){reject(req.error||new Error('保存先を確認できませんでした'));};
-    tx.oncomplete=function(){db.close();};
-  });
-}
-async function _folderPermission(handle,mode,ask){
-  var opts={mode:mode||'read'};
-  if((await handle.queryPermission(opts))==='granted')return true;
-  return !!ask&&(await handle.requestPermission(opts))==='granted';
-}
 function _setFolderStatus(message,state){
   var el=document.getElementById('json-folder-status');
   if(!el)return;
   el.textContent=message;
   el.className='json-folder-status '+(state||'');
 }
-async function _refreshFolderStatus(){
-  if(!_supportsFolderAccess()){
-    _setFolderStatus('このブラウザではDrive同期フォルダを直接操作できません（PC保存をご利用ください）','warn');
-    return;
-  }
-  try{
-    var handle=await _readJsonFolderHandle();
-    if(!handle){_setFolderStatus('初回保存時にDrive同期フォルダを選択します','warn');return;}
-    var permitted=await _folderPermission(handle,'readwrite',false);
-    _setFolderStatus(permitted?'接続済み：'+handle.name:'保存先：'+handle.name+'（次回操作時に再許可）',permitted?'ok':'warn');
-  }catch(err){_setFolderStatus('保存先を確認できません：'+err.message,'warn');}
+function _waitForGoogleIdentity(){
+  return new Promise(function(resolve,reject){
+    var started=Date.now();
+    (function check(){
+      if(window.google&&google.accounts&&google.accounts.oauth2){resolve();return;}
+      if(Date.now()-started>10000){reject(new Error('Google認証を読み込めませんでした。通信状態を確認してください'));return;}
+      setTimeout(check,100);
+    })();
+  });
 }
-window.connectJsonFolder=async function(){
-  if(!_supportsFolderAccess()){
-    alert('この機能はChromeまたはEdgeで利用できます。Google Drive for desktopをインストールし、共有ドライブをPCに表示してください。');
-    return null;
+async function _getGoogleDriveToken(force){
+  if(!force&&googleDriveAccessToken&&Date.now()<googleDriveTokenExpiresAt-60000)return googleDriveAccessToken;
+  await _waitForGoogleIdentity();
+  return new Promise(function(resolve,reject){
+    googleDriveTokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:GOOGLE_DRIVE_CLIENT_ID,
+      scope:GOOGLE_DRIVE_SCOPE,
+      callback:function(response){
+        if(response&&response.access_token){
+          googleDriveAccessToken=response.access_token;
+          googleDriveTokenExpiresAt=Date.now()+(Number(response.expires_in)||3600)*1000;
+          _setFolderStatus('Google Drive接続済み（会社指定フォルダ）','ok');
+          resolve(googleDriveAccessToken);
+        }else reject(new Error((response&&response.error_description)||'Google Driveの許可が完了しませんでした'));
+      },
+      error_callback:function(error){reject(new Error((error&&error.message)||'Google Driveの認証を中止しました'));}
+    });
+    googleDriveTokenClient.requestAccessToken({prompt:force?'consent':''});
+  });
+}
+async function _driveFetch(url,options,retried){
+  var token=await _getGoogleDriveToken(false);
+  var opts=options||{};
+  opts.headers=Object.assign({},opts.headers||{},{Authorization:'Bearer '+token});
+  var response=await fetch(url,opts);
+  if(response.status===401&&!retried){googleDriveAccessToken='';googleDriveTokenExpiresAt=0;return _driveFetch(url,options,true);}
+  if(!response.ok){
+    var detail='';try{detail=(await response.json()).error.message;}catch(ignore){}
+    throw new Error(detail||('Google Driveとの通信に失敗しました（'+response.status+'）'));
   }
-  try{
-    var handle=await window.showDirectoryPicker({id:'izumi-photo-album-json-folder',mode:'readwrite',startIn:'documents'});
-    if(handle.name!==JSON_FOLDER_NAME){
-      alert('指定フォルダ「'+JSON_FOLDER_NAME+'」を選択してください。\n選択されたフォルダ：'+handle.name);
-      return null;
-    }
-    await _storeJsonFolderHandle(handle);
-    _setFolderStatus('接続済み：'+handle.name,'ok');
-    return handle;
-  }catch(err){
-    if(err&&err.name!=='AbortError')alert('保存先の設定に失敗しました：'+err.message);
-    return null;
-  }
-};
-async function _getJsonFolder(mode){
-  if(!_supportsFolderAccess())throw new Error('ChromeまたはEdgeで開いてください');
-  var handle=await _readJsonFolderHandle();
-  if(!handle&&mode==='readwrite')handle=await window.connectJsonFolder();
-  if(!handle)throw new Error(mode==='readwrite'?'保存先が選択されませんでした':'先にDrive保存先を選択してください');
-  if(handle.name!==JSON_FOLDER_NAME)throw new Error('保存先が指定フォルダではありません。設定し直してください');
-  if(!(await _folderPermission(handle,mode||'read',true)))throw new Error('フォルダへのアクセスが許可されませんでした');
-  return handle;
+  return response;
+}
+function _driveQueryEscape(value){return String(value).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+async function _findDriveFile(name){
+  var query="'"+GOOGLE_DRIVE_FOLDER_ID+"' in parents and name = '"+_driveQueryEscape(name)+"' and trashed = false";
+  var url='https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&includeItemsFromAllDrives=true&fields=files(id,name)&pageSize=10&q='+encodeURIComponent(query);
+  var data=await (await _driveFetch(url)).json();
+  return data.files&&data.files.length?data.files[0]:null;
 }
 function _formatJsonSize(bytes){
   if(bytes<1024)return bytes+' B';
@@ -824,33 +802,35 @@ window.openDriveJsonList=async function(){
   if(modal)modal.style.display='flex';
   if(list)list.innerHTML='<div class="drive-empty">指定フォルダを確認しています…</div>';
   try{
-    var dir=await _getJsonFolder('read');
-    var files=[];
-    for await(var pair of dir.entries()){
-      var name=pair[0],entry=pair[1];
-      if(entry.kind!=='file'||!/\.json$/i.test(name))continue;
-      try{var file=await entry.getFile();files.push({file:file});}catch(e){}
-    }
-    files.sort(function(a,b){return b.file.lastModified-a.file.lastModified;});
+    var query="'"+GOOGLE_DRIVE_FOLDER_ID+"' in parents and mimeType = 'application/json' and trashed = false";
+    var url='https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&includeItemsFromAllDrives=true&orderBy=modifiedTime%20desc&pageSize=100&fields=files(id,name,size,modifiedTime)&q='+encodeURIComponent(query);
+    var data=await (await _driveFetch(url)).json();
+    var files=data.files||[];
     if(!list)return;
     list.innerHTML='';
     if(!files.length){list.innerHTML='<div class="drive-empty">このフォルダにJSONファイルはありません。</div>';return;}
     files.forEach(function(item){
       var button=document.createElement('button');
       button.type='button';button.className='drive-file';
-      var name=document.createElement('span');name.className='drive-file-name';name.textContent=item.file.name;
-      var meta=document.createElement('span');meta.className='drive-file-meta';meta.textContent=_formatJsonSize(item.file.size);
-      var date=document.createElement('span');date.className='drive-file-meta';date.textContent=new Date(item.file.lastModified).toLocaleString('ja-JP');
+      var name=document.createElement('span');name.className='drive-file-name';name.textContent=item.name;
+      var meta=document.createElement('span');meta.className='drive-file-meta';meta.textContent=_formatJsonSize(Number(item.size)||0);
+      var date=document.createElement('span');date.className='drive-file-meta';date.textContent=new Date(item.modifiedTime).toLocaleString('ja-JP');
       button.appendChild(name);button.appendChild(meta);button.appendChild(date);
-      button.onclick=function(){document.getElementById('drive-load-modal').style.display='none';window.loadProject({files:[item.file],value:''});};
+      button.onclick=async function(){
+        try{
+          button.disabled=true;
+          var blob=await (await _driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(item.id)+'?alt=media&supportsAllDrives=true')).blob();
+          var file=new File([blob],item.name,{type:'application/json',lastModified:Date.parse(item.modifiedTime)||Date.now()});
+          document.getElementById('drive-load-modal').style.display='none';window.loadProject({files:[file],value:''});
+        }catch(err){alert('Driveから読み込めませんでした：'+String(err.message||err));}finally{button.disabled=false;}
+      };
       list.appendChild(button);
     });
-    _setFolderStatus('接続済み：'+dir.name,'ok');
+    _setFolderStatus('Google Drive接続済み（会社指定フォルダ）','ok');
   }catch(err){
-    if(list)list.innerHTML='<div class="drive-empty">'+String(err.message||err)+'<br>「保存先を設定」から指定フォルダを選び直してください。</div>';
+    if(list)list.innerHTML='<div class="drive-empty">'+String(err.message||err)+'<br>Googleアカウントを確認して、もう一度お試しください。</div>';
   }
 };
-setTimeout(_refreshFolderStatus,0);
 function setProjectField(id,value){var el=document.getElementById(id);if(el&&value!=null&&String(value).trim())el.value=String(value);}
 function updateSystemTabLinks(managementNumber){
   document.querySelectorAll('[data-est-tab]').forEach(function(link){
@@ -1504,9 +1484,9 @@ window.saveProject=function(){
   var note=document.getElementById('save-destination-note');
   var btn=document.getElementById('save-exec-btn');
   if(note){
-    note.innerHTML='<b>指定フォルダ「'+JSON_FOLDER_NAME+'」へ保存します。</b><br>同名ファイルがある場合は上書きし、Google Drive for desktopがオンラインへ同期します。';
+    note.innerHTML='<b>会社指定のGoogle Driveフォルダへ直接保存します。</b><br>同名ファイルがある場合は上書きします。初回だけGoogleアカウントの許可が必要です。';
   }
-  if(btn)btn.textContent='指定Driveフォルダへ保存';
+  if(btn)btn.textContent='Google Driveへ保存';
   _setSaveProgress(0,'');
   document.getElementById('save-modal').style.display='flex';
 };
@@ -1530,22 +1510,19 @@ window.execSave=async function(){
   var button=document.getElementById('save-exec-btn');
   if(button)button.disabled=true;
   try{
-    var dir=await _getJsonFolder('readwrite');
-    var fileHandle=await dir.getFileHandle(fname,{create:true});
-    var writable=await fileHandle.createWritable();
-    var reader=blob.stream().getReader(),written=0;
-    try{
-      while(true){
-        var part=await reader.read();
-        if(part.done)break;
-        await writable.write(part.value);
-        written+=part.value.byteLength;
-        _setSaveProgress(blob.size?Math.round(written/blob.size*100):100,'保存中… '+_formatJsonSize(written)+' / '+_formatJsonSize(blob.size));
-      }
-      await writable.close();
-    }catch(writeErr){try{await writable.abort();}catch(ignore){}throw writeErr;}
-    _setSaveProgress(100,'保存完了：'+fname+'（Driveへの同期は自動で続きます）');
-    _setFolderStatus('接続済み：'+dir.name,'ok');
+    _setSaveProgress(15,'Google Driveへ接続しています…');
+    var existing=await _findDriveFile(fname);
+    _setSaveProgress(45,'Google Driveへ送信中… '+_formatJsonSize(blob.size));
+    if(existing){
+      await _driveFetch('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(existing.id)+'?uploadType=media&supportsAllDrives=true',{method:'PATCH',headers:{'Content-Type':'application/json'},body:blob});
+    }else{
+      var boundary='izumi_photo_'+Date.now();
+      var metadata={name:fname,parents:[GOOGLE_DRIVE_FOLDER_ID],mimeType:'application/json'};
+      var multipart=new Blob(['--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',JSON.stringify(metadata),'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n',blob,'\r\n--'+boundary+'--'],{type:'multipart/related; boundary='+boundary});
+      await _driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body:multipart});
+    }
+    _setSaveProgress(100,'保存完了：'+fname);
+    _setFolderStatus('Google Drive接続済み（会社指定フォルダ）','ok');
     setTimeout(function(){document.getElementById('save-modal').style.display='none';_setSaveProgress(0,'');},900);
   }catch(err){
     _setSaveProgress(0,'保存できませんでした：'+String(err.message||err));
@@ -2061,7 +2038,7 @@ window.doPrint=function(){
     <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
       <button onclick="document.getElementById('save-modal').style.display='none'" style="padding:10px 20px;border:1.5px solid #D6D0C8;border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:#666">キャンセル</button>
       <button onclick="saveProjectToPc()" style="padding:10px 18px;border:1.5px solid #D07A16;border-radius:10px;background:#FFF7E8;color:#8A4B08;font-size:13px;font-weight:700;cursor:pointer">PCへ保存</button>
-      <button id="save-exec-btn" onclick="execSave()" style="padding:10px 20px;border:none;border-radius:10px;background:#2E7D32;color:#fff;font-size:13px;font-weight:700;cursor:pointer">指定Driveフォルダへ保存</button>
+      <button id="save-exec-btn" onclick="execSave()" style="padding:10px 20px;border:none;border-radius:10px;background:#2E7D32;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Google Driveへ保存</button>
     </div>
     <div id="save-progress" class="save-progress"><div class="save-progress-track"><div id="save-progress-bar" class="save-progress-bar"></div></div><div id="save-progress-text" class="save-progress-text"></div></div>
   </div>
@@ -2073,7 +2050,7 @@ window.doPrint=function(){
     <div id="drive-file-list" class="drive-file-list"><div class="drive-empty">指定フォルダを確認しています…</div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:11px">
       <a href="https://drive.google.com/drive/u/2/folders/1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve" target="_blank" rel="noopener" style="color:#246cff">Google Driveでフォルダを開く</a>
-      <button type="button" class="json-folder-btn secondary" onclick="connectJsonFolder()">保存先を設定し直す</button>
+      <span style="color:#506080">保存先は会社指定フォルダに固定</span>
     </div>
   </div>
 </div>
