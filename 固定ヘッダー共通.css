@@ -316,11 +316,34 @@ body.ledger-system>header:first-of-type>.izumi-ledger-primary{justify-content:sp
 body.ledger-system>header:first-of-type>.izumi-ledger-secondary{justify-content:flex-end!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
 body.ledger-system>header:first-of-type>.izumi-ledger-secondary::-webkit-scrollbar{display:none}
 body.ledger-system>header:first-of-type>.izumi-ledger-primary>div:first-child{min-width:0}
-body.ledger-system>header:first-of-type h1{font-size:16px!important;white-space:nowrap!important}
+body.ledger-system>header:first-of-type h1,
+body.ledger-system>header:first-of-type .izumi-ledger-primary .title{margin:0!important;color:#fff!important;font-size:16px!important;white-space:nowrap!important}
 body.ledger-system>header:first-of-type .sub{margin-top:1px!important;font-size:9px!important;white-space:nowrap!important}
+body.ledger-system>header:first-of-type .izumi-ledger-primary .system-brand{height:42px!important;color:#fff!important}
 body.ledger-system>header:first-of-type .izumi-ledger-date-slot{margin-left:auto!important;color:#fff!important;overflow:visible!important}
 body.ledger-system>header:first-of-type #todayDateDisplay{color:#fff!important;border-color:rgba(255,255,255,.38)!important;background:rgba(255,255,255,.12)!important}
 body.ledger-system>header:first-of-type .izumi-ledger-secondary .user{justify-content:flex-end!important;overflow:visible!important}
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.header-actions,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.header-content,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.auth-controls,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.toolbar,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.links,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>.user,
+body.ledger-system>header:first-of-type .izumi-ledger-secondary>nav{
+  width:auto!important;
+  min-height:0!important;
+  height:42px!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:4px!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
 body.ledger-system>header:first-of-type .izumi-ledger-secondary #userEmail,
 body.ledger-system>header:first-of-type .izumi-ledger-secondary .session-user{display:none!important}
 body.ledger-system>header:first-of-type .izumi-ledger-secondary nav{gap:4px!important;overflow:visible!important}
@@ -372,6 +395,13 @@ body.ledger-system>header:first-of-type .izumi-ledger-secondary a.current{
   body>header:first-of-type button:not(.icon-btn){min-height:30px;padding:6px 8px!important;font-size:10.5px!important}
   body>header.system-tabbar,
   body>.tabbar:first-of-type{padding-left:7px!important;padding-right:7px!important}
+  body.ledger-system>header:first-of-type{
+    height:84px!important;min-height:84px!important;max-height:84px!important;
+    padding-left:10px!important;padding-right:10px!important;gap:0!important
+  }
+  body.ledger-system>header:first-of-type>.izumi-ledger-primary,
+  body.ledger-system>header:first-of-type>.izumi-ledger-secondary{height:42px!important;padding:0!important}
+  body.ledger-system>header:first-of-type>.izumi-ledger-secondary{overflow-x:auto!important}
 }
 @media print{
   body>header:first-of-type,

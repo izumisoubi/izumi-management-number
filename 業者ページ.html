@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER9">
 </head>
 <body>
 <header><div class="head"><div><h1>株式会社イズミ装美</h1><div>工事内容・支払通知書の確認</div></div></div></header>
@@ -64,6 +64,6 @@ function showDispute(){$('disputeBox').classList.remove('hidden');$('disputeReas
 async function sendDispute(){const reason=$('disputeReason').value.trim(),amountText=String($('disputeAmount').value).replace(/[,，¥￥\s]/g,''),amount=Number(amountText);if(!reason||amountText===''||!Number.isFinite(amount))return $('actionStatus').textContent='正しいと考える税込支払額と相違内容を入力してください。';if(submitting)return;submitting=true;$('actionStatus').textContent='相違内容を記録中…';const result=await db.functions.invoke('notice-action',{body:{action:'dispute',token,reason,amount}});if(result.error||result.data?.error){submitting=false;$('actionStatus').textContent=result.data?.error||result.error.message;return}$('actions').classList.add('hidden');$('completed').classList.remove('hidden');$('completed').textContent='相違内容を受け付けました。イズミ装美の担当者からご連絡します。'}
 loadNotice();
 </script>
-<script src="本日日付共通.js?v=20260808-TODAY1"></script>
+<script src="本日日付共通.js?v=20260814-TODAY2"></script>
 </body>
 </html>

@@ -1,25 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 
 const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
-const nav=read('common-nav.js');
+const headerScript=read('本日日付共通.js');
 const css=read('固定ヘッダー共通.css');
 const menu=read('index.html');
-const ledgerPages=[
-  'calendar.html','管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'
-];
+const root=fileURLToPath(new URL('../',import.meta.url));
+const headerPages=readdirSync(root)
+  .filter(file=>file.endsWith('.html'))
+  .filter(file=>/<header\b|class="tabbar"/.test(read(file)));
 
-test('管理台帳系のヘッダーを上段と薄グレーの下段に統一する',()=>{
-  for(const page of ledgerPages){
-    assert.match(nav,new RegExp(page.replace('.','\\.')));
+test('全画面のヘッダーを上段と薄グレーの下段に統一する',()=>{
+  assert.equal(headerPages.length,28,'ヘッダー画面の増減を確認してください');
+  for(const page of headerPages){
     const html=read(page);
-    assert.match(html,/common-nav\.js\?v=20260814-HEADER4/);
-    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER8/);
+    assert.match(html,/本日日付共通\.js\?v=20260814-TODAY2/);
+    assert.match(html,/固定ヘッダー共通\.css\?v=20260814-HEADER9/);
   }
-  assert.match(nav,/izumi-ledger-primary/);
-  assert.match(nav,/izumi-ledger-secondary/);
-  assert.match(nav,/container\.childElementCount === 0/);
+  assert.match(headerScript,/function normalizeHeaderLayout\(\)/);
+  assert.match(headerScript,/izumi-ledger-primary/);
+  assert.match(headerScript,/izumi-ledger-secondary/);
+  assert.match(headerScript,/旧レイアウトのラッパー/);
   assert.match(css,/body\.ledger-system>header:first-of-type::before\{[\s\S]*left:0;[\s\S]*right:0;[\s\S]*background:#eef2f6/);
   assert.match(css,/body\.ledger-system>header:first-of-type\{[\s\S]*gap:0!important/);
   assert.match(css,/\.izumi-ledger-primary\{justify-content:space-between!important\}/);

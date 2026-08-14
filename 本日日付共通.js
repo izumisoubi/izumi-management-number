@@ -7,6 +7,49 @@
   const styleId = 'todayDateDisplayStyle';
   const displayId = 'todayDateDisplay';
 
+  function normalizeHeaderLayout() {
+    // 見積画面は同じ2段構造をHTML側で持っているため、そのまま利用する。
+    if (document.querySelector('body > .tabbar:first-of-type')) return;
+    const header = document.querySelector('body > header:first-of-type');
+    if (!header || header.querySelector(':scope > .izumi-ledger-primary')) return;
+
+    const heading = header.querySelector('h1');
+    const title = header.querySelector('.title');
+    let titleBlock = heading ? (heading.parentElement === header ? heading : heading.parentElement) : null;
+    if (!titleBlock && title) titleBlock = title.parentElement === header ? title : title.parentElement;
+    if (!titleBlock) titleBlock = header.querySelector('.system-brand');
+    if (!titleBlock) return;
+
+    const primary = document.createElement('div');
+    primary.className = 'izumi-ledger-primary';
+    const dateSlot = document.createElement('div');
+    dateSlot.className = 'header-actions izumi-ledger-date-slot';
+    dateSlot.setAttribute('aria-label', '本日の日付');
+    const secondary = document.createElement('div');
+    secondary.className = 'izumi-ledger-secondary';
+
+    const actionSelector = [
+      '.header-content', '#userBox', '.header-actions', '.toolbar-actions',
+      '.toolbar', '.links', '.user', '.auth-controls', 'nav', 'a.system-tab', ':scope > a'
+    ].join(',');
+    const candidates = [...header.querySelectorAll(actionSelector)]
+      .filter(element => !titleBlock.contains(element))
+      .filter(element => !element.parentElement?.closest(actionSelector));
+
+    document.body.classList.add('ledger-system', 'unified-header-system');
+    header.prepend(primary);
+    primary.append(titleBlock, dateSlot);
+    header.append(secondary);
+    candidates.forEach(element => secondary.append(element));
+
+    // 旧レイアウトのラッパーに残った要素も下段へ集約し、空ラッパーは残さない。
+    [...header.children].forEach(child => {
+      if (child === primary || child === secondary) return;
+      if (child.textContent.trim() || child.childElementCount) secondary.append(child);
+      else child.remove();
+    });
+  }
+
   function japanDateParts(date = new Date()) {
     const parts = {};
     new Intl.DateTimeFormat('ja-JP', {
@@ -95,6 +138,7 @@
 
   function mount() {
     if (document.getElementById(displayId)) return;
+    normalizeHeaderLayout();
     installStyle();
     const display = document.createElement('span');
     display.id = displayId;
