@@ -4,6 +4,8 @@
   root.IzumiFiscalYear=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   const START_MONTH=9;
+  const MINIMUM_CODE=25;
+  const MAXIMUM_CODE=31;
   function dateParts(value){
     if(value instanceof Date&&!Number.isNaN(value.getTime())){
       return {year:value.getFullYear(),month:value.getMonth()+1};
@@ -31,12 +33,9 @@
     if(!parts)return'';
     return `${parts.month>=START_MONTH?parts.year:parts.year-1}年度`;
   }
-  function options({today=new Date(),minimumCode=22,pastYears=6,futureYears=3,includeCodes=[]}={}){
-    const current=Number(codeForDate(today));
-    const minimum=Math.min(minimumCode,...includeCodes.map(Number).filter(Number.isFinite));
-    const maximum=Math.max(current+futureYears,...includeCodes.map(Number).filter(Number.isFinite));
+  function options(){
     const result=[];
-    for(let code=maximum;code>=minimum;code-=1){
+    for(let code=MAXIMUM_CODE;code>=MINIMUM_CODE;code-=1){
       const normalized=String(code).padStart(2,'0');
       result.push({code:normalized,label:labelForCode(normalized)});
     }
@@ -46,5 +45,5 @@
     const numericCode=Number(code),numericMonth=Number(month);
     return 2000+numericCode-(numericMonth>=START_MONTH?1:0);
   }
-  return {START_MONTH,dateParts,fiscalEndYearForDate,codeForDate,labelForCode,accountingYearForDate,options,fiscalCalendarYear};
+  return {START_MONTH,MINIMUM_CODE,MAXIMUM_CODE,dateParts,fiscalEndYearForDate,codeForDate,labelForCode,accountingYearForDate,options,fiscalCalendarYear};
 });

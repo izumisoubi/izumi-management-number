@@ -39,7 +39,7 @@
         font-variant-numeric:tabular-nums;letter-spacing:.02em;white-space:nowrap;
         box-shadow:inset 0 1px 0 rgba(255,255,255,.08)
       }
-      #${displayId}.today-date-in-header{margin-left:8px}
+      #${displayId}.today-date-in-header{margin-left:8px;order:2147483647}
       #${displayId}.today-date-floating{
         position:fixed;top:10px;right:12px;z-index:9500;background:#fff;color:#17345f;
         border-color:#b9c8db;box-shadow:0 5px 18px rgba(23,52,95,.16)
@@ -57,6 +57,7 @@
 
   function findTarget() {
     const selectors = [
+      '.tabbar .header-actions',
       '.tabbar .bar-r',
       'header .header-actions',
       'header .toolbar-actions',
@@ -105,8 +106,8 @@
     const placement = findTarget();
     if (placement) {
       display.classList.add('today-date-in-header');
-      if (placement.actionGroup) placement.target.prepend(display);
-      else placement.target.append(display);
+      // 日付は全画面共通で、ヘッダー内の操作ボタンより後ろ（最も右）に置く。
+      placement.target.append(display);
     } else {
       display.classList.add('today-date-floating');
       document.body.appendChild(display);

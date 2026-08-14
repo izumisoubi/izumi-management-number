@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
   <title>イズミ装美 操作履歴</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--line:#d9e1ed;--text:#172033;--muted:#637188;--bg:#eef3f9;--danger:#c53030;--green:#177c55}
     *{box-sizing:border-box}
@@ -108,9 +108,8 @@
   </main>
 
   <script>
-    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+    const db=window.createIzumiSupabaseClient();
     const PAGE_SIZE=200;
     let offset=0;
     let logs=[];

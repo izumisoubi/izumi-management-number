@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>サンプル装美 銀行入金照合</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX39">
   <style>
     .import-grid{display:grid;grid-template-columns:180px minmax(250px,1fr) auto;gap:12px;align-items:end}
@@ -21,9 +21,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-<header><div class="head"><div><h1>銀行入金照合</h1><div>三菱UFJ BizSTATION・三井住友 Web21のCSVを管理番号へ照合</div></div><div class="toolbar"><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="請求.html">請求管理</a><button id="logoutButton" class="btn secondary" onclick="signOut()">ログアウト</button></div></div></header>
+<header><div class="head"><div><h1>銀行入金照合</h1><div>三菱UFJ BizSTATION・三井住友 Web21のCSVを管理番号へ照合</div></div><div class="toolbar"><a href="index.html">一覧メニュー</a><a href="請求.html">請求管理</a><button id="logoutButton" class="btn secondary" onclick="signOut()">ログアウト</button></div></div></header>
 <main>
   <section id="accessCard" class="panel"><h2>接続確認中…</h2><p class="muted">銀行情報は最高権限者だけが閲覧・操作できます。</p></section>
   <div id="app" class="hidden">
@@ -56,7 +57,7 @@
 <script src="業務基盤.js?v=20260724-UX39"></script>
 <script src="銀行CSV解析.js?v=20260724-UX39"></script>
 <script>
-const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),money=value=>'¥'+Number(value||0).toLocaleString('ja-JP'),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 let parsedFile=null,transactions=[],selectedTx=null,candidates=[],combinationSuggestion=null,transactionOffset=0,transactionCount=0,transactionLoading=false,transactionHasMore=true;
 const transactionPageSize=200;
@@ -69,7 +70,7 @@ async function boot(){
   if(!session){location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search));return}
   const [enabled,admin]=await Promise.all([db.rpc('is_current_app_user_enabled'),db.rpc('is_management_admin')]);
   if(enabled.error||enabled.data!==true){await db.auth.signOut();location.replace('auth.html?next='+encodeURIComponent(location.pathname));return}
-  if(admin.error||admin.data!==true){$('accessCard').innerHTML='<h2>最高権限が必要です</h2><p class="muted">銀行明細と入金確定は最高権限者だけが操作できます。</p><a class="btn secondary" href="イズミ装美社内システム.html">一覧メニューへ戻る</a>';return}
+  if(admin.error||admin.data!==true){$('accessCard').innerHTML='<h2>最高権限が必要です</h2><p class="muted">銀行明細と入金確定は最高権限者だけが操作できます。</p><a class="btn secondary" href="index.html">一覧メニューへ戻る</a>';return}
   $('accessCard').classList.add('hidden');$('app').classList.remove('hidden');await loadTransactions();
 }
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
@@ -206,7 +207,7 @@ $('voidButton').addEventListener('click',async()=>{
 function closeCandidates(){selectedTx=null;candidates=[];combinationSuggestion=null;$('candidatePanel').classList.add('hidden')}
 boot();
 </script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

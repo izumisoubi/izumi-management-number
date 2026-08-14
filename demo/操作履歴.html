@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
   <title>サンプル装美 操作履歴</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--line:#d9e1ed;--text:#172033;--muted:#637188;--bg:#eef3f9;--danger:#c53030;--green:#177c55}
     *{box-sizing:border-box}
@@ -43,13 +43,14 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
   <header>
     <div class="header-inner">
       <div><h1>サンプル装美　操作履歴</h1><div class="sub">採番・案件保存・台帳変更・削除を、実行者と変更内容まで記録します</div></div>
       <nav>
-        <a href="イズミ装美社内システム.html">一覧メニュー</a>
+        <a href="index.html">一覧メニュー</a>
         <a href="管理番号台帳.html">管理番号台帳</a>
         <a href="estimate.html">見積を開く</a>
         <a href="ユーザー設定.html">ユーザー設定</a>
@@ -107,9 +108,8 @@
   </main>
 
   <script>
-    const SUPABASE_URL='https://demo.invalid';
-    const SUPABASE_ANON_KEY='demo-anon-key';
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+    const db=window.createIzumiSupabaseClient();
     const PAGE_SIZE=200;
     let offset=0;
     let logs=[];
@@ -238,7 +238,7 @@
     db.auth.onAuthStateChange((_event,session)=>showSession(session));
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

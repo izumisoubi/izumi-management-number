@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
   <title>イズミ装美 データ取込・出力</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="年度共通.js?v=20260729-UX51"></script>
+  <script src="年度共通.js?v=20260814-YEAR2030"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--line:#d8e1ed;--muted:#66758c;--bg:#f3f6fb;--green:#12805c;--red:#bd3344}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#162033;font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}button,input,select{font:inherit}
@@ -51,13 +51,12 @@
     </div>
   </main>
   <script>
-    const SUPABASE_URL='https://jjowjnrsknmakcunblzq.supabase.co';
-    const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs';
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const $=id=>document.getElementById(id);const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+    const db=window.createIzumiSupabaseClient();const $=id=>document.getElementById(id);const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     let currentUser=null,isAdmin=false,parsed={projects:[],lines:[],fileName:''};
     function normalizeStableUrl(){const url=new URL(location.href);if(url.searchParams.has('v')){url.searchParams.delete('v');history.replaceState(null,'',url.pathname+(url.searchParams.size?'?'+url.searchParams.toString():''))}}
     normalizeStableUrl();
-    function prefixOptions(){return window.IzumiFiscalYear.options({minimumCode:22,futureYears:3}).map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('')}
+    function prefixOptions(){return window.IzumiFiscalYear.options().map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('')}
     $('importPrefix').insertAdjacentHTML('beforeend',prefixOptions());$('exportPrefix').insertAdjacentHTML('beforeend',prefixOptions());
     function setStatus(id,text,type=''){const node=$(id);node.textContent=text;node.className=`status ${type}`}
     function setProgress(id,ratio){const node=$(id);node.classList.remove('hidden');node.querySelector('span').style.width=`${Math.max(0,Math.min(100,ratio*100))}%`;if(ratio>=1)setTimeout(()=>node.classList.add('hidden'),600)}

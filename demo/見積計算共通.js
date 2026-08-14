@@ -218,6 +218,29 @@
     });
   }
 
+  // 台帳に見積合計だけが残り、元の明細が無い過去案件用。
+  // 存在しない明細を推測せず、台帳の合計を1式の下書きとして忠実に復元する。
+  function reconstructLedgerTotalEstimateRow(item){
+    const sales=numberOrNull(item?.sales_estimate_ex_tax
+      ??item?.invoice_subtotal_ex_tax
+      ??item?.sales_invoice_ex_tax);
+    if(sales===null||sales===0)return null;
+    return {
+      type:'item',
+      name:String(item?.work_name||'工事一式'),
+      spec:'',
+      qty:1,
+      unit:'式',
+      cost:'',
+      orderCost:'',
+      sellOverride:Math.round(sales),
+      note:'',
+      vendor:'',
+      category:String(item?.category||'外注費'),
+      _ledgerTotalFallback:true
+    };
+  }
+
   return Object.freeze({
     version:'1.3.0',
     normalizeNumericText,
@@ -230,6 +253,7 @@
     customerUnit,
     customerAmount,
     burdenSplitFromGross,
-    reconstructImportedEstimateRows
+    reconstructImportedEstimateRows,
+    reconstructLedgerTotalEstimateRow
   });
 });

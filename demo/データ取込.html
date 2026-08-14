@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17345f">
   <title>サンプル装美 データ取込・出力</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="年度共通.js?v=20260729-UX51"></script>
+  <script src="年度共通.js?v=20260814-YEAR2030"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--line:#d8e1ed;--muted:#66758c;--bg:#f3f6fb;--green:#12805c;--red:#bd3344}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#162033;font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}button,input,select{font:inherit}
@@ -24,9 +24,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-  <header><div class="header-inner"><div><div class="title">サンプル装美　データ取込・出力</div><div class="sub">過去のExcel工事リストをオンライン台帳へ移し、同じ形式で書き戻します</div></div><nav class="links"><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="estimate.html">見積を開く</a></nav></div></header>
+  <header><div class="header-inner"><div><div class="title">サンプル装美　データ取込・出力</div><div class="sub">過去のExcel工事リストをオンライン台帳へ移し、同じ形式で書き戻します</div></div><nav class="links"><a href="index.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="estimate.html">見積を開く</a></nav></div></header>
   <main>
     <section class="card">
       <h2>安全な移行手順</h2><p>Excelファイルはブラウザ内で読み取ります。管理番号をキーに既存案件へ追記し、空欄で登録済みデータを消しません。</p>
@@ -50,13 +51,12 @@
     </div>
   </main>
   <script>
-    const SUPABASE_URL='https://demo.invalid';
-    const SUPABASE_ANON_KEY='demo-anon-key';
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const $=id=>document.getElementById(id);const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+    const db=window.createIzumiSupabaseClient();const $=id=>document.getElementById(id);const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     let currentUser=null,isAdmin=false,parsed={projects:[],lines:[],fileName:''};
     function normalizeStableUrl(){const url=new URL(location.href);if(url.searchParams.has('v')){url.searchParams.delete('v');history.replaceState(null,'',url.pathname+(url.searchParams.size?'?'+url.searchParams.toString():''))}}
     normalizeStableUrl();
-    function prefixOptions(){return window.IzumiFiscalYear.options({minimumCode:22,futureYears:3}).map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('')}
+    function prefixOptions(){return window.IzumiFiscalYear.options().map(item=>`<option value="${item.code}">${item.label}（${item.code}-）</option>`).join('')}
     $('importPrefix').insertAdjacentHTML('beforeend',prefixOptions());$('exportPrefix').insertAdjacentHTML('beforeend',prefixOptions());
     function setStatus(id,text,type=''){const node=$(id);node.textContent=text;node.className=`status ${type}`}
     function setProgress(id,ratio){const node=$(id);node.classList.remove('hidden');node.querySelector('span').style.width=`${Math.max(0,Math.min(100,ratio*100))}%`;if(ratio>=1)setTimeout(()=>node.classList.add('hidden'),600)}
@@ -90,7 +90,7 @@
     $('fileInput').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)parseFile(file).catch(error=>setStatus('importStatus',`ファイルを読み込めません: ${error.message}`,'error'))});$('importPrefix').addEventListener('change',renderPreview);$('importButton').addEventListener('click',runImport);$('exportButton').addEventListener('click',runExport);requireSession();
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

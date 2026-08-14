@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>サンプル装美 支払通知書</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link rel="stylesheet" href="管理ポータル.css?v=20260724-UX34">
   <style>
@@ -22,9 +22,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-<header><div class="header-inner"><div><h1>支払通知書</h1><div class="sub">業者別の発注実績から作成・版管理・確認証跡を保存</div></div><div class="header-actions"><span id="sessionUser" class="session-user"></span><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="請求.html">請求管理</a><button type="button" onclick="signOut()">ログアウト</button></div></div></header>
+<header><div class="header-inner"><div><h1>支払通知書</h1><div class="sub">業者別の発注実績から作成・版管理・確認証跡を保存</div></div><div class="header-actions"><span id="sessionUser" class="session-user"></span><a href="index.html">一覧メニュー</a><a href="請求.html">請求管理</a><button type="button" onclick="signOut()">ログアウト</button></div></div></header>
 <main class="wrap">
   <section id="loginCard" class="card narrow hidden"><h2>社員ログイン</h2><div class="grid"><div class="full"><label>メールアドレス</label><input id="email" type="email" autocomplete="username"></div><div class="full"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"></div></div><div class="button-row"><button class="primary" onclick="signIn()">ログイン</button></div><div id="loginStatus" class="status"></div></section>
   <div id="app" class="hidden">
@@ -45,7 +46,7 @@
 </main>
 <section id="printNotice"></section>
 <script>
-const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const yen=value=>'¥'+Math.round(Number(value)||0).toLocaleString('ja-JP');
 let vendors=[],orders=[],notices=[],activeNotice=null,activeLines=[],saveTimer=0,isAdmin=false,usedPoLineIds=new Set(),usedChangeOrderIds=new Set(),noticeVisibleCount=100;
@@ -133,12 +134,11 @@ function selectedSourceLines(){
     source_po_line_id:kind==='po'?line.id:null,source_change_order_id:kind==='co'?change.id:null
   }));
 }
-const todayJst=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
-function headerPayload(){return{issue_date:$('issueDate').value||todayJst(),payment_due_date:$('paymentDueDate').value||null,approval_days:Number($('approvalDays').value)||7,issuer_name_snapshot:'株式会社サンプル装美',issuer_address_snapshot:'東京都千代田区丸の内1-1-1 サンプルビル5F',issuer_invoice_reg_no_snapshot:'T1234567890123'}}
+function headerPayload(){return{issue_date:$('issueDate').value||new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'}),payment_due_date:$('paymentDueDate').value||null,approval_days:Number($('approvalDays').value)||7,issuer_name_snapshot:'株式会社サンプル装美',issuer_address_snapshot:'東京都千代田区丸の内1-1-1 サンプルビル5F',issuer_invoice_reg_no_snapshot:'T1234567890123'}}
 async function createDraft(){
   const vendorId=$('vendorSelect').value,lines=selectedSourceLines();if(!vendorId)return setStatus('globalStatus','業者を選択してください。',true);if(!lines.length)return setStatus('globalStatus','明細を1行以上選択してください。',true);
   $('createButton').disabled=true;setStatus('globalStatus','下書きを作成中…');
-  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:vendorId,p_header:{...headerPayload(),issue_date:todayJst()},p_lines:lines,p_supersedes_notice_id:null});
+  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:vendorId,p_header:{...headerPayload(),issue_date:new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})},p_lines:lines,p_supersedes_notice_id:null});
   $('createButton').disabled=!isAdmin;
   if(result.error)return setStatus('globalStatus',schemaMissing(result.error)?'安全操作RPCはDB適用待ちです。既存データは変更していません。':result.error.message,true);
   await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(n=>n.id===created?.id);if(index>=0)await openNotice(index);
@@ -199,7 +199,7 @@ async function createCorrection(){
   })));
   if(!additions.length)return setStatus('editorStatus','訂正へ追加できる承認済COがありません。先に変更注文を承認してください。',true);
   const lines=[...activeLines.map(line=>({...line})),...additions].map((line,index)=>({...line,line_no:index+1}));
-  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:activeNotice.vendor_id,p_header:{...headerPayload(),issue_date:todayJst()},p_lines:lines,p_supersedes_notice_id:activeNotice.id});
+  const result=await db.rpc('create_payment_notice_draft',{p_vendor_id:activeNotice.vendor_id,p_header:{...headerPayload(),issue_date:new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'})},p_lines:lines,p_supersedes_notice_id:activeNotice.id});
   if(result.error)return setStatus('editorStatus',result.error.message,true);
   await loadBase();const created=Array.isArray(result.data)?result.data[0]:result.data;const index=notices.findIndex(notice=>notice.id===created?.id);if(index>=0)await openNotice(index);
   setStatus('editorStatus','旧版を保持し、承認済COを加えた訂正版を作成しました。');
@@ -223,6 +223,6 @@ async function sendNotice(){
 $('vendorSelect').addEventListener('change',loadVendorOrders);
 db.auth.getSession().then(({data})=>sessionReady(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)sessionReady(null)});
 </script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>

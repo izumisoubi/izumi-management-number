@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>業者・単価管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX29">
   <style>
     .login-card{max-width:480px;margin:22px auto}.save-mark{font-size:9px;color:var(--muted);min-width:58px}.save-mark.saving{color:#986c00}.save-mark.saved{color:#168657}.save-mark.error{color:#c93442}
@@ -37,7 +37,7 @@
 </main>
 <script src="業務基盤.js?v=20260804-DEC1"></script>
 <script>
-const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),LS_VENDOR='izumi_vendors_v3',LS_LEGACY='izumi_vendor_price_drafts_v1',LS_COMMON='izumi_common_prices_v1',LS_OVERRIDES='izumi_vendor_price_overrides_v2';
 let fallbackVendors=[{name:'株式会社美装'},{name:'染谷住宅サービス'},{name:'有限会社林硝子工業所'},{name:'RE・BOX株式会社'},{name:'ネックス株式会社'},{name:'稲垣機材株式会社'}];
 let currentVendor='',currentVendorId='',commonItems=[],vendorOverrides={},cloudVendors=[],cloudOverrides=new Map(),pendingOverrides=new Map(),cloudReady=false,isAdmin=false,saveTimers=new Map();

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>イズミ装美 システム管理</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="認証セッション共通.js?v=20260729-UX56"></script><link rel="stylesheet" href="管理ポータル.css?v=20260720-UX22"><link rel="icon" href="favicon.ico" sizes="any">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>イズミ装美 システム管理</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script><link rel="stylesheet" href="管理ポータル.css?v=20260720-UX22"><link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
@@ -18,7 +18,7 @@
   <section class="card"><h3>管理者の注意</h3><div class="muted">管理者は利用者設定・バックアップ・操作履歴を閲覧できます。パスワードを聞いたり保管したりせず、忘れた場合は本人に再設定メールを送ってもらってください。退職者は「停止」にした後、SupabaseのAuthentication画面でも該当ユーザーを確認してください。</div></section>
 </main>
 <script>
-const db=window.supabase.createClient('https://jjowjnrsknmakcunblzq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqb3dqbnJza25tYWtjdW5ibHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNzY4MjUsImV4cCI6MjA5OTg1MjgyNX0.XYPEt90GQlzJMTe67f9O7WExNYrJhfQ_HC20kkCWgGs');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id);const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));let users=[],meetingViewers=[],currentUser=null;
 function status(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'success')}
 async function requireAdmin(){const {data:{session}}=await db.auth.getSession();if(!session){location.replace('auth.html?next='+encodeURIComponent(location.pathname+location.search));return false}currentUser=session.user;$('sessionUser').textContent=currentUser.email||'';const {data,error}=await db.rpc('is_management_admin');if(error||data!==true){document.querySelector('main').innerHTML='<section class="card"><h2>管理者権限が必要です</h2><p class="muted">この画面はシステム管理者だけが利用できます。</p><a class="button" href="index.html">一覧メニューへ戻る</a></section>';return false}return true}

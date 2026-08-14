@@ -1,0 +1,76 @@
+name: Quarterly portability restore drill
+
+on:
+  schedule:
+    - cron: '0 18 1 1,4,7,10 *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quarterly-portability-restore-drill
+  cancel-in-progress: false
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+      BACKUP_S3_PREFIX: ${{ vars.BACKUP_S3_PREFIX }}
+      BACKUP_S3_REGION: ${{ vars.BACKUP_S3_REGION }}
+      TARGET_DB_URL: ${{ secrets.RESTORE_TEST_DB_URL }}
+      TARGET_S3_ENDPOINT: ${{ secrets.RESTORE_TEST_S3_ENDPOINT }}
+      TARGET_S3_ACCESS_KEY_ID: ${{ secrets.RESTORE_TEST_S3_ACCESS_KEY_ID }}
+      TARGET_S3_SECRET_ACCESS_KEY: ${{ secrets.RESTORE_TEST_S3_SECRET_ACCESS_KEY }}
+      TARGET_S3_REGION: ${{ vars.RESTORE_TEST_S3_REGION }}
+      RESTORE_STORAGE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check restore-test configuration
+        id: preflight
+        run: |
+          missing=()
+          for name in BACKUP_S3_ENDPOINT BACKUP_S3_BUCKET BACKUP_S3_ACCESS_KEY_ID BACKUP_S3_SECRET_ACCESS_KEY TARGET_DB_URL TARGET_S3_ENDPOINT TARGET_S3_ACCESS_KEY_ID TARGET_S3_SECRET_ACCESS_KEY; do
+            [[ -n "${!name:-}" ]] || missing+=("$name")
+          done
+          if ((${#missing[@]})); then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "### Quarterly restore drill" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Result: not configured" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Missing names: ${missing[*]}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install restore tools
+        if: steps.preflight.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client rclone awscli
+      - name: Download latest external backup
+        if: steps.preflight.outputs.enabled == 'true'
+        run: |
+          export AWS_ACCESS_KEY_ID="$BACKUP_S3_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$BACKUP_S3_SECRET_ACCESS_KEY"
+          export AWS_DEFAULT_REGION="${BACKUP_S3_REGION:-auto}"
+          prefix="${BACKUP_S3_PREFIX:-izumi-management-number}"
+          aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "s3://$BACKUP_S3_BUCKET/$prefix/latest/izumi-portability-latest.tar.gz" portability-latest.tar.gz --only-show-errors
+          aws --endpoint-url "$BACKUP_S3_ENDPOINT" s3 cp "s3://$BACKUP_S3_BUCKET/$prefix/latest/izumi-portability-latest.tar.gz.sha256" portability-latest.tar.gz.sha256 --only-show-errors
+          shasum -a 256 -c portability-latest.tar.gz.sha256
+      - name: Verify package
+        if: steps.preflight.outputs.enabled == 'true'
+        run: scripts/portability/verify-backup.sh portability-latest.tar.gz
+      - name: Restore to isolated environment
+        if: steps.preflight.outputs.enabled == 'true'
+        run: scripts/portability/restore-backup.sh portability-latest.tar.gz
+      - name: Record restore drill
+        if: always() && steps.preflight.outputs.enabled == 'true'
+        run: |
+          echo "### Quarterly restore drill" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- UTC: $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Target: isolated restore-test environment" >> "$GITHUB_STEP_SUMMARY"

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17345f">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>サンプル装美 行動予定</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <style>
     :root{--navy:#17345f;--blue:#2563eb;--bg:#f1f5fb;--line:#b9c7da;--line2:#d8e1ed;--muted:#63718a;--text:#172033;--yellow:#fff9df;--green:#147d59;--red:#bd3848}
     *{box-sizing:border-box}html,body{min-height:100%}html{scroll-snap-type:y mandatory;scroll-padding-top:8px}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}body>header{scroll-snap-align:start;scroll-snap-stop:always}
@@ -23,7 +23,8 @@
     .sheet-panel{margin-top:12px;overflow:hidden}.sheet-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line2);background:#fff}.sheet-toolbar strong{font-size:12px;color:var(--navy)}.sheet-toolbar span{font-size:10px;color:var(--muted)}.sheet-toolbar-main{display:flex;align-items:center;gap:8px}.scale-control{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:800;color:#536887}.scale-control select{height:35px;min-width:92px;padding:0 9px;border:1px solid var(--line2);border-radius:7px;background:#fff;color:#27466f}.sheet-wrap{max-height:calc(100vh - 235px);min-height:500px;overflow:auto;background:#fff;scrollbar-gutter:stable}
     table{border-collapse:separate;border-spacing:0;min-width:max-content;width:max-content;font-size:11px;table-layout:fixed;transform-origin:top left}th,td{height:28px;padding:2px 4px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;vertical-align:middle}thead th{position:sticky;z-index:20;background:#1d477b;color:#fff;text-align:center;font-weight:850}thead tr:first-child th{top:0;height:31px}thead tr:nth-child(2) th{top:31px;height:26px;background:#2d5d94}.staff-group,.staff-start{border-left:3px solid #244d78!important}.day-start>td{border-top:3px solid #315b86!important}.date-col{position:sticky!important;left:0;z-index:24!important;width:86px;min-width:86px;max-width:86px;text-align:center}.day-col{position:sticky!important;left:86px;z-index:24!important;width:40px;min-width:40px;max-width:40px;text-align:center}.date-cell{position:sticky!important;font-weight:850;color:#203f68;background:#fff;vertical-align:top;padding:6px 3px 36px}.day-cell{font-weight:850;text-align:center;background:#fff;vertical-align:top;padding-top:8px}.sun{color:#b22d3d!important}.sat{color:#235ea8!important}.today-row .date-cell,.today-row .day-cell{box-shadow:inset 4px 0 #4f8ee8}.time-cell,.status-cell{width:72px;min-width:72px;max-width:72px;text-align:center}.content-cell{width:215px;min-width:215px;max-width:215px;padding:0}.empty-cell{background:#fff}.empty-cell:hover{background:#fff}.quick-entry,.quick-time,.event-direct{width:100%;height:26px;border:0;padding:3px 5px;background:#fff;color:#203b60;font-size:10px;font-weight:400;outline:0}.quick-entry{font-size:11.5px;padding-left:8px}.quick-time{padding:2px 3px;text-align:center}.quick-entry::placeholder,.quick-time::placeholder{color:#9aa7ba}.quick-entry:focus,.quick-time:focus,.event-direct:focus{background:#eaf3ff;box-shadow:inset 0 0 0 2px #4f8ee8}.quick-entry.saving,.quick-time.saving,.event-direct.saving{opacity:.55}.event-direct-content{border-left:4px solid var(--event-color,#2563eb);padding-left:8px;text-align:left;font-size:11.5px;font-weight:400}.add-date{margin-top:4px;padding:2px 6px;border:1px solid #c9d8ea;background:#fff;color:#315685;font-size:9px}.date-row-controls{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:78px;display:flex;align-items:center;justify-content:center;gap:3px;padding:2px 4px;border:1px solid #cbd8e9;border-radius:999px;background:#fff;box-shadow:0 4px 12px #17345f24}.date-row-controls button{min-width:21px;padding:1px 4px;border:1px solid #c9d5e6;border-radius:999px;background:#fff;color:#27466f;font-size:10px}.date-row-controls span{min-width:25px;color:#526783;font-size:9px}.event-tooltip{position:fixed;z-index:1600;max-width:280px;padding:8px 10px;border-radius:8px;background:#12233d;color:#fff;font-size:10px;line-height:1.5;box-shadow:0 10px 28px #08162c4d;pointer-events:none;transform:translate(12px,12px)}.event-tooltip:before{content:"";position:absolute;left:-6px;top:10px;border-width:6px 6px 6px 0;border-style:solid;border-color:transparent #12233d transparent transparent}.memo-detail-hidden{display:none!important}.color-row{display:flex;align-items:center;gap:8px}.color-row select{flex:1}.color-preview{width:30px;height:30px;border:1px solid #cbd7e8;border-radius:7px;background:#fff;box-shadow:inset 4px 0 var(--preview-color,#2563eb)}.flow-note.memo{background:#fff;border-color:#f2d67f;color:#765b08}
     .modal-back{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:#0f1b2d7d}.modal{width:min(780px,100%);max-height:calc(100vh - 36px);overflow:auto;border-radius:15px;background:#fff;box-shadow:0 24px 70px #0004}.modal-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line2);background:#fff}.modal-head h2{margin:0;font-size:17px}.close{padding:3px 7px;background:transparent;color:#50627e;font-size:20px}.form{padding:4px 18px 18px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px}.form .wide{grid-column:1/-1}.form input,.form select,.form textarea{width:100%;border:1px solid var(--line2);border-radius:7px;padding:8px;background:#fff}.form select[multiple]{min-height:92px}.form textarea{min-height:74px;resize:vertical}.time-help{display:block;margin-top:4px;color:#728098;font-size:9px}.modal-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line2);background:#fbfcff}.link-note{margin-top:12px;padding:10px 12px;background:#f3f8ff;border:1px solid #d7e6fb;border-radius:8px;color:#315685;font-size:11px;line-height:1.55}
-    @media(max-width:900px){.header-inner{padding:10px 12px;align-items:flex-start;flex-direction:column}.user{width:100%;overflow:auto}.user>span{display:none}main{padding:0 8px;margin-top:8px}.month-title{order:-1;width:100%}.spacer{display:none}.sheet-wrap{min-height:520px;max-height:75vh}.form-grid{grid-template-columns:1fr}.form .wide{grid-column:auto}.modal-back{padding:5px}}
+    .calendar-suggest{position:fixed;z-index:1300;width:min(440px,calc(100vw - 16px));overflow:auto;padding:5px;border:1px solid #b9c9dc;border-radius:11px;background:#fff;box-shadow:0 18px 48px #07142645}.calendar-suggest:before{content:"";position:fixed;width:10px;height:10px;transform:translate(-11px,17px) rotate(45deg);border-left:1px solid #b9c9dc;border-bottom:1px solid #b9c9dc;background:#fff}.calendar-suggest button{display:block;width:100%;padding:9px 11px;border:0;border-radius:7px;background:#fff;color:#183554;text-align:left}.calendar-suggest button:hover,.calendar-suggest button:focus{background:#eaf3ff;outline:0}.calendar-suggest strong{display:block;font-size:12px;line-height:1.35}.calendar-suggest small{display:block;margin-top:3px;color:#60738b;font-size:10px;line-height:1.35}.calendar-suggest .suggest-rank{float:right;margin-left:8px;color:#2f6fc4;font-size:9px;font-weight:800}.calendar-suggest-empty{padding:12px;color:#708197;font-size:11px}
+    @media(max-width:900px){.header-inner{padding:10px 12px;align-items:flex-start;flex-direction:column}.user{width:100%;overflow:auto}.user>span{display:none}main{padding:0 8px;margin-top:8px}.month-title{order:-1;width:100%}.spacer{display:none}.sheet-wrap{min-height:520px;max-height:75vh}.form-grid{grid-template-columns:1fr}.form .wide{grid-column:auto}.modal-back{padding:5px}.calendar-suggest{left:8px!important;right:8px!important;width:auto!important}.calendar-suggest:before{display:none}}
     .staff-group{font-size:13px!important;font-weight:400!important}
     thead th{font-size:13px!important;font-weight:400!important}
     .saved-content,.empty-content{position:relative}.saved-content .event-direct-content{padding-right:45px}.empty-content .quick-entry{padding-right:25px}.row-edit,.row-delete{position:absolute;top:50%;z-index:2;width:19px;height:19px;padding:0;transform:translateY(-50%);border:0;border-radius:50%;background:transparent;color:#8292a8;font-size:13px;font-weight:400;line-height:19px;opacity:.62}.row-edit{right:23px}.empty-content .row-edit{right:3px}.row-delete{right:3px;font-size:14px;color:#9aa8ba}.row-edit:hover,.row-edit:focus{background:#eaf3ff;color:#245b9c;opacity:1}.row-delete:hover,.row-delete:focus{background:#fff0f1;color:#c43c4a;opacity:1}
@@ -234,9 +235,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-  <header><div class="header-inner"><div><h1>サンプル装美　行動予定</h1><div class="sub">全員の予定と現場の動きを、ひとつの月間表で共有</div></div><div id="userBox" class="user hidden"><nav class="nav"><a href="管理番号取得.html">番号取得</a><a class="current" href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">台帳</a><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="請求.html">請求</a><a href="ユーザー設定.html">ユーザー設定</a></nav><span id="userEmail"></span><button class="logout" id="logout">ログアウト</button></div></div></header>
+  <header><div class="header-inner"><div><h1>サンプル装美　行動予定</h1><div class="sub">全員の予定と現場の動きを、ひとつの月間表で共有</div></div><div id="userBox" class="user hidden"><nav class="nav"><a href="管理番号取得.html">番号取得</a><a class="current" href="calendar.html">カレンダー</a><a href="estimate.html">見積を開く</a><a href="管理番号台帳.html">台帳</a><a href="index.html">一覧メニュー</a><a href="請求.html">請求</a><a href="ユーザー設定.html">ユーザー設定</a></nav><span id="userEmail"></span><button class="logout" id="logout">ログアウト</button></div></div></header>
   <section id="loginCard" class="login hidden"><h2>社員ログイン</h2><div style="font-size:12px;color:#64748b;line-height:1.7">サンプル装美の社内システム共通アカウントでログインします。登録済みの会社メールアドレスと設定済みパスワードを入力してください。</div><label>メールアドレス</label><input id="email" type="email" autocomplete="email"><label>パスワード</label><input id="password" type="password" autocomplete="current-password"><button id="login" class="primary" style="width:100%;margin-top:13px">ログイン</button><div style="display:flex;justify-content:space-between;gap:12px;margin-top:13px;font-size:12px;font-weight:800"><a href="auth.html?mode=signup&amp;next=calendar.html">新しい社員の登録</a><a href="auth.html?mode=forgot&amp;next=calendar.html">パスワードを忘れた方</a></div><div id="loginStatus" class="status" style="padding:10px 0 0"></div></section>
   <main id="app" class="hidden">
     <section class="panel calendar-command"><div class="toolbar"><div class="month-nav"><button id="prevMonth" class="secondary">‹ 前月</button><div id="monthTitle" class="month-title"></div><button id="nextMonth" class="secondary">次月 ›</button><button id="today" class="secondary">今月</button></div><div class="calendar-filters"><div class="field"><label>社員表示</label><select id="staffFilter"><option value="">全社員</option></select></div><div class="field"><label>予定種別</label><select id="typeFilter"><option value="">すべて</option><option>退去立会</option><option>現地調査</option><option>見積訪問</option><option>工事</option><option>完工確認</option><option>休み</option><option>その他</option></select></div><label class="scale-control">縮尺<select id="calendarScale"><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option><option value="100">100%</option><option value="110">110%</option><option value="120">120%</option></select></label></div><div id="todayAttendance" class="today-attendance" aria-live="polite"></div><div class="spacer"></div><div class="toolbar-actions"><a class="secondary" style="padding:8px 11px;border-radius:9px;text-decoration:none;font-size:11px;font-weight:800" href="操作履歴.html?action=予定削除">削除履歴</a><button id="newEvent" class="primary">＋ 予定を追加</button></div></div><div class="stats" id="stats"></div><div id="calendarStatus" class="status"></div></section>
@@ -248,13 +250,12 @@
   <script>
   function normalizeStablePageUrls(){const current=new URL(location.href);if(current.searchParams.has('v')){current.searchParams.delete('v');history.replaceState(history.state,'',current.pathname+(current.searchParams.size?'?'+current.searchParams.toString():'')+current.hash)}document.querySelectorAll('a[href]').forEach(link=>{const target=new URL(link.getAttribute('href'),location.href);if(target.origin!==location.origin||!target.searchParams.has('v'))return;target.searchParams.delete('v');link.setAttribute('href',target.pathname+(target.searchParams.size?'?'+target.searchParams.toString():'')+target.hash)})}
   normalizeStablePageUrls();
-  const SUPABASE_URL='https://demo.invalid';
-  const SUPABASE_ANON_KEY='demo-anon-key';
-  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY),$=id=>document.getElementById(id);
-  const DEFAULT_STAFF=['大島','林','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
+  const {url:SUPABASE_URL,anonKey:SUPABASE_ANON_KEY}=window.IZUMI_SUPABASE_CONFIG;
+  const db=window.createIzumiSupabaseClient(),$=id=>document.getElementById(id);
+  const DEFAULT_STAFF=['大島','林','長谷川','中井','大塚','池野','花田','古磯','撮影','事務'],weekdays=['日','月','火','水','木','金','土'];
   const COLOR_PALETTE={blue:{line:'#2563eb',bg:'#eef5ff'},purple:{line:'#7c3aed',bg:'#f5f0ff'},green:{line:'#15805d',bg:'#edf9f3'},cyan:{line:'#0891b2',bg:'#ebfbff'},yellow:{line:'#d59b12',bg:'#fff8d7'},orange:{line:'#e46c1a',bg:'#fff1e6'},red:{line:'#c94352',bg:'#fff0f2'},gray:{line:'#64748b',bg:'#f1f5f9'}};
   const AUTO_COLORS={'現地調査':'purple','見積訪問':'purple','工事':'green','完工確認':'cyan','休み':'gray','その他':'yellow','退去立会':'blue'};
-  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:'',slot:null},authFlowId=0;
+  let currentUser=null,currentProfile=null,employees=[],events=[],todayEvents=[],editorDirectory={},calendarClients=[],calendarProperties=[],calendarMasterUsage={client:{},property:{},address:{}},activeCalendarSuggestType='',dayRows=readDayRows(),displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),lastScheduleClick={key:'',at:0},leaveDraft={date:'',staff:'',slot:null},authFlowId=0;
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const isoDate=date=>{const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`};
   const estimateDocumentUrl=()=>new URL('estimate.html',location.href);
@@ -332,9 +333,94 @@
     $('userEmail').textContent=user.email;
     setAuthView('app');
     await loadEmployees();
-    await loadEvents();
+    await Promise.all([loadCalendarMasters(),loadEvents()]);
   }
-  async function loadEmployees(){employees=[...DEFAULT_STAFF];$('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');$('eventStaff').innerHTML=staffOptions('');$('additionalStaff').innerHTML=staffOptions('')}
+  async function loadEmployees(){
+    let masterNames=[];
+    try{
+      const {data,error}=await db.from('employee_master').select('name').eq('active',true).order('display_order',{ascending:true});
+      if(error)throw error;
+      masterNames=(data||[]).map(row=>String(row.name||'').trim()).filter(Boolean);
+    }catch(error){
+      console.warn('社員マスタの読込に失敗したため、標準社員一覧を使用します。',error);
+    }
+    employees=[...new Set([...masterNames,...DEFAULT_STAFF])];
+    $('staffFilter').innerHTML='<option value="">全社員</option>'+employees.map(name=>`<option>${esc(name)}</option>`).join('');
+    $('eventStaff').innerHTML=staffOptions('');
+    $('additionalStaff').innerHTML=staffOptions('');
+  }
+  function masterText(value){return String(value||'').trim().replace(/[\s　]+/g,' ')}
+  function propertyCompany(property){return masterText(property.mgmt||property.client)}
+  function matchingClient(name){const key=masterText(name);return calendarClients.find(client=>masterText(client.name)===key)||null}
+  function matchingProperty(name){const key=masterText(name);return calendarProperties.find(property=>masterText(property.name)===key)||null}
+  function calendarUsageStorageKey(){return `izumiCalendarMasterUsageV1:${currentUser?.id||'local'}`}
+  function loadLocalCalendarUsage(){try{return JSON.parse(localStorage.getItem(calendarUsageStorageKey())||'{}')||{}}catch(_error){return{}}}
+  function usageScore(type,value){const key=masterText(value);return Number(calendarMasterUsage[type]?.[key]||0)}
+  function rememberCalendarUsage(type,value){
+    const key=masterText(value);if(!key)return;
+    calendarMasterUsage[type]||(calendarMasterUsage[type]={});
+    calendarMasterUsage[type][key]=usageScore(type,key)+3;
+    const local=loadLocalCalendarUsage();local[type]||(local[type]={});local[type][key]=Number(local[type][key]||0)+1;
+    try{localStorage.setItem(calendarUsageStorageKey(),JSON.stringify(local))}catch(_error){}
+  }
+  function addCalendarUsage(type,value,amount=1){const key=masterText(value);if(!key)return;calendarMasterUsage[type]||(calendarMasterUsage[type]={});calendarMasterUsage[type][key]=usageScore(type,key)+amount}
+  function buildCalendarUsage(rows){
+    calendarMasterUsage={client:{},property:{},address:{}};
+    (rows||[]).forEach(row=>{addCalendarUsage('client',row.client_name);addCalendarUsage('property',row.property_name);addCalendarUsage('address',row.address)});
+    const local=loadLocalCalendarUsage();Object.entries(local).forEach(([type,items])=>Object.entries(items||{}).forEach(([value,count])=>addCalendarUsage(type,value,Number(count||0)*3)));
+  }
+  function calendarSuggestionInput(type){return $(type==='client'?'clientName':type==='property'?'propertyName':'eventAddress')}
+  function calendarSuggestionSource(type){
+    const company=masterText($('clientName')?.value),scoped=company?calendarProperties.filter(property=>propertyCompany(property)===company):calendarProperties;
+    if(type==='client')return calendarClients.map(client=>({value:client.name,detail:[client.addr,client.tel].filter(Boolean).join(' ／ '),record:client}));
+    if(type==='property')return scoped.map(property=>({value:property.name,detail:[propertyCompany(property),property.addr].filter(Boolean).join(' ／ '),record:property}));
+    const seen=new Set();return scoped.filter(property=>property.addr&&!seen.has(masterText(property.addr))&&seen.add(masterText(property.addr))).map(property=>({value:property.addr,detail:[property.name,propertyCompany(property)].filter(Boolean).join(' ／ '),record:property}));
+  }
+  function hideCalendarSuggestions(){const panel=$('calendarMasterSuggestions');if(panel)panel.remove();activeCalendarSuggestType=''}
+  function positionCalendarSuggestions(panel,input){
+    const rect=input.getBoundingClientRect(),gap=8,panelWidth=Math.min(440,innerWidth-16),roomRight=innerWidth-rect.right-gap;
+    let left=rect.right+gap,top=rect.top;
+    if(innerWidth<=900||roomRight<Math.min(300,panelWidth)){left=Math.max(8,Math.min(rect.left,innerWidth-panelWidth-8));top=Math.min(innerHeight-120,rect.bottom+6)}
+    panel.style.left=`${Math.round(left)}px`;panel.style.top=`${Math.max(8,Math.round(top))}px`;panel.style.maxHeight=`${Math.max(110,Math.min(520,innerHeight-Math.max(8,top)-8))}px`;
+  }
+  function chooseCalendarSuggestion(type,item){
+    const input=calendarSuggestionInput(type);if(!input)return;input.value=item.value;rememberCalendarUsage(type,item.value);
+    if(type==='client'){applyClientMasterCandidate();hideCalendarSuggestions();showCalendarSuggestions('property',true)}
+    else if(type==='property'){applyPropertyMasterCandidate();hideCalendarSuggestions()}
+    else{const property=item.record;if(property){$('propertyName').value=property.name||$('propertyName').value;applyPropertyMasterCandidate()}hideCalendarSuggestions()}
+  }
+  function showCalendarSuggestions(type,force=false){
+    const input=calendarSuggestionInput(type);if(!input||$('modalBack').classList.contains('hidden'))return;
+    activeCalendarSuggestType=type;let panel=$('calendarMasterSuggestions');if(!panel){panel=document.createElement('div');panel.id='calendarMasterSuggestions';panel.className='calendar-suggest';panel.setAttribute('role','listbox');document.body.appendChild(panel)}
+    const query=masterText(input.value).toLocaleLowerCase('ja'),items=calendarSuggestionSource(type).filter(item=>force||!query||`${item.value} ${item.detail}`.toLocaleLowerCase('ja').includes(query)).sort((a,b)=>usageScore(type,b.value)-usageScore(type,a.value)||masterText(a.value).localeCompare(masterText(b.value),'ja')).slice(0,40);
+    panel.innerHTML=items.length?items.map((item,index)=>`<button type="button" role="option" data-suggest-index="${index}"><span class="suggest-rank">${usageScore(type,item.value)?`よく使う ${usageScore(type,item.value)}`:''}</span><strong>${esc(item.value)}</strong>${item.detail?`<small>${esc(item.detail)}</small>`:''}</button>`).join(''):'<div class="calendar-suggest-empty">一致する候補はありません。手入力できます。</div>';
+    panel._calendarItems=items;panel.querySelectorAll('button').forEach(button=>button.addEventListener('pointerdown',event=>{event.preventDefault();chooseCalendarSuggestion(type,items[Number(button.dataset.suggestIndex)])}));positionCalendarSuggestions(panel,input);
+  }
+  function renderCalendarMasterCandidates(){
+    if(activeCalendarSuggestType)showCalendarSuggestions(activeCalendarSuggestType);
+  }
+  function applyClientMasterCandidate(){
+    const client=matchingClient($('clientName').value);renderCalendarMasterCandidates();if(!client)return;
+    if(!$('contactName').value.trim())$('contactName').value=client.person||client.billingPerson||'';
+    if(!$('phone').value.trim())$('phone').value=client.tel||client.billingTel||'';
+  }
+  function applyPropertyMasterCandidate(){
+    const property=matchingProperty($('propertyName').value);if(!property)return;
+    const company=propertyCompany(property);if(company)$('clientName').value=company;
+    if(property.addr)$('eventAddress').value=property.addr;
+    if(!$('contactName').value.trim())$('contactName').value=property.person||'';
+    const client=matchingClient(company);if(client&&!$('phone').value.trim())$('phone').value=client.tel||client.billingTel||'';
+    renderCalendarMasterCandidates();
+  }
+  async function loadCalendarMasters(){
+    const [result,history]=await Promise.all([db.rpc('list_shared_master_records'),db.from('calendar_events').select('client_name,property_name,address').is('deleted_at',null).limit(10000)]);
+    buildCalendarUsage(history.error?[]:history.data||[]);
+    if(result.error){console.warn('カレンダーのマスタ候補を読み込めませんでした',result.error);calendarClients=[];calendarProperties=[];renderCalendarMasterCandidates();return}
+    const rows=Array.isArray(result.data)?result.data:[];
+    calendarClients=rows.filter(row=>row.master_type==='client').map(row=>({...row.data,name:row.name||row.data?.name||'',_cloudId:row.id})).filter(row=>row.name).sort((a,b)=>masterText(a.name).localeCompare(masterText(b.name),'ja'));
+    calendarProperties=rows.filter(row=>row.master_type==='property').map(row=>({...row.data,name:row.name||row.data?.name||'',_cloudId:row.id})).filter(row=>row.name).sort((a,b)=>masterText(a.name).localeCompare(masterText(b.name),'ja'));
+    renderCalendarMasterCandidates();
+  }
   function calendarScaleKey(){return `izumiCalendarScaleV2:${currentUser?.id||'local'}`}
   function applyCalendarScale(value){
     const scale=Math.max(70,Math.min(120,Number(value)||100));
@@ -610,8 +696,8 @@
     $('modalTitle').textContent=event.memo_only||event.event_status==='メモ'?'共有メモを編集':'予定を編集';
     $('deleteEvent').classList.remove('hidden');
   }
-  function closeModal(){$('modalBack').classList.add('hidden')}
-  function eventPayload(){const memo=$('eventMode').value==='memo',startText=$('startTime').value.trim(),returnText=$('endTime').value.trim();return {event_date:$('eventDate').value,start_text:startText||null,return_status_text:returnText||null,start_time:startText&&validNormalizedTime(startText)?normalizeManualTime(startText):null,end_time:returnText&&validNormalizedTime(returnText)?normalizeManualTime(returnText):null,event_type:$('eventType').value,event_status:memo?'メモ':$('eventStatus').value,staff_name:$('eventStaff').value,additional_staff_names:selectedAdditional().filter(name=>name!==$('eventStaff').value),management_number:memo?null:$('managementNumber').value.trim()||null,client_name:memo?null:$('clientName').value.trim()||null,property_name:$('propertyName').value.trim()||null,room_number:memo?null:$('roomNumber').value.trim()||null,work_name:memo?null:$('eventWorkName').value.trim()||null,address:memo?null:$('eventAddress').value.trim()||null,contact_name:memo?null:$('contactName').value.trim()||null,phone:memo?null:$('phone').value.trim()||null,notes:$('eventNotes').value.trim()||null,color_key:$('eventColor').value||'auto',memo_only:memo,display_slot:normalizeDisplaySlot($('eventDisplaySlot').value),updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||''}}
+  function closeModal(){hideCalendarSuggestions();$('modalBack').classList.add('hidden')}
+  function eventPayload(){const memo=$('eventMode').value==='memo',startText=$('startTime').value.trim(),returnText=$('endTime').value.trim();return {event_date:$('eventDate').value,start_text:startText||null,return_status_text:returnText||null,start_time:startText&&validNormalizedTime(startText)?normalizeManualTime(startText):null,end_time:returnText&&validNormalizedTime(returnText)?normalizeManualTime(returnText):null,event_type:$('eventType').value,event_status:memo?'メモ':$('eventStatus').value,staff_name:$('eventStaff').value,additional_staff_names:selectedAdditional().filter(name=>name!==$('eventStaff').value),management_number:memo?null:$('managementNumber').value.trim()||null,client_name:$('clientName').value.trim()||null,property_name:$('propertyName').value.trim()||null,room_number:$('roomNumber').value.trim()||null,work_name:memo?null:$('eventWorkName').value.trim()||null,address:$('eventAddress').value.trim()||null,contact_name:$('contactName').value.trim()||null,phone:$('phone').value.trim()||null,notes:$('eventNotes').value.trim()||null,color_key:$('eventColor').value||'auto',memo_only:memo,display_slot:normalizeDisplaySlot($('eventDisplaySlot').value),updated_by:currentUser.id,updated_by_name:currentProfile?.display_name||currentUser?.email||''}}
   async function saveEvent(options={}){
     if(!$('eventForm').reportValidity())return false;
     const originalId=$('eventId').value,payload=eventPayload();
@@ -643,6 +729,17 @@
     scheduleWrap.classList.toggle('is-x-scrolled',scheduleWrap.scrollLeft>2);
   },{passive:true});
   $('login').onclick=async()=>{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)$('loginStatus').textContent=error.message;else if(data.session)await showApp(data.session)};$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('prevMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()-1,1);loadEvents()};$('nextMonth').onclick=()=>{displayMonth=new Date(displayMonth.getFullYear(),displayMonth.getMonth()+1,1);loadEvents()};$('today').onclick=()=>{displayMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);loadEvents()};$('newEvent').onclick=()=>newEvent();$('staffFilter').onchange=render;$('typeFilter').onchange=render;$('calendarScale').onchange=event=>applyCalendarScale(event.target.value);$('eventColor').onchange=updateColorPreview;$('eventType').onchange=updateColorPreview;$('closeModal').onclick=closeModal;$('modalBack').addEventListener('click',event=>{if(event.target===$('modalBack'))closeModal()});$('saveEvent').onclick=saveEvent;$('deleteEvent').onclick=deleteEvent;$('openEstimate').onclick=openEstimate;$('issueNumber').onclick=issueNumberFromEvent;$('closeLeavePicker').onclick=closeLeavePicker;$('leavePickerBack').addEventListener('click',event=>{if(event.target===$('leavePickerBack'))closeLeavePicker()});document.querySelectorAll('.leave-option').forEach(button=>button.onclick=()=>saveLeavePeriod(button.dataset.period,button));
+  [['clientName','client'],['propertyName','property'],['eventAddress','address']].forEach(([id,type])=>{
+    const input=$(id);input.removeAttribute('list');input.setAttribute('autocomplete','off');
+    input.addEventListener('focus',()=>showCalendarSuggestions(type));
+    input.addEventListener('input',()=>showCalendarSuggestions(type));
+    input.addEventListener('keydown',event=>{if(event.key==='Escape'){hideCalendarSuggestions();return}if(event.key==='ArrowDown'){const first=$('calendarMasterSuggestions')?.querySelector('button');if(first){event.preventDefault();first.focus()}}});
+  });
+  $('clientName').addEventListener('change',applyClientMasterCandidate);
+  $('propertyName').addEventListener('change',applyPropertyMasterCandidate);
+  $('propertyName').addEventListener('blur',applyPropertyMasterCandidate);
+  document.addEventListener('pointerdown',event=>{const panel=$('calendarMasterSuggestions');if(panel&&!panel.contains(event.target)&&!['clientName','propertyName','eventAddress'].includes(event.target?.id))hideCalendarSuggestions()});
+  addEventListener('resize',()=>{const input=calendarSuggestionInput(activeCalendarSuggestType);const panel=$('calendarMasterSuggestions');if(input&&panel)positionCalendarSuggestions(panel,input)});
   setAuthView('loading');
   db.auth.onAuthStateChange((event,session)=>{
     if(event==='INITIAL_SESSION')return;
@@ -653,7 +750,7 @@
   db.auth.getSession().then(({data:{session},error})=>{if(error||!session)revealLogin();else void showApp(session)});
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>

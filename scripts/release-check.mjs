@@ -2,7 +2,7 @@
 import {existsSync,readFileSync,writeFileSync,rmSync,readdirSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 
-const requiredFiles=['index.html','kanribangou.html','estimate.html','calendar.html','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','バックアップ共通.js','年度共通.js','本日日付共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/本日日付共通.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/本日日付共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
+const requiredFiles=['index.html','kanribangou.html','estimate.html','calendar.html','supabase-config.js','認証セッション共通.js','表入力共通.js','見積計算共通.js','自社原価共通.js','バックアップ共通.js','年度共通.js','本日日付共通.js','台帳期限共通.js','台帳共通.js','台帳共通.css','SUPABASE_UX42_台帳入力を正本へ反映.sql','BACKUP_AND_RECOVERY.md','SUPABASE_EXIT_STRATEGY.md','AUTH_MIGRATION_RUNBOOK.md','.github/workflows/daily-portability-backup.yml','.github/workflows/quarterly-restore-drill.yml','scripts/portability/create-backup.sh','scripts/portability/verify-backup.sh','scripts/portability/restore-backup.sh','scripts/portability/check-readiness.mjs','supabase/migrations/manifest.txt','restore-tests/README.md','restore-tests/template.md','demo/index.html','demo/demo-data.js','demo/demo-runtime.js','demo/本日日付共通.js','demo/管理番号取得.html','demo/calendar.html','demo/管理番号台帳.html','demo/工事リスト・未発注.html','demo/工事リスト・原価.html','demo/請求.html','demo/会議用案件一覧.html','demo/銀行入金照合.html','demo/支払通知書.html','demo/変更注文・締め管理.html','demo/システム管理.html','demo/estimate.html','demo/estimate/index.html','demo/estimate/standalone.js','demo/estimate/demo-integration.js','demo/estimate/表入力共通.js','demo/estimate/見積計算共通.js','demo/estimate/自社原価共通.js','demo/estimate/年度共通.js','demo/estimate/本日日付共通.js','demo/estimate/assets/stamps/demo-company.svg','demo/estimate/assets/stamps/demo-person.svg','scripts/build-demo-mirror.mjs'];
 const failures=[];
 const expect=(condition,message)=>{if(!condition)failures.push(message)};
 const read=file=>readFileSync(file,'utf8');
@@ -86,7 +86,7 @@ if(!failures.length){
   expect(estimate.includes('gridCoreCT.normalizeRange')&&estimate.includes('gridCoreCT.planPaste'),`売上原価管理表が共通表入力へ接続されていません`);
   expect(ledger.includes('window.IzumiGridCore'),`台帳が共通表入力へ接続されていません`);
   expect(ledger.includes('IzumiLedgerDates?.isAtLeastMonthsOld')&&ledgerDates.includes('addCalendarMonths'),`未入金の3か月経過判定が見つかりません`);
-  expect(fiscalYear.includes('fiscalEndYearForDate')&&fiscalYear.includes('futureYears=3'),`年度候補の自動更新ロジックが見つかりません`);
+  expect(fiscalYear.includes('fiscalEndYearForDate')&&fiscalYear.includes('MINIMUM_CODE=25')&&fiscalYear.includes('MAXIMUM_CODE=31'),`年度候補の2024年度から2030年度までの固定範囲が見つかりません`);
   ['管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'].forEach(file=>{
     expect(read(file).includes('表入力共通.js'),`${file} が共通表入力を読み込んでいません`);
     expect(read(file).includes('年度共通.js'),`${file} が年度自動更新を読み込んでいません`);
@@ -145,6 +145,10 @@ if(!failures.length){
   expect(backupCoreSyntax.status===0,`バックアップ共通.jsの構文エラー: ${backupCoreSyntax.stderr}`);
   const authSessionSyntax=spawnSync(process.execPath,['--check','認証セッション共通.js'],{encoding:'utf8'});
   expect(authSessionSyntax.status===0,`認証セッション共通.jsの構文エラー: ${authSessionSyntax.stderr}`);
+  const supabaseConfigSyntax=spawnSync(process.execPath,['--check','supabase-config.js'],{encoding:'utf8'});
+  expect(supabaseConfigSyntax.status===0,`supabase-config.jsの構文エラー: ${supabaseConfigSyntax.stderr}`);
+  const portabilityReadiness=spawnSync(process.execPath,['scripts/portability/check-readiness.mjs'],{encoding:'utf8'});
+  expect(portabilityReadiness.status===0,`Supabase離脱準備の静的検査に失敗しました: ${portabilityReadiness.stdout}\n${portabilityReadiness.stderr}`);
   const demoRuntimeSyntax=spawnSync(process.execPath,['--check','demo/demo-runtime.js'],{encoding:'utf8'});
   expect(demoRuntimeSyntax.status===0,`demo/demo-runtime.jsの構文エラー: ${demoRuntimeSyntax.stderr}`);
   const demoDataSyntax=spawnSync(process.execPath,['--check','demo/demo-data.js'],{encoding:'utf8'});

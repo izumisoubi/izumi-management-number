@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173e70"><title>サンプル装美 変更注文・締め管理</title>
-  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
+  <script src="demo-data.js?v=4"></script><script src="demo-runtime.js?v=3"></script><script src="supabase-config.js?v=20260814-PORTABLE1"></script><script src="認証セッション共通.js?v=20260729-UX56"></script>
   <link rel="stylesheet" href="業務基盤.css?v=20260724-UX36">
   <style>
     main{max-width:1200px}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.kpi{padding:18px;border:1px solid #d8e1ed;border-radius:12px;background:#fff}.kpi strong{display:block;font-size:36px;color:#173e70}.kpi.ok{border-color:#9ed7ba;background:#effaf4}.kpi.warn{border-color:#f1bd75;background:#fff8eb}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th,td{padding:8px;border-bottom:1px solid #d8e1ed;text-align:left;font-size:11px}th{background:#eef3f9}.num{text-align:right}.row-actions{display:flex;gap:6px}.row-actions button{padding:6px 9px}.create-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.create-grid textarea{grid-column:1/-1}.hidden{display:none!important}
@@ -15,9 +15,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="../site.webmanifest">
 <meta name="theme-color" content="#006699">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
 </head>
 <body>
-<header><div class="head"><div><h1>変更注文・締め管理</h1><div>未承認COと未承認支払通知書をゼロにしてから締めます</div></div><nav><a href="イズミ装美社内システム.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
+<header><div class="head"><div><h1>変更注文・締め管理</h1><div>未承認COと未承認支払通知書をゼロにしてから締めます</div></div><nav><a href="index.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
 <section id="loginCard" class="login-card hidden"><h2>社員ログイン</h2><label>メールアドレス<input id="email" type="email"></label><label>パスワード<input id="password" type="password"></label><button class="btn primary" onclick="signIn()">ログイン</button><div id="loginStatus" class="status"></div></section>
 <main id="app" class="hidden">
   <section class="kpis"><div id="coKpi" class="kpi"><span>未承認CO</span><strong id="coCount">0</strong><small>requested の変更注文</small></div><div id="noticeKpi" class="kpi"><span>未承認支払通知書</span><strong id="noticeCount">0</strong><small>draft / sent / disputed / agreed</small></div></section>
@@ -26,7 +27,7 @@
   <div id="globalStatus" class="status"></div>
 </main>
 <script>
-const db=window.supabase.createClient('https://demo.invalid','demo-anon-key');
+const db=window.createIzumiSupabaseClient();
 const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),yen=v=>'¥'+Math.round(Number(v)||0).toLocaleString('ja-JP');
 let orders=[],changeOrders=[],notices=[],isAdmin=false,pendingCoCount=0,pendingNoticeCount=0;
 const setStatus=(id,text,error=false)=>{$(id).textContent=text;$(id).className='status '+(error?'error':'')};
@@ -53,6 +54,6 @@ async function copyVendorLink(){const poId=$('poSelect').value;if(!poId||!isAdmi
 async function decide(index,decision){const co=changeOrders[index];if(!co||!isAdmin)return;let reason=null;if(decision==='rejected'){reason=prompt('却下理由を入力してください。');if(!reason?.trim())return}const result=await db.rpc('decide_change_order',{p_co_id:co.id,p_expected_revision:co.revision,p_decision:decision,p_reason:reason});if(result.error)return setStatus('globalStatus',result.error.message,true);await loadAll()}
 db.auth.getSession().then(({data})=>ready(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)ready(null)});
 </script>
-<script src="common-nav.js?v=20260801-MOBILE4"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>
