@@ -6,7 +6,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-STICKY1">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER2">
 </head>
 <body>
 <header><div class="header-inner"><div><h1>ユーザー設定</h1><div class="sub">自分の表示名・パスワードを管理</div></div><div class="header-actions"><a href="index.html">一覧メニュー</a><button onclick="signOut()">ログアウト</button></div></div></header>
@@ -24,5 +24,5 @@ async function changePassword(){const password=$('password').value;if(password.l
 async function sendReset(){const {error}=await db.auth.resetPasswordForEmail(currentUser.email,{redirectTo:new URL('auth.html?mode=recovery',location.href).href});if(error)return status('passwordStatus',error.message,true);status('passwordStatus','再設定メールを送りました。')}
 async function signOut(){await db.auth.signOut();location.replace('auth.html')}
 init();
-</script><script src="common-nav.js?v=20260812-SEARCHSELECT1"></script><script src="本日日付共通.js?v=20260808-TODAY1"></script>
+</script><script src="common-nav.js?v=20260814-HEADER2"></script><script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>

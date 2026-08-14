@@ -21,6 +21,10 @@
   let calendarLink = null;
   headerLinks.forEach(link => {
     const target = decodeURIComponent((link.getAttribute('href') || '').split('?')[0].split('#')[0]);
+    if (target === page || (!page && target === menuPage)) {
+      link.classList.add('current');
+      link.setAttribute('aria-current', 'page');
+    }
     if (target === menuPage) { link.textContent = '一覧メニュー'; menuLink = link; return; }
     if (target === 'calendar.html') calendarLink = link;
     if (labels.has(target)) link.textContent = labels.get(target);

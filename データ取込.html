@@ -24,7 +24,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-STICKY1">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER2">
 </head>
 <body>
   <header><div class="header-inner"><div><div class="title">イズミ装美　データ取込・出力</div><div class="sub">過去のExcel工事リストをオンライン台帳へ移し、同じ形式で書き戻します</div></div><nav class="links"><a href="index.html">一覧メニュー</a><a href="管理番号台帳.html">管理番号台帳</a><a href="estimate.html">見積を開く</a></nav></div></header>
@@ -91,7 +91,7 @@
     $('fileInput').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)parseFile(file).catch(error=>setStatus('importStatus',`ファイルを読み込めません: ${error.message}`,'error'))});$('importPrefix').addEventListener('change',renderPreview);$('importButton').addEventListener('click',runImport);$('exportButton').addEventListener('click',runExport);requireSession();
   </script>
 <script src="見積作業タブ.js?v=20260722"></script>
-<script src="common-nav.js?v=20260812-SEARCHSELECT1"></script>
+<script src="common-nav.js?v=20260814-HEADER2"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body>
 </html>
