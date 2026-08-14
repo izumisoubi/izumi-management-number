@@ -19,7 +19,7 @@ test('写真帳はDrive保存と保存先確認を別の操作として表示す
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
   const html = await readFile(htmlPath, 'utf8');
   assert.match(html, /var _details=\[_c\.title,_c\.room,_c\.workContent,_c\.managementNumber\]/);
-  assert.match(html, /var _fname='【'\+_docTitle\+'】'\+_details\.join\('　'\)/);
+  assert.match(html, /var _fname='【'\+_docTitle\+'】'\+_details\.join\(' '\)/);
 });
 
 test('工事内容は元の施工会社欄に入り、施工会社は作成開始の直前へ移動する', async () => {
