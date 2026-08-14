@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const estimate=readFileSync(new URL('../estimate.html',import.meta.url),'utf8');
+const headerCss=readFileSync(new URL('../固定ヘッダー共通.css',import.meta.url),'utf8');
+
+test('見積ヘッダーは上段メニューと下段操作の2段に固定する',()=>{
+  assert.match(estimate,/<div class="tabbar">\s*<div class="header-primary-row">/);
+  assert.match(estimate,/header-master-group[\s\S]*header-actions[\s\S]*<\/div>\s*<\/div>\s*<div class="bar-r">/);
+  assert.match(headerCss,/header-primary-row[\s\S]*flex-flow:row nowrap!important/);
+  assert.match(headerCss,/header-primary-row[\s\S]*flex:1 0 100%!important/);
+  assert.match(headerCss,/\.bar-r\{[\s\S]*flex:1 0 100%!important/);
+});
