@@ -13,5 +13,6 @@ test('見積ヘッダーは上段メニューと下段操作の2段に固定す�
   assert.match(headerCss,/\.bar-r\{[\s\S]*flex:1 0 100%!important/);
   assert.match(headerCss,/padding-right:14px!important/);
   assert.match(headerCss,/#todayDateDisplay\.today-date-in-header\{[\s\S]*color:#fff!important/);
-  assert.match(headerCss,/\.bar-r\{[\s\S]*background:#eef2f6!important/);
+  assert.match(headerCss,/\.tabbar:first-of-type::before\{[\s\S]*left:0;[\s\S]*right:0;[\s\S]*background:#eef2f6/);
+  assert.match(headerCss,/\.bar-r\{[\s\S]*background:transparent!important/);
 });
