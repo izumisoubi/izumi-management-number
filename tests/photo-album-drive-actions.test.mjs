@@ -16,10 +16,20 @@ test('写真帳はDrive保存と保存先確認を別の操作として表示す
   assert.ok(saveIndex < driveIndex, 'Drive保存ボタンは保存先確認より先に配置します');
 });
 
-test('Drive保存時は未設定ならその場で保存先選択を開始する', async () => {
+test('Drive保存先は会社指定フォルダに固定しGoogle APIへ直接送信する', async () => {
   const html = await readFile(htmlPath, 'utf8');
-  assert.match(html, /if\(!handle&&mode==='readwrite'\)handle=await window\.connectJsonFolder\(\)/);
-  assert.doesNotMatch(html, /if\(!handle\)throw new Error\('先に「保存先を設定」を押してください'\)/);
+  assert.match(html, /var GOOGLE_DRIVE_FOLDER_ID='1ppBAKpPg3K6Sx1Rm8t5-veca3bgjE4Ve'/);
+  assert.match(html, /accounts\.google\.com\/gsi\/client/);
+  assert.match(html, /google\.accounts\.oauth2\.initTokenClient/);
+  assert.match(html, /www\.googleapis\.com\/upload\/drive\/v3\/files/);
+  assert.doesNotMatch(html, /showDirectoryPicker/);
+  assert.doesNotMatch(html, /保存先を設定/);
+});
+
+test('Drive読込は会社指定フォルダだけを検索する', async () => {
+  const html = await readFile(htmlPath, 'utf8');
+  assert.match(html, /GOOGLE_DRIVE_FOLDER_ID\+"' in parents/);
+  assert.match(html, /alt=media&supportsAllDrives=true/);
 });
 
 test('JSON名は帳票タイトルから管理番号まで判別しやすい順で作る', async () => {
