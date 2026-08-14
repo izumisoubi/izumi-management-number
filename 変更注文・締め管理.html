@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
 </head>
 <body>
 <header><div class="head"><div><h1>変更注文・締め管理</h1><div>未承認COと未承認支払通知書をゼロにしてから締めます</div></div><nav><a href="index.html">一覧メニュー</a><a href="支払通知書.html">支払通知書</a></nav><div id="userBox"></div></div></header>
@@ -54,6 +54,6 @@ async function copyVendorLink(){const poId=$('poSelect').value;if(!poId||!isAdmi
 async function decide(index,decision){const co=changeOrders[index];if(!co||!isAdmin)return;let reason=null;if(decision==='rejected'){reason=prompt('却下理由を入力してください。');if(!reason?.trim())return}const result=await db.rpc('decide_change_order',{p_co_id:co.id,p_expected_revision:co.revision,p_decision:decision,p_reason:reason});if(result.error)return setStatus('globalStatus',result.error.message,true);await loadAll()}
 db.auth.getSession().then(({data})=>ready(data.session));db.auth.onAuthStateChange((_event,session)=>{if(!session)ready(null)});
 </script>
-<script src="common-nav.js?v=20260814-HEADER2"></script>
+<script src="common-nav.js?v=20260814-HEADER3"></script>
 <script src="本日日付共通.js?v=20260808-TODAY1"></script>
 </body></html>

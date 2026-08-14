@@ -16,6 +16,28 @@
     ['estimate.html', '見積・発注'], ['管理番号台帳.html', '台帳'],
     ['工事リスト・原価.html', '原価'], ['工事リスト・未発注.html', '未発注'], ['請求.html', '請求']
   ]);
+  const ledgerHeaderPages = new Set([
+    '管理番号台帳.html','工事リスト・原価.html','工事リスト・未発注.html','請求.html','会議用案件一覧.html'
+  ]);
+  if (ledgerHeaderPages.has(page)) {
+    const header = document.querySelector('body>header:first-of-type');
+    const titleBlock = header ? [...header.children].find(child => child.querySelector('h1')) : null;
+    const userBox = header?.querySelector('#userBox');
+    if (header && titleBlock && userBox && !header.querySelector('.izumi-ledger-primary')) {
+      document.body.classList.add('ledger-system');
+      const primary = document.createElement('div');
+      primary.className = 'izumi-ledger-primary';
+      const dateSlot = document.createElement('div');
+      dateSlot.className = 'header-actions izumi-ledger-date-slot';
+      dateSlot.setAttribute('aria-label','本日の日付');
+      const secondary = document.createElement('div');
+      secondary.className = 'izumi-ledger-secondary';
+      header.prepend(primary);
+      primary.append(titleBlock,dateSlot);
+      header.append(secondary);
+      secondary.append(userBox);
+    }
+  }
   const headerLinks = [...document.querySelectorAll('header a[href]')];
   let menuLink = null;
   let calendarLink = null;

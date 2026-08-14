@@ -6,7 +6,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#006699">
-<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER3">
+<link rel="stylesheet" href="固定ヘッダー共通.css?v=20260814-HEADER8">
 </head>
 <body><header><div class="head"><div><h1>株式会社イズミ装美</h1><div>追加・変更工事の事前申請</div></div></div></header><main><section id="loading" class="panel">発注内容を確認しています…</section><section id="error" class="panel hidden"><h2>申請できません</h2><p id="errorText"></p></section><section id="app" class="hidden"><div class="hero"><small id="poNo"></small><h2 id="vendor"></h2><div id="project"></div></div><section class="panel"><h3>現在の発注内容</h3><div style="overflow:auto"><table class="lines"><thead><tr><th>内容</th><th>数量</th><th>単位</th><th>金額</th></tr></thead><tbody id="lines"></tbody></table></div></section><section class="panel"><h3>追加・変更内容</h3><label>理由（必須）<input id="reason" placeholder="例：下地劣化により補修が必要"></label><label>詳しい作業内容<textarea id="detail" placeholder="施工前に、内容・数量・現場状況を入力してください"></textarea></label><label>増減金額（税抜）<input id="amount" inputmode="numeric" placeholder="減額は -5000 のように入力"></label><p class="notice">申請だけでは着工承認になりません。イズミ装美が変更注文を承認した後に施工してください。</p><button id="submit" class="btn primary" onclick="submitRequest()">変更申請を送信</button><div id="status" class="status"></div></section></section><section id="done" class="panel hidden"><h2>変更申請を受け付けました</h2><p id="doneText"></p><p>イズミ装美の承認連絡を待ってから施工してください。</p></section></main>
 <script>
