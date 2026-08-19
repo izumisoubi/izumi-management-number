@@ -11,6 +11,9 @@ create table if not exists public.safety_restore_ledger_estimates_20260812 (
   restored_at timestamptz not null default now()
 );
 
+alter table public.safety_restore_ledger_estimates_20260812 enable row level security;
+revoke all on table public.safety_restore_ledger_estimates_20260812 from anon, authenticated;
+
 with source_lines as (
   select
     m.id as project_id,
@@ -155,4 +158,3 @@ from public.safety_restore_ledger_estimates_20260812 b
 where not exists(select 1 from public.estimate_projects e where e.management_number=b.management_number);
 
 commit;
-

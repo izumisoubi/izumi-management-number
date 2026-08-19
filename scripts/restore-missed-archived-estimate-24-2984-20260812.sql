@@ -11,6 +11,9 @@ create table if not exists public.safety_restore_archived_estimate_24_2984_20260
   restored_at timestamptz not null default now()
 );
 
+alter table public.safety_restore_archived_estimate_24_2984_20260812 enable row level security;
+revoke all on table public.safety_restore_archived_estimate_24_2984_20260812 from anon, authenticated;
+
 with backup as (
   select id,payload
   from public.system_backups

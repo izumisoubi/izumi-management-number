@@ -13,6 +13,9 @@ create table if not exists public.safety_restore_deleted_estimate_26_2984_202608
   backed_up_at timestamptz not null default now()
 );
 
+alter table public.safety_restore_deleted_estimate_26_2984_20260812 enable row level security;
+revoke all on table public.safety_restore_deleted_estimate_26_2984_20260812 from anon, authenticated;
+
 insert into public.safety_restore_deleted_estimate_26_2984_20260812(
   management_number,old_project_id,old_payload,old_revision,old_deleted_at
 )
