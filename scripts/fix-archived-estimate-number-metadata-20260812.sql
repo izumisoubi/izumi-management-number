@@ -10,6 +10,9 @@ create table if not exists public.safety_fix_archived_estimate_metadata_20260812
   backed_up_at timestamptz not null default now()
 );
 
+alter table public.safety_fix_archived_estimate_metadata_20260812 enable row level security;
+revoke all on table public.safety_fix_archived_estimate_metadata_20260812 from anon, authenticated;
+
 insert into public.safety_fix_archived_estimate_metadata_20260812(
   management_number,payload,revision
 )

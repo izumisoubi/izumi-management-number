@@ -11,6 +11,9 @@ create table if not exists public.safety_restore_ledger_basic_total_20260812 (
   restored_at timestamptz not null default now()
 );
 
+alter table public.safety_restore_ledger_basic_total_20260812 enable row level security;
+revoke all on table public.safety_restore_ledger_basic_total_20260812 from anon, authenticated;
+
 with source_projects as (
   select
     m.*,
